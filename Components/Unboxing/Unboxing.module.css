@@ -1,0 +1,253 @@
+.page {
+  position: relative;
+
+  width: 100%;
+  max-width: 430px;
+  min-height: 100dvh;
+
+  margin: 0 auto;
+
+  overflow: hidden;
+}
+
+
+/* 상단 영역 */
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  padding-top: 70px;
+
+  text-align: center;
+}
+
+.header h1 {
+  margin: 10px 0 0;
+
+  font-family: var(--font-abhaya);
+  font-size: 30px;
+  font-weight: 600;
+
+  color: #2D1F11;
+}
+
+.header p {
+  margin: 0;
+
+  font-family: var(--font-noto-sans-kr);
+  font-size: 14px;
+  font-weight: 400;
+
+  color: #2D1F11;
+}
+
+/* 상자 영역 */
+.boxArea {
+  position: relative;
+
+  width: calc(100% - 48px);
+  aspect-ratio: 1 / 1;
+  margin: 40px auto 0;
+
+  border-radius: 32px;
+  overflow: hidden;
+
+  background: #d8c8b8;
+
+  /* 카드 자체 그림자 */
+  box-shadow:
+    0 10px 28px rgba(92, 64, 33, 0.12),
+    0 3px 10px rgba(92, 64, 33, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+/* 상자 뒤쪽에 은은한 빛 */
+.boxGlow {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  width: 72%;
+  height: 72%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+
+  background: radial-gradient(
+    circle,
+    rgba(255, 248, 239, 0.95) 0%,
+    rgba(255, 243, 230, 0.55) 35%,
+    rgba(255, 243, 230, 0.18) 60%,
+    rgba(255, 243, 230, 0) 100%
+  );
+
+  filter: blur(10px);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.boxImage {
+  object-fit: contain;
+  z-index: 2;
+
+  transform: scale(1.35);
+
+  /* 상자 자체 그림자 */
+  filter:
+    drop-shadow(0 18px 22px rgba(70, 42, 17, 0.18))
+    drop-shadow(0 6px 10px rgba(70, 42, 17, 0.12));
+
+  transition:
+    opacity 0.12s linear,
+    transform 0.2s ease,
+    filter 0.2s ease;
+}
+
+
+/* 정품 인증 */
+.product {
+  margin-top: 22px;
+
+  text-align: center;
+
+  font-family: var(--font-noto-sans-kr);
+  font-size: 13px;
+  font-weight: 500;
+
+  color: #2D1F11;
+}
+
+
+/* 하단 바 */
+.bottomSheet {
+  position: fixed;
+
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  width: 100%;
+  max-width: 430px;
+  height: 330px;
+
+  margin: 0 auto;
+  padding: 12px 22px 24px;
+
+  background: #FFFFFF;
+
+  border-radius: 28px 28px 0 0;
+
+  box-sizing: border-box;
+
+  transition: transform 0.35s ease;
+
+  will-change: transform;
+
+  z-index: 10;
+}
+
+
+/* 사용자가 직접 드래그 중일 때는
+   transition을 꺼서 손가락을 바로 따라오게 */
+.dragging {
+  transition: none;
+}
+
+
+/* 실제 드래그 가능한 부분 */
+.dragArea {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  padding-bottom: 12px;
+
+  touch-action: none;
+
+  cursor: grab;
+}
+
+.dragArea:active {
+  cursor: grabbing;
+}
+
+
+/* 손잡이 */
+.handle {
+  width: 72px;
+  height: 5px;
+
+  margin: 0 auto 10px;
+
+  border-radius: 999px;
+
+  background: #CCB99F;
+}
+
+
+/* 위로 밀기 안내 */
+.dragGuide {
+  margin: 0;
+
+  font-family: var(--font-noto-sans-kr);
+  font-size: 12px;
+  font-weight: 400;
+
+  color: #A8937B;
+}
+
+
+/* 로그인 영역 */
+.sheetContent {
+  text-align: center;
+
+  font-family: var(--font-noto-sans-kr);
+}
+
+.sheetContent h2 {
+  margin: 8px 0 6px;
+
+  font-size: 20px;
+  font-weight: 600;
+
+  color: #2D1F11;
+}
+
+.sheetContent p {
+  margin: 0 0 16px;
+
+  font-size: 13px;
+  line-height: 1.5;
+
+  color: #76695D;
+}
+
+
+/* 버튼 */
+.loginButton,
+.skipButton {
+  width: 100%;
+  height: 48px;
+
+  border: none;
+  border-radius: 10px;
+
+  margin-top: 12px;
+
+  font-family: var(--font-noto-sans-kr);
+  font-size: 14px;
+  font-weight: 500;
+
+  cursor: pointer;
+}
+
+.loginButton {
+  background: #2D1F11;
+  color: #FFFFFF;
+}
+
+.skipButton {
+  background: #F7F3EE;
+  color: #2D1F11;
+}

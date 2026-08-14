@@ -16,7 +16,7 @@
 
   box-sizing: border-box;
 
-  border-top: 1px solid #eeeeee;
+  border-top: 1px solid #F4F4F4;
 
   z-index: 1000;
 }
@@ -34,7 +34,7 @@
 
   text-decoration: none;
 
-  color: #2c2118;
+  color: #2D1F11;
 
   font-size: 14px;
   font-weight: 700;
@@ -57,7 +57,7 @@
 
 /* 선택된 메뉴 */
 .active {
-  color: #9c7a55;
+  color: #9F7C57;
 }
 
 /* 가운데 카메라 */
@@ -81,11 +81,11 @@
 
   border-radius: 50%;
 
-  background: #302116;
+  background: #2D1F11;
 
-  border: 3px solid white;
+  border: 3px solid #ffffff;
 
-  outline: 2px solid #302116;
+  outline: 2px solid #2D1F11;
 }
 
 .cameraIcon {

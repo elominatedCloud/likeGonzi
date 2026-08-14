@@ -1,0 +1,121 @@
+.splash {
+  width: 100%;
+  min-height: 100dvh;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  padding: 24px;
+  box-sizing: border-box;
+
+  cursor: pointer;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* 로고 */
+.logo {
+  opacity: 0;
+  transform: translateY(12px) scale(0.95);
+
+  animation:
+    fadeUp 0.8s ease-out forwards,
+    logoGlow 1.2s ease-in-out 0.8s;
+}
+
+/* MCM Storybook */
+.title {
+  margin: 18px 0 8px;
+
+  font-family: var(--font-abhaya);
+  font-size: 28px;
+  font-weight: 600;
+
+  color: #2D1F11;
+
+  opacity: 0;
+  transform: translateY(12px);
+
+  animation: fadeUp 0.8s ease-out 0.3s forwards;
+}
+
+/* 한글 설명 */
+.description {
+  margin: 0;
+
+  font-family: var(--font-noto-sans-kr);
+  font-size: 14px;
+  font-weight: 400;
+
+  color: #2D1F11;
+
+  opacity: 0;
+  transform: translateY(10px);
+
+  animation: fadeUp 0.8s ease-out 0.55s forwards;
+}
+
+/* 화면 터치 안내 */
+.touchGuide {
+  margin-top: 40px;
+
+  font-family: var(--font-noto-sans-kr);
+  font-size: 12px;
+  font-weight: 400;
+
+  color: #CCBAA6;
+
+  opacity: 0;
+  transform: translateY(8px);
+
+  animation:
+    fadeUp 0.8s ease-out 1s forwards,
+    touchBlink 1.8s ease-in-out 1.8s infinite;
+}
+
+/* 아래에서 위로 부드럽게 등장 */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* MCM 로고 은은하게 빛나는 효과 */
+@keyframes logoGlow {
+  0%,
+  100% {
+    filter: drop-shadow(
+      0 0 0 rgba(166, 132, 91, 0)
+    );
+  }
+
+  50% {
+    filter: drop-shadow(
+      0 0 10px rgba(166, 132, 91, 0.35)
+    );
+  }
+}
+
+/* 화면 터치 안내 깜빡임 */
+@keyframes touchBlink {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}

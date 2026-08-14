@@ -1,12 +1,50 @@
+@import "tailwindcss";
+
 :root {
-  --background: #fcfaf7;
-  --foreground: #2d1f11;
+  --background: #FBF9F6;
+  --foreground: #2D1F11;
 }
-* { box-sizing: border-box; }
-html, body { margin: 0; min-height: 100%; }
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --font-sans: var(--font-noto-sans-kr);
+  --font-brand: var(--font-abhaya);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
 }
-button, input, textarea { font: inherit; }
+
+body {
+  min-height: 100dvh;
+
+  background-color: var(--background);
+  background-image: url("/images/pattern/mcm_pattern.svg");
+  background-repeat: repeat;
+  background-size: 240px auto;
+
+  color: var(--foreground);
+
+  font-family:
+    var(--font-noto-sans-kr),
+    -apple-system,
+    BlinkMacSystemFont,
+    "Pretendard",
+    "Noto Sans KR",
+    sans-serif;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
