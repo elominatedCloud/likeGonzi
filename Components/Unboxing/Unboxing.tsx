@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { PointerEvent } from 'react';
 import Image from 'next/image';
 import styles from './Unboxing.module.css';
+import { useRouter } from 'next/navigation';
 
 const TOTAL_FRAMES = 31;
 
@@ -14,6 +15,7 @@ export default function Unboxing() {
   const progressRef = useRef(0);
   const startY = useRef(0);
   const startProgress = useRef(0);
+  const router = useRouter();
 
   const MAX_DRAG = 260;
 
@@ -168,6 +170,7 @@ export default function Unboxing() {
           <button
             type="button"
             className={styles.loginButton}
+            onClick={() => router.push('/login')}
           >
             로그인 / 회원가입하고 계속하기
           </button>

@@ -1,0 +1,279 @@
+.page {
+  width: 100%;
+  max-width: 430px;
+  min-height: 100dvh;
+
+  margin: 0 auto;
+
+  position: relative;
+
+  overflow: hidden;
+}
+
+.container {
+  width: 100%;
+
+  padding: 72px 28px 40px;
+
+  font-family: var(--font-noto-sans-kr);
+}
+
+/* 뒤로가기 */
+.backButton {
+  width: 36px;
+  height: 36px;
+
+  padding: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+
+  border: none;
+  background: transparent;
+
+  font-size: 25px;
+  line-height: 1;
+
+  color: #2D1F11;
+
+  cursor: pointer;
+}
+
+/* 타이틀 */
+.header {
+  margin-top: 14px;
+  margin-bottom: 44px;
+}
+
+.header h1 {
+  margin: 0;
+
+  font-family: var(--font-noto-sans-kr);
+  font-size: 23px;
+  line-height: 1.45;
+  font-weight: 500;
+
+  color: #2D1F11;
+}
+
+.header strong {
+  font-weight: 700;
+}
+
+/* 폼 */
+.loginForm {
+  display: flex;
+  flex-direction: column;
+
+  gap: 10px;
+}
+
+.inputBox {
+  width: 100%;
+  height: 54px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 0 17px;
+
+  background: rgba(255, 255, 255, 0.94);
+
+  border: 1px solid rgba(169, 145, 115, 0.18);
+  border-radius: 12px;
+
+  box-shadow:
+    0 5px 14px rgba(71, 48, 27, 0.07),
+    0 1px 4px rgba(71, 48, 27, 0.04);
+}
+
+.inputBox label {
+  flex-shrink: 0;
+
+  margin-right: 8px;
+
+  font-family: var(--font-abhaya);
+  font-size: 16px;
+  font-weight: 600;
+
+  color: #5D5045;
+}
+
+.inputBox input {
+  width: 100%;
+
+  border: none;
+  outline: none;
+
+  background: transparent;
+
+  font-family: var(--font-noto-sans-kr);
+  font-size: 14px;
+
+  color: #2D1F11;
+}
+
+/* 로그인 버튼 */
+.loginButton {
+  width: 100%;
+  height: 50px;
+
+  margin-top: 2px;
+
+  border: none;
+  border-radius: 11px;
+
+  background: #E8DDD0;
+
+  font-family: var(--font-noto-sans-kr);
+  font-size: 14px;
+  font-weight: 600;
+
+  color: #2D1F11;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.15s ease;
+}
+
+.loginButton:hover {
+  background: #DDCFBF;
+}
+
+.loginButton:active {
+  transform: scale(0.99);
+}
+
+/* 또는 */
+.divider {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  margin: 27px 0 21px;
+}
+
+.divider span {
+  flex: 1;
+  height: 1px;
+
+  background: #E2D6C9;
+}
+
+.divider p {
+  margin: 0;
+
+  font-size: 13px;
+  font-weight: 500;
+
+  color: #77685A;
+}
+
+/* 소셜 로그인 */
+.socialLogin {
+  display: flex;
+  flex-direction: column;
+
+  gap: 10px;
+}
+
+.socialButton {
+  position: relative;
+
+  width: 100%;
+  height: 48px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  border-radius: 9px;
+
+  font-family: var(--font-noto-sans-kr);
+  font-size: 13px;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.socialButton:hover {
+  opacity: 0.92;
+}
+
+.socialButton:active {
+  transform: scale(0.99);
+}
+
+.google {
+  background: #2D1F11;
+  color: #FFFFFF;
+}
+
+.kakao {
+  background: #FEE45C;
+  color: #2D1F11;
+}
+
+.naver {
+  background: #53C65A;
+  color: #FFFFFF;
+}
+
+/* 소셜 아이콘 */
+.googleIcon,
+.kakaoIcon,
+.naverIcon {
+  position: absolute;
+  left: 16px;
+
+  width: 24px;
+  height: 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-weight: 700;
+}
+
+.socialIcon {
+  position: absolute;
+  left: 16px;
+
+  width: 22px;
+  height: 22px;
+
+  object-fit: contain;
+}
+
+/* 회원가입 / 비밀번호 찾기 */
+.links {
+  margin-top: 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  font-size: 11px;
+
+  color: #76695D;
+}
+
+.links a {
+  color: #76695D;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
