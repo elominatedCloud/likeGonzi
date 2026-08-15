@@ -1,36 +1,30 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MCM · STORYBOOK
 
-## Getting Started
+Next.js + TypeScript + Supabase 기반 MCM 제품 아카이브 앱입니다.
 
-First, run the development server:
+## 이번 스프린트 범위
+
+1. **홈** (`/`) — 내 제품, 케어 알림, 생일 혜택, ESG 카드, 라이프스타일 제안
+2. **제품 상세** (`/products/[id]`) — 누끼→라이프스타일 슬라이드, 메뉴(삭제/이름수정/소유권이전), AI 수선, 가죽 점검 업로드
+3. **케어 가이드** (`/products/[id]/care`) — 케어 점수, 클리닉 tip / 수선 기록 탭
+
+수선 접수·진행 플로우는 미확정이라 제외했습니다.
+
+## 실행
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+브라우저에서 [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Supabase
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. `.env.local.example`을 `.env.local`로 복사 후 URL/Anon Key 입력
+2. `supabase/schema.sql`을 Supabase SQL Editor에서 실행
+3. 현재 UI는 `lib/data.ts` 목 데이터로 동작합니다
 
-## Learn More
+## 페르소나 키워드
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+합리적인 럭셔리 · 아카이브 · 케어로 수명 연장(ESG Circular Care) · 비세토스 · 소유권 스토리

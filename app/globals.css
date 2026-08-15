@@ -1,26 +1,117 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --cream: #f6f2ec;
+  --cream-deep: #efe8de;
+  --paper: #fffcf8;
+  --ink: #2b211c;
+  --ink-soft: #5a4b42;
+  --muted: #8a7b70;
+  --cognac: #8d5a3b;
+  --cognac-deep: #6e432c;
+  --gold: #b89463;
+  --gold-soft: #d4b88a;
+  --card-shadow: 0 10px 30px rgba(43, 33, 28, 0.08);
+  --nav-height: 72px;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-cream: var(--cream);
+  --color-cream-deep: var(--cream-deep);
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-muted: var(--muted);
+  --color-cognac: var(--cognac);
+  --color-cognac-deep: var(--cognac-deep);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --font-sans: var(--font-pretendard);
+  --font-serif: var(--font-cormorant);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: #e8e2d8;
+  color: var(--ink);
+  font-family: var(--font-pretendard), "Apple SD Gothic Neo", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.font-serif {
+  font-family: var(--font-cormorant), "Times New Roman", serif;
+}
+
+.visetos-bg {
+  background-color: var(--cream);
+  background-image: url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23c4b5a4' stroke-opacity='0.18' stroke-width='1'%3E%3Cpath d='M60 18 L78 36 L60 54 L42 36 Z'/%3E%3Cpath d='M60 66 L78 84 L60 102 L42 84 Z'/%3E%3Cpath d='M18 42 L36 60 L18 78 L0 60 Z'/%3E%3Cpath d='M102 42 L120 60 L102 78 L84 60 Z'/%3E%3Ccircle cx='60' cy='60' r='8'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 96px 96px;
+}
+
+.soft-card {
+  background: var(--paper);
+  border-radius: 18px;
+  box-shadow: var(--card-shadow);
+}
+
+.ribbon-tag {
+  position: absolute;
+  top: 12px;
+  left: 0;
+  background: var(--cognac-deep);
+  color: #fff;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  padding: 6px 12px 6px 10px;
+  clip-path: polygon(0 0, 100% 0, 92% 50%, 100% 100%, 0 100%);
+}
+
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateX(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.hero-fade {
+  animation: fadeSlide 0.55s ease;
+}
+
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rise-in {
+  animation: riseIn 0.45s ease both;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
