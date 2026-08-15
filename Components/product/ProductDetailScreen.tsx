@@ -6,6 +6,7 @@ import Link from "next/link";
 import {
   BadgeCheck,
   Camera,
+  ChevronDown,
   FileText,
   Pencil,
   Sparkles,
@@ -23,6 +24,11 @@ interface ProductDetailScreenProps {
   repairs: RepairRecord[];
 }
 
+function shortMaterial(material: string) {
+  if (material.toLowerCase().includes("visetos")) return "Visetos";
+  return material.split(/[/,]/)[0]?.trim() || material;
+}
+
 export function ProductDetailScreen({
   product,
   stories,
@@ -32,6 +38,7 @@ export function ProductDetailScreen({
   const [name, setName] = useState(product.name);
   const [editingName, setEditingName] = useState(false);
   const [slide, setSlide] = useState(0);
+  const [showSerial, setShowSerial] = useState(false);
   const [leatherPreview, setLeatherPreview] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -105,11 +112,6 @@ export function ProductDetailScreen({
             />
           ))}
         </div>
-        {slide === 0 && (
-          <p className="absolute left-6 top-2 rounded-full bg-white/70 px-2 py-0.5 text-[10px] tracking-wide text-muted">
-            누끼 · 제품 컷
-          </p>
-        )}
       </section>
 
       <section className="soft-card mx-4 mt-2 px-4 py-4">
@@ -120,26 +122,27 @@ export function ProductDetailScreen({
           </span>
         </div>
 
-        <dl className="mt-4 space-y-1.5 text-[12px] text-muted">
-          <div className="flex gap-2 opacity-55">
-            <dt className="w-16 shrink-0">시리얼</dt>
-            <dd className="truncate tracking-wide">{product.serial}</dd>
-          </div>
-          <div className="flex gap-2">
-            <dt className="w-16 shrink-0 text-ink-soft">등록</dt>
-            <dd className="text-ink-soft">
-              {product.registeredAt} · {product.store}
-            </dd>
-          </div>
-          <div className="flex gap-2">
-            <dt className="w-16 shrink-0 text-ink-soft">소재</dt>
-            <dd className="text-ink-soft">{product.material}</dd>
-          </div>
-          <div className="flex gap-2">
-            <dt className="w-16 shrink-0 text-ink-soft">색상</dt>
-            <dd className="text-ink-soft">{product.color}</dd>
-          </div>
-        </dl>
+        <p className="mt-3 text-[13px] text-ink-soft">
+          {product.color} · {shortMaterial(product.material)}
+        </p>
+        <p className="mt-1 text-[12px] text-muted">{product.registeredAt}</p>
+
+        <button
+          type="button"
+          onClick={() => setShowSerial((v) => !v)}
+          className="mt-2 inline-flex items-center gap-1 text-[11px] text-muted"
+        >
+          인증 정보
+          <ChevronDown
+            size={12}
+            className={`transition ${showSerial ? "rotate-180" : ""}`}
+          />
+        </button>
+        {showSerial && (
+          <p className="mt-1 text-[11px] tracking-wide text-muted/80">
+            {product.serial} · {product.store}
+          </p>
+        )}
       </section>
 
       <section className="mx-4 mt-5">
@@ -218,7 +221,10 @@ export function ProductDetailScreen({
           <h3 className="font-serif text-[13px] tracking-[0.14em] text-ink">
             MY STORYS
           </h3>
-          <Link href="/log" className="text-[12px] text-muted">
+          <Link
+            href={`/products/${product.id}/stories`}
+            className="text-[12px] text-muted"
+          >
             전체보기 →
           </Link>
         </div>

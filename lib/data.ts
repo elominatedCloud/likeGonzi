@@ -26,7 +26,7 @@ export const products: Product[] = [
     serial: "MWKCSVE01C0001",
     registeredAt: "2024.05.12",
     store: "MCM Seoul",
-    material: "Visetos coated canvas / leather trim",
+    material: "Visetos",
     color: "Cognac",
     year: 2024,
     cutoutImage:
@@ -77,7 +77,7 @@ export const stories: Story[] = [
     tag: "기념일",
     count: 3,
     image:
-      "https://images.unsplash.com/photo-1519677100203-a0e668c92439?auto=format&fit=crop&w=700&q=80",
+      "https://images.unsplash.com/photo-1541849546-216549ae216d?auto=format&fit=crop&w=700&q=80",
     date: "2026.06.02",
   },
 ];
