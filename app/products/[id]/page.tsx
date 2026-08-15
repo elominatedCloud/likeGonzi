@@ -1,4 +1,4 @@
-import { ProductDetailScreen } from "@/components/product/ProductDetailScreen";
+import { ProductDetailScreen } from "@/Components/product/ProductDetailScreen";
 import {
   getProduct,
   getRepairsByProduct,

@@ -13,8 +13,8 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { BottomNav } from "@/components/ui/BottomNav";
+import { PageHeader } from "@/Components/ui/PageHeader";
+import { BottomNav } from "@/Components/ui/BottomNav";
 import type { Product, RepairRecord, Story } from "@/types";
 
 interface ProductDetailScreenProps {

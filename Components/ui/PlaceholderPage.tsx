@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BottomNav } from "@/components/ui/BottomNav";
+import { BottomNav } from "@/Components/ui/BottomNav";
 
 export default function PlaceholderPage({
   title,

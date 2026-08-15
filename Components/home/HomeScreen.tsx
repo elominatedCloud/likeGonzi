@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Bell, Leaf, Star } from "lucide-react";
-import { BottomNav } from "@/components/ui/BottomNav";
+import { BottomNav } from "@/Components/ui/BottomNav";
 import {
   benefitCard,
   careReminder,

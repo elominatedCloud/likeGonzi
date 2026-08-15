@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { CareGuideScreen } from "@/components/care/CareGuideScreen";
+import { CareGuideScreen } from "@/Components/care/CareGuideScreen";
 import { getProduct, getRepairsByProduct } from "@/lib/data";
 
 export default async function CarePage({

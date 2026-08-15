@@ -10,8 +10,8 @@ import {
   SunMedium,
   ThumbsUp,
 } from "lucide-react";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { BottomNav } from "@/components/ui/BottomNav";
+import { PageHeader } from "@/Components/ui/PageHeader";
+import { BottomNav } from "@/Components/ui/BottomNav";
 import { clinicTips } from "@/lib/data";
 import type { Product, RepairRecord } from "@/types";
 import { cn } from "@/lib/cn";
