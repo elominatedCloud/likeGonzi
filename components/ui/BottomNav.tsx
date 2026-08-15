@@ -12,7 +12,7 @@ import {
 import { cn } from "@/lib/cn";
 
 const items = [
-  { href: "/", label: "홈", icon: Home },
+  { href: "/home", label: "홈", icon: Home },
   { href: "/log", label: "로그", icon: FileText },
   { href: "/camera", label: "카메라", icon: Camera, fab: true },
   { href: "/shop", label: "쇼핑", icon: ShoppingBag },
@@ -27,8 +27,8 @@ export function BottomNav() {
       <ul className="grid h-[72px] grid-cols-5 items-end px-2 pb-2 pt-1">
         {items.map((item) => {
           const active =
-            item.href === "/"
-              ? pathname === "/"
+            item.href === "/home"
+              ? pathname === "/home"
               : pathname.startsWith(item.href);
           const Icon = item.icon;
 

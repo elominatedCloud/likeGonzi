@@ -60,7 +60,7 @@ export function ProductDetailScreen({
     <main className="visetos-bg relative min-h-dvh pb-28">
       <PageHeader
         title={name}
-        backHref="/"
+        backHref="/home"
         onMore={() => setMenuOpen(true)}
         rightSlot={
           <button

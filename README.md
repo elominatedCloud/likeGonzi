@@ -2,11 +2,13 @@
 
 Next.js + TypeScript + Supabase 기반 MCM 제품 아카이브 앱입니다.
 
-## 이번 스프린트 범위
+## 화면 범위
 
-1. **홈** (`/`) — 내 제품, 케어 알림, 생일 혜택, ESG 카드, 라이프스타일 제안
-2. **제품 상세** (`/products/[id]`) — 누끼→라이프스타일 슬라이드, 메뉴(삭제/이름수정/소유권이전), AI 수선, 가죽 점검 업로드
-3. **케어 가이드** (`/products/[id]/care`) — 케어 점수, 클리닉 tip / 수선 기록 탭
+1. **스플래시 / 시작 / 로그인** (`/`, `/start`, `/login`) — 기존 팀 구현
+2. **홈** (`/home`) — 내 제품, 케어 알림, 생일 혜택, ESG 카드, 라이프스타일 제안
+3. **제품 상세** (`/products/[id]`) — 누끼→라이프스타일 슬라이드, 메뉴(삭제/이름수정/소유권이전), AI 수선, 가죽 점검
+4. **케어 가이드** (`/products/[id]/care`) — 케어 점수, 클리닉 tip / 수선 기록
+5. **로그 경험** (`/log/...`) — FE(namjun) 타임라인·스토리북
 
 수선 접수·진행 플로우는 미확정이라 제외했습니다.
 
@@ -21,9 +23,9 @@ npm run dev
 
 ## Supabase
 
-1. `.env.local.example`을 `.env.local`로 복사 후 URL/Anon Key 입력
+1. `.env.local.example`을 참고해 `.env.local` 작성 (`.env*`는 gitignore)
 2. `supabase/schema.sql`을 Supabase SQL Editor에서 실행
-3. 현재 UI는 `lib/data.ts` 목 데이터로 동작합니다
+3. 홈·제품 상세 UI는 현재 `lib/data.ts` 목 데이터로 동작합니다
 
 ## 페르소나 키워드
 

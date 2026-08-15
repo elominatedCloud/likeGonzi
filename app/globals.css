@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
 :root {
+  --background: #fbf9f6;
+  --foreground: #2d1f11;
   --cream: #f6f2ec;
   --cream-deep: #efe8de;
   --paper: #fffcf8;
@@ -16,6 +18,8 @@
 }
 
 @theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
   --color-cream: var(--cream);
   --color-cream-deep: var(--cream-deep);
   --color-paper: var(--paper);
@@ -26,7 +30,8 @@
   --color-cognac-deep: var(--cognac-deep);
   --color-gold: var(--gold);
   --color-gold-soft: var(--gold-soft);
-  --font-sans: var(--font-pretendard);
+  --font-sans: var(--font-noto-sans-kr);
+  --font-brand: var(--font-abhaya);
   --font-serif: var(--font-cormorant);
 }
 
@@ -37,15 +42,33 @@
 html,
 body {
   margin: 0;
+  padding: 0;
   min-height: 100%;
-  background: #e8e2d8;
-  color: var(--ink);
-  font-family: var(--font-pretendard), "Apple SD Gothic Neo", sans-serif;
+}
+
+body {
+  min-height: 100dvh;
+  background-color: var(--background);
+  background-image: url("/images/pattern/mcm_pattern.svg");
+  background-repeat: repeat;
+  background-size: 240px auto;
+  color: var(--foreground);
+  font-family:
+    var(--font-noto-sans-kr),
+    Pretendard,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Apple SD Gothic Neo",
+    "Noto Sans KR",
+    sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
 button,
+input,
+textarea,
 a {
+  font: inherit;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -55,8 +78,9 @@ a {
 
 .visetos-bg {
   background-color: var(--cream);
-  background-image: url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23c4b5a4' stroke-opacity='0.18' stroke-width='1'%3E%3Cpath d='M60 18 L78 36 L60 54 L42 36 Z'/%3E%3Cpath d='M60 66 L78 84 L60 102 L42 84 Z'/%3E%3Cpath d='M18 42 L36 60 L18 78 L0 60 Z'/%3E%3Cpath d='M102 42 L120 60 L102 78 L84 60 Z'/%3E%3Ccircle cx='60' cy='60' r='8'/%3E%3C/g%3E%3C/svg%3E");
-  background-size: 96px 96px;
+  background-image: url("/images/pattern/mcm_pattern.svg");
+  background-repeat: repeat;
+  background-size: 240px auto;
 }
 
 .soft-card {

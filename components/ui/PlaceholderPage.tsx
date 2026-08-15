@@ -19,7 +19,7 @@ export default function PlaceholderPage({
           {description}
         </p>
         <Link
-          href="/"
+          href="/home"
           className="mt-6 rounded-full bg-ink px-5 py-2.5 text-[13px] text-white"
         >
           홈으로

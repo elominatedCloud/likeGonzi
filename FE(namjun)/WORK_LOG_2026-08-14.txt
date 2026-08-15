@@ -1,0 +1,339 @@
+likeGonzi FE(namjun) 전체 작업 기록
+기록 기준일: 2026-08-14
+작업 경로: C:\Users\남준\Desktop\likegonzi
+원격 저장소: https://github.com/elominatedCloud/likeGonzi.git
+
+============================================================
+1. 최초 Git 연결 및 pull 상태
+============================================================
+
+저장소를 처음 연결했을 때 현재 폴더는 비어 있었으며 Git 저장소가 아니었다.
+다음 원격 저장소를 현재 폴더에 clone하여 origin으로 연결했다.
+
+https://github.com/elominatedCloud/likeGonzi.git
+
+clone 직후 상태:
+- 브랜치: main
+- origin/main과 동기화 상태
+- 당시 최신 커밋: 29f74b9 Bottom
+- git pull --ff-only 결과: Already up to date
+
+초기 저장소에는 ahnjung513님이 만든 다음 내용이 있었다.
+- Next.js 16.3.0 / React 19 / TypeScript 초기 프로젝트
+- package.json, package-lock.json, tsconfig.json, ESLint, Tailwind 설정
+- app/layout.tsx와 app/globals.css
+- Components/BottomBar/BottomBar.tsx
+- Components/BottomBar/BottomBar.module.css
+- public/icon 아래 홈, 로그, 카메라, 쇼핑, 마이 SVG
+
+초기 상태에서 발견한 사항:
+- app/page.tsx가 Bottom 커밋에서 삭제된 상태였다.
+- 기존 BottomBar는 모든 페이지에 전역으로 표시되고 있었다.
+- 기존 BottomBar는 높이 90px였으나 Figma 하단바는 393×58px이었다.
+- BottomBar 소스의 한글 문자열 일부가 콘솔에서 인코딩 문제로 깨져 보였다.
+- 최초 push 권한 확인에서는 Southjuneee 계정이 HTTP 403을 받았다.
+
+팀원 작업 보존:
+- Components/BottomBar/BottomBar.tsx는 삭제하거나 덮어쓰지 않았다.
+- Components/BottomBar/BottomBar.module.css는 삭제하거나 덮어쓰지 않았다.
+- public/icon의 기존 SVG 5개도 삭제하거나 덮어쓰지 않았다.
+- 장남준 담당 구현은 FE(namjun), public/FE-namjun, app/log 라우트로 분리했다.
+
+============================================================
+2. 구현에 사용한 디자인 자료와 참조
+============================================================
+
+Figma 원본:
+https://www.figma.com/design/l73ERyKZFmvi3JrbAwcx4z/Untitled?node-id=109-1994
+
+직접 확인한 Figma 프레임:
+- 전체 캔버스: 109:1994
+- 로그_스토리북: 109:2451, 393×1082
+- 로그_타임라인 전체: 109:3323, 393×976
+- 로그_타임라인 제품 이력: 109:5903, 393×976
+- 로그_타임라인 내 기록: 109:5787, 393×976
+- 로그_기록 상세: 109:3113, 393×976
+- 로그_기록 작성: 109:3025, 393×852
+- AI 추천 이미지: 109:3267, 393×930
+- 공통 하단바: 142:6154, 393×58
+
+사용자가 전달한 SVG:
+- AI 추천 이미지.svg
+- 로그_기록 상세.svg
+- 로그_기록 작성.svg
+- 로그_스토리북.svg
+- 로그_타임라인.svg
+- 로그_타임라인-1.svg
+- 로그_타임라인-2.svg
+
+SVG 원본은 FE(namjun)/design-reference에 보관했다.
+SVG 내부에 포함된 base64 PNG를 추출하여 제품 컷과 Stark 기록 사진으로 사용했다.
+
+vitrine.html에서 참조한 내용:
+- Pretendard, Apple SD Gothic Neo 계열 한글 폰트
+- #2d1f11 진한 브라운
+- #9f7c57 Cognac 포인트 컬러
+- #fcfaf7 종이색 배경
+- 반투명 카드와 부드러운 그림자
+- MCM 모티프의 반복 배경
+
+추가 이미지 제작:
+- Ella Boston Bag 제품 컷을 참조하여 재즈 공연장 기록 사진과 콘서트홀 AI 추천 이미지 제작
+- Pina Studded Wallet 제품 컷을 참조하여 서점 기록 사진과 미술관 AI 추천 이미지 제작
+- 생성 결과는 public/FE-namjun/assets에 프로젝트 자산으로 저장
+
+============================================================
+3. 기존 파일에서 수정한 내용
+============================================================
+
+.gitignore
+- *.stdout.log와 *.stderr.log를 추가했다.
+- 로컬 데모 서버 로그가 Git 변경 목록에 들어가지 않게 했다.
+
+app/layout.tsx
+- Create Next App 기본 메타데이터를 MCM Storybook 메타데이터로 변경했다.
+- html lang을 ko로 변경했다.
+- 각 디자인 화면에서 하단바 표시 여부가 다르므로 기존 전역 BottomBar 렌더링을 제거했다.
+- 기존 BottomBar 컴포넌트 파일 자체는 보존했다.
+
+app/globals.css
+- 프로젝트 공통 배경색과 글자색을 적용했다.
+- Pretendard, Noto Sans KR, Apple SD Gothic Neo 폰트 스택을 적용했다.
+- box-sizing, body margin, form 폰트 등 기본 스타일을 정리했다.
+
+app/page.tsx
+- 삭제되어 있던 루트 페이지를 새로 작성했다.
+- FE(namjun)에서 구현한 화면들을 확인하는 데모 인덱스로 사용한다.
+
+============================================================
+4. 새로 작성한 핵심 파일
+============================================================
+
+FE(namjun)/LogExperience.tsx
+- 상품 데이터, 기록 데이터, 화면 컴포넌트, 화면 이동과 상호작용을 관리한다.
+- ProductId는 stark, ella, pina 세 가지다.
+- 각 상품은 제품명, 소재, 제품 사진, 구매일, 상태, 장소, 타임라인, AI 추천 정보를 가진다.
+- 각 추억은 고유 record id, 날짜, 제목, 장소, 사진, 메모와 AI STORY를 가진다.
+- SharedRecord는 한 기록에 연결된 여러 productIds를 함께 저장한다.
+- SHARED_RECORDS_KEY를 사용하여 새 기록을 브라우저 localStorage에 보관한다.
+
+FE(namjun)/log-experience.module.css
+- 393px 모바일 프레임과 데스크톱 중앙 프리뷰를 구현한다.
+- Storybook 카드, 타임라인 카드, 기록 상세 Hero, 작성 폼, AI 추천 화면을 스타일링한다.
+- Figma 규격 58px 하단바와 원본 SVG 아이콘을 적용한다.
+- 복수 상품 선택 목록과 선택된 상품 칩을 스타일링한다.
+
+FE(namjun)/README.md
+- 담당 코드 구조와 주요 데모 경로를 정리한다.
+
+FE(namjun)/design-reference
+- 전달받은 SVG 7개를 원본 참조 자료로 보관한다.
+
+public/FE-namjun/icons
+- Figma 노드 142:6154에서 받은 원본 SVG를 저장한다.
+- home.svg, log.svg, camera.svg, shopping.svg, my.svg
+- 임시 유니코드 아이콘 때문에 로그와 마이 아이콘이 깨지던 문제를 해결했다.
+
+public/FE-namjun/assets
+- 제품 컷, Stark 기록 사진, AI 추천 이미지
+- Ella 전용 ella-jazz-memory.png, ella-ai-concert.png
+- Pina 전용 pina-bookstore-memory.png, pina-ai-museum.png
+
+============================================================
+5. Next.js 라우트와 페이지별 기능
+============================================================
+
+app/log/storybook/page.tsx
+주소: /log/storybook
+- 세 보유 상품을 카드로 표시한다.
+- 구매일, 상태, 추억 수, 최근 기록을 표시한다.
+- Storybook 보기를 누르면 해당 상품 타임라인으로 이동한다.
+
+app/log/[product]/timeline/page.tsx
+주소 예: /log/stark/timeline
+- 선택 상품의 구매, 케어, 추억을 한 타임라인에 표시한다.
+- + 기록 추가는 해당 상품의 /record/new로 이동한다.
+- 브라우저에 저장된 공유 기록 중 현재 상품 ID가 포함된 기록도 함께 표시한다.
+
+app/log/[product]/timeline/my/page.tsx
+주소 예: /log/ella/timeline/my
+- 선택 상품의 기존 추억과 새로 저장된 공유 추억만 표시한다.
+
+app/log/[product]/timeline/product/page.tsx
+주소 예: /log/pina/timeline/product
+- 선택 상품의 구매, 정품 등록, 케어 이력만 표시한다.
+- 사용자가 만든 추억 기록은 제품 이력 탭에서 제외한다.
+
+app/log/[product]/record/[record]/page.tsx
+- 상품과 기록 ID에 따른 고유 상세 페이지다.
+- 정해진 기본 기록 ID와 shared-로 시작하는 사용자 기록 ID를 처리한다.
+- 존재하지 않는 상품이나 기록은 404 처리한다.
+
+app/log/[product]/record/new/page.tsx
+- 각 상품 타임라인의 + 기록 추가에서만 들어가는 작성 화면이다.
+- 현재 타임라인 상품이 기본 상품으로 선택되고 해제할 수 없다.
+- 다른 보유 상품은 추가 또는 제거할 수 있다.
+
+app/log/[product]/ai-recommendation/page.tsx
+- 현재 상품에 맞는 AI 추천 이미지와 추천 이유를 표시한다.
+- 후보 썸네일을 눌러 추천 이미지를 변경할 수 있다.
+
+============================================================
+6. 상품별 기본 기록과 고유 상세 페이지
+============================================================
+
+Stark Side Studs Backpack
+- 성수에서 만난 새로운 영감
+  /log/stark/record/seongsu-inspiration
+- 파리 여행
+  /log/stark/record/paris-trip
+- 파리 카드를 눌러도 성수 상세가 나오던 문제를 고유 ID로 해결했다.
+
+Ella Boston Bag
+- 재즈 선율과 함께한 저녁
+  /log/ella/record/jazz-evening
+- 봄날의 갤러리 오프닝
+  /log/ella/record/spring-gallery
+- 갤러리 카드를 눌러도 재즈 상세가 나오던 문제를 고유 ID로 해결했다.
+
+Pina Studded Wallet
+- 책갈피 사이에 남은 오후
+  /log/pina/record/bookstore-afternoon
+- 미술관에서 쓴 엽서
+  /log/pina/record/museum-postcard
+- 미술관 카드를 눌러도 서점 상세가 나오던 문제를 고유 ID로 해결했다.
+
+기록 상세 공통 기능:
+- 클릭한 기록의 제목, 사진, 날짜, 장소와 메모를 표시한다.
+- 기록별 AI STORY를 표시한다.
+- WITH에는 기록에 포함된 상품만 표시한다.
+- 기본 기록은 상품 하나, 공유 기록은 선택된 상품을 모두 표시한다.
+- 기존 Stark Backpack이 두 번 표시되던 문제를 제거했다.
+
+============================================================
+7. 새 기록 작성과 복수 상품 기록 구조
+============================================================
+
+진입 방식:
+- 하단 카메라 버튼은 현재 이동이 막혀 있다.
+- 카메라는 추후 다른 기능이 들어갈 예약 버튼이다.
+- 공용 /log/record/new 라우트는 제거했다.
+- 기록 작성은 각 상품 타임라인의 + 기록 추가 버튼으로만 진입한다.
+
+작성 화면 기능:
+- 현재 타임라인 상품은 기본 선택되며 해제할 수 없다.
+- PRODUCT를 열면 내가 보유한 Stark, Ella, Pina 목록이 표시된다.
+- 한 사진에 같이 나온 다른 상품을 추가로 복수 선택할 수 있다.
+- 선택된 상품은 제품 썸네일 칩으로 화면에 표시된다.
+- 사진 파일을 선택하면 미리보기가 바뀐다.
+- 업로드 사진은 Data URL로 변환하여 저장 가능한 형태로 처리한다.
+- 메모는 최대 100자이며 글자 수를 표시한다.
+- 장소 변경은 Google Maps 검색을 새 탭으로 연다.
+- AI 추천 보기는 작성 화면을 연 현재 상품의 추천 페이지로 이동한다.
+
+복수 상품 저장 방식:
+- 저장 시 SharedRecord 객체를 만든다.
+- 하나의 SharedRecord에 선택된 모든 productIds를 저장한다.
+- 날짜, 제목, 장소, 메모, 사진과 AI STORY를 함께 저장한다.
+- localStorage의 likegonzi-shared-records 키에 기록을 추가한다.
+- 저장 후 기록 작성을 시작한 상품의 전체 타임라인으로 이동한다.
+
+여러 타임라인에 동시에 남는 방식:
+- 각 TimelinePage는 localStorage의 공유 기록을 읽는다.
+- 현재 productId가 SharedRecord.productIds에 포함되면 해당 기록을 표시한다.
+- 예를 들어 Stark와 Ella를 함께 선택해 저장하면 같은 기록이 다음에 모두 나타난다.
+  /log/stark/timeline
+  /log/stark/timeline/my
+  /log/ella/timeline
+  /log/ella/timeline/my
+- Pina가 선택되지 않았다면 Pina 타임라인에는 나타나지 않는다.
+- 공유 기록 상세의 WITH에는 Stark와 Ella 두 상품이 모두 표시된다.
+
+============================================================
+8. 하단바 최종 동작
+============================================================
+
+- 홈: 데모 인덱스로 이동
+- 로그: Storybook으로 이동
+- 카메라: aria-disabled 상태의 예약 버튼, 페이지 이동 없음
+- 쇼핑: /shopping 주소 연결
+- 마이: /my 주소 연결
+- 아이콘은 모두 Figma 원본 SVG 사용
+
+============================================================
+9. 검증 내용
+============================================================
+
+- npm.cmd run build 성공
+- Next.js 프로덕션 컴파일 성공
+- TypeScript 검사 성공
+- npm.cmd run lint 오류 0개
+- img 요소에 대한 Next.js Image 최적화 권고 warning만 존재
+- git diff --check 통과
+- 기본 기록 상세 6개가 각각 독립된 제목으로 HTTP 200 응답함
+- 상품별 타임라인과 작성 라우트가 빌드 결과에 포함됨
+
+============================================================
+10. Git Write 권한
+============================================================
+
+2026-08-14 확인:
+- 인증 계정: Southjuneee
+- 확인 명령: git push --dry-run origin HEAD:main
+- 결과: Everything up-to-date
+- 최초 확인 때 발생했던 HTTP 403이 사라졌다.
+- 현재 elominatedCloud/likeGonzi 저장소에 Write/push 권한이 정상 적용됐다.
+- 이 문서를 작성한 시점에는 아직 commit 또는 실제 push를 하지 않았다.
+
+============================================================
+11. 내 기록 삭제 기능 추가
+============================================================
+
+요청 배경:
+- 기록을 새로 추가할 수 있지만 기존 내 기록을 삭제할 방법이 없었다.
+- 기본 제공 기록과 사용자가 만든 공유 기록 모두 상세 페이지에서 삭제할 수 있어야 했다.
+
+수정한 핵심 파일:
+- FE(namjun)/LogExperience.tsx
+- FE(namjun)/log-experience.module.css
+
+모든 내 기록 상세 페이지에 추가된 UI:
+- 상세 화면의 스토리 다운로드 버튼 아래에 연한 붉은색 기록 삭제 배너를 추가했다.
+- 배너에는 삭제 시 타임라인에서도 사라지고 복구할 수 없다는 안내를 표시한다.
+- 오른쪽의 기록 삭제 버튼을 누르면 브라우저 확인 창을 먼저 표시한다.
+- 사용자가 확인을 선택해야 실제 삭제가 진행된다.
+
+기본 제공 기록 삭제 방식:
+- localStorage의 likegonzi-deleted-records 키를 사용한다.
+- 삭제 항목은 productId:recordId 형식으로 저장한다.
+- 원본 TypeScript 데이터 자체를 손상하지 않고 사용자 브라우저에서 삭제 상태를 유지한다.
+- TimelinePage는 삭제 목록을 읽어 기본 기록 중 삭제된 ID를 전체/내 기록 탭에서 제외한다.
+- 제품 구매와 케어 이력에는 record id가 없으므로 내 기록 삭제 대상에 포함되지 않는다.
+
+사용자 생성 공유 기록 삭제 방식:
+- recordId가 shared-로 시작하는지 확인한다.
+- localStorage의 likegonzi-shared-records에서 해당 SharedRecord 객체를 실제 제거한다.
+- 하나의 기록이 Stark와 Ella처럼 여러 상품에 연결되어 있었다면 공유 원본이 제거되므로 두 상품의 전체/내 기록 타임라인에서 모두 사라진다.
+- 삭제 후에는 삭제를 시작한 상품의 전체 타임라인으로 이동한다.
+
+삭제 기능 적용 범위:
+- Stark 성수 기록
+- Stark 파리 기록
+- Ella 재즈 기록
+- Ella 갤러리 기록
+- Pina 서점 기록
+- Pina 미술관 기록
+- 사용자가 새로 저장한 단일 상품 기록
+- 사용자가 새로 저장한 복수 상품 공유 기록
+
+삭제 후 화면 흐름:
+1) 기록 상세 하단의 기록 삭제 선택
+2) 복구 불가 확인 창 표시
+3) 취소 시 아무 변화 없음
+4) 확인 시 기본 기록은 삭제 목록 등록, 공유 기록은 저장 데이터 제거
+5) 해당 상품 전체 타임라인으로 이동
+6) 삭제 기록은 전체 타임라인과 내 기록 탭에서 표시되지 않음
+
+관련 저장 키:
+- likegonzi-shared-records: 사용자가 추가한 단일/복수 상품 기록
+- likegonzi-deleted-records: 삭제 처리된 기본 내 기록 ID 목록

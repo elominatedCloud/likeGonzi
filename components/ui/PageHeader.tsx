@@ -11,7 +11,7 @@ interface PageHeaderProps {
 
 export function PageHeader({
   title,
-  backHref = "/",
+  backHref = "/home",
   onMore,
   rightSlot,
   serif = true,
