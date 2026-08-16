@@ -167,6 +167,11 @@ function db() {
           product_id: "ella",
           registered_at: "2023-11-08T00:00:00.000Z",
         },
+        {
+          user_id: "user-other",
+          product_id: "campaign-only",
+          registered_at: "2026-01-01T00:00:00.000Z",
+        },
       ],
       repairs: [
         {
@@ -279,12 +284,18 @@ export function getProductByTag(tagCode: string) {
   return db().products.find((p) => p.tag_code === tagCode) ?? null;
 }
 
-export function isOwnedBy(userId: string, productId: string) {
+export function getOwnershipStatus(userId: string, productId: string) {
   const id = normalizeProductId(productId);
-  return db().ownerships.some(
-    (o) => o.user_id === userId && o.product_id === id,
-  );
+  const owner = db().ownerships.find((o) => o.product_id === id);
+  if (!owner) return "unregistered" as const;
+  if (owner.user_id === userId) return "owned_by_me" as const;
+  return "owned_by_other" as const;
 }
+
+export function isOwnedBy(userId: string, productId: string) {
+  return getOwnershipStatus(userId, productId) === "owned_by_me";
+}
+
 
 export function listMyProducts(userId: string) {
   return db()
@@ -303,7 +314,9 @@ export function registerProduct(userId: string, productId: string) {
   const id = normalizeProductId(productId);
   const product = getProduct(id);
   if (!product) return { error: "PRODUCT_NOT_FOUND" as const };
-  if (isOwnedBy(userId, id)) return { error: "ALREADY_REGISTERED" as const };
+  const status = getOwnershipStatus(userId, id);
+  if (status === "owned_by_me") return { error: "ALREADY_REGISTERED" as const };
+  if (status === "owned_by_other") return { error: "OWNED_BY_OTHER" as const };
   const ownership: Ownership = {
     user_id: userId,
     product_id: id,

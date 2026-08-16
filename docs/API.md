@@ -31,11 +31,15 @@ Authorization 없으면 기본 유저(곤지)로 동작합니다.
 | 소유권 이전 목록 | GET | `/api/transfers` |
 | 소유권 이전 신청 | POST | `/api/transfers` |
 
-### 스캔 테스트 태그
-- `UNIT-STARK-0001` → stark (등록됨)
-- `UNIT-ELLA-0002` → ella (등록됨)
-- `UNIT-PINA-0003` → pina (미등록 → register_confirm)
-- `CAMP-STARK-999` → campaign (`is_campaign: true`)
+### 스캔 ownership_status
+- `unregistered` → 등록 확인
+- `owned_by_me` → 제품 상세
+- `owned_by_other` → 타인 등록
+
+태그: `UNIT-STARK-0001` / `UNIT-PINA-0003`(미등록) / `CAMP-STARK-999`(타인 소유)
+
+스키마 설계: `supabase/SCHEMA.md` · SQL: `supabase/schema.sql`
+
 
 ---
 

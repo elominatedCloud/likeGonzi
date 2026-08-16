@@ -1,9 +1,6 @@
 import { fail, ok } from "@/lib/api-response";
 import { requireUserOrDemo } from "@/lib/auth-guard";
-import {
-  getProductByTag,
-  isOwnedBy,
-} from "@/lib/mock-db";
+import { getOwnershipStatus, getProductByTag } from "@/lib/mock-db";
 
 type Ctx = { params: Promise<{ tag_code: string }> };
 
@@ -16,7 +13,14 @@ export async function GET(request: Request, context: Ctx) {
   }
 
   const { user } = requireUserOrDemo(request);
-  const is_registered_to_user = isOwnedBy(user.id, product.id);
+  const ownership_status = getOwnershipStatus(user.id, product.id);
+
+  const route =
+    ownership_status === "owned_by_me"
+      ? "product_detail"
+      : ownership_status === "unregistered"
+        ? "register_confirm"
+        : "owned_by_other";
 
   return ok({
     tag_code,
@@ -24,11 +28,13 @@ export async function GET(request: Request, context: Ctx) {
     product_name: product.name,
     model_no: product.model_no,
     serial: product.serial,
+    serial_no: product.serial,
     color: product.color,
     material: product.material,
     cutout_image: product.cutout_image,
-    is_registered_to_user,
+    ownership_status,
+    is_registered_to_user: ownership_status === "owned_by_me",
     is_campaign: tag_code.startsWith("CAMP-"),
-    route: is_registered_to_user ? "product_detail" : "register_confirm",
+    route,
   });
 }
