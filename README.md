@@ -9,6 +9,7 @@ Next.js + TypeScript + Supabase 기반 MCM 제품 아카이브 앱입니다.
 3. **제품 상세** (`/products/[id]`) — 누끼→라이프스타일 슬라이드, 메뉴(삭제/이름수정/소유권이전), AI 수선, 가죽 점검
 4. **케어 가이드** (`/products/[id]/care`) — 케어 점수, 클리닉 tip / 수선 기록
 5. **로그 경험** (`/log/...`) — FE(namjun) 타임라인·스토리북
+6. **Story API** — 남준 명세 2.1/2.2 (`docs/STORY_API.md`)
 
 수선 접수·진행 플로우는 미확정이라 제외했습니다.
 

@@ -19,4 +19,16 @@
 - `public/FE-namjun/assets/`: 상품 및 생성 이미지
 - `public/FE-namjun/icons/`: Figma 원본 하단바 아이콘
 
-실행: `npm.cmd run dev`
+실행: `npm run dev`
+
+## Story API (멋사 엔드포인트)
+
+명세 2.1 / 2.2는 Next API로 구현되어 있습니다. 상세는 [`docs/STORY_API.md`](../docs/STORY_API.md).
+
+- `POST /api/products/{product_id}/stories`
+- `GET /api/products/{product_id}/stories/{story_id}`
+- `PATCH /api/products/{product_id}/stories/{story_id}`
+- `DELETE /api/products/{product_id}/stories/{story_id}`
+
+`product_id` 예: `stark`, `ella`, `pina`
+
