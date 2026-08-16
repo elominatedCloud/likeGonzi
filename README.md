@@ -10,6 +10,7 @@ Next.js + TypeScript + Supabase 기반 MCM 제품 아카이브 앱입니다.
 4. **케어 가이드** (`/products/[id]/care`) — 케어 점수, 클리닉 tip / 수선 기록
 5. **로그 경험** (`/log/...`) — FE(namjun) 타임라인·스토리북
 6. **Story API** — 남준 명세 2.1/2.2 (`docs/STORY_API.md`)
+7. **전체 API** — IA 명세 엔드포인트 (`docs/API.md`)
 
 수선 접수·진행 플로우는 미확정이라 제외했습니다.
 
