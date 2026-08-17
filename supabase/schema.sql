@@ -138,15 +138,34 @@ create index if not exists user_products_user_id_idx
 create table if not exists public.stories (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.profiles (id) on delete cascade,
-  photo_url text not null,
+  -- photo_path: private Storage object path (preferred)
+  -- photo_url: legacy/external URL or local demo compatibility
+  photo_url text,
+  photo_path text,
   location text,
   memo text,
   trip_label text,
-  title text,
+  tag text,
   story_date date not null default (timezone('utc', now()))::date,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.stories add column if not exists photo_path text;
+alter table public.stories alter column photo_url drop not null;
+
+do $$
+begin
+  alter table public.stories
+    add constraint stories_photo_reference_required
+    check (
+      nullif(btrim(photo_url), '') is not null
+      or nullif(btrim(photo_path), '') is not null
+    );
+exception
+  when duplicate_object then null;
+end;
+$$;
 
 create trigger stories_set_updated_at
   before update on public.stories
@@ -163,6 +182,9 @@ create index if not exists story_products_unit_idx
 
 create index if not exists stories_user_id_idx on public.stories (user_id);
 create index if not exists stories_story_date_idx on public.stories (story_date desc);
+create index if not exists stories_photo_path_idx
+  on public.stories (photo_path)
+  where photo_path is not null;
 
 -- -----------------------------------------------------------------------------
 -- repairs — 상태 DB 수동 관리 (유저는 status UPDATE 불가)
@@ -392,6 +414,100 @@ end;
 $$;
 
 -- =============================================================================
+-- Story 생성 RPC — 사진 경로 + 선택 제품 소유권을 한 트랜잭션에서 검증
+-- =============================================================================
+create or replace function public.create_story_with_products(
+  p_tag text,
+  p_photo_path text,
+  p_location text default null,
+  p_memo text default null,
+  p_story_date date default current_date,
+  p_product_slugs text[] default '{}'
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_user_id uuid := auth.uid();
+  v_story_id uuid;
+  v_requested_count integer;
+  v_owned_count integer;
+begin
+  if v_user_id is null then
+    raise exception 'AUTH_REQUIRED' using errcode = '42501';
+  end if;
+
+  if nullif(btrim(p_tag), '') is null then
+    raise exception 'TAG_REQUIRED' using errcode = '22023';
+  end if;
+
+  if nullif(btrim(p_photo_path), '') is null
+     or split_part(p_photo_path, '/', 1) <> v_user_id::text then
+    raise exception 'INVALID_PHOTO_PATH' using errcode = '42501';
+  end if;
+
+  select count(*)
+  into v_requested_count
+  from (
+    select distinct btrim(value) as slug
+    from unnest(coalesce(p_product_slugs, '{}'::text[])) as requested(value)
+    where nullif(btrim(value), '') is not null
+  ) requested;
+
+  if v_requested_count = 0 then
+    raise exception 'PRODUCT_REQUIRED' using errcode = '22023';
+  end if;
+
+  select count(distinct p.slug)
+  into v_owned_count
+  from public.products p
+  join public.product_units pu on pu.product_id = p.id
+  join public.user_products up on up.product_unit_id = pu.id
+  where up.user_id = v_user_id
+    and p.slug = any(p_product_slugs);
+
+  if v_owned_count <> v_requested_count then
+    raise exception 'PRODUCT_NOT_OWNED' using errcode = '42501';
+  end if;
+
+  insert into public.stories (
+    user_id,
+    tag,
+    photo_path,
+    location,
+    memo,
+    story_date
+  )
+  values (
+    v_user_id,
+    btrim(p_tag),
+    p_photo_path,
+    nullif(btrim(p_location), ''),
+    nullif(btrim(p_memo), ''),
+    coalesce(p_story_date, current_date)
+  )
+  returning id into v_story_id;
+
+  insert into public.story_products (story_id, product_unit_id)
+  select v_story_id, pu.id
+  from public.products p
+  join public.product_units pu on pu.product_id = p.id
+  join public.user_products up on up.product_unit_id = pu.id
+  where up.user_id = v_user_id
+    and p.slug = any(p_product_slugs)
+  on conflict do nothing;
+
+  return jsonb_build_object(
+    'id', v_story_id,
+    'photo_path', p_photo_path,
+    'product_slugs', p_product_slugs
+  );
+end;
+$$;
+
+-- =============================================================================
 -- RLS
 -- =============================================================================
 alter table public.profiles enable row level security;
@@ -432,15 +548,28 @@ create policy user_products_delete_own on public.user_products
 
 -- stories: 본인 + 소유 제품 검증
 create policy stories_select_own on public.stories
-  for select to authenticated using (user_id = auth.uid());
+  for select to authenticated using (user_id = (select auth.uid()));
 create policy stories_insert_own on public.stories
   for insert to authenticated
-  with check (user_id = auth.uid());
+  with check (
+    user_id = (select auth.uid())
+    and (
+      photo_path is null
+      or (storage.foldername(photo_path))[1] = (select auth.uid()::text)
+    )
+  );
 create policy stories_update_own on public.stories
   for update to authenticated
-  using (user_id = auth.uid()) with check (user_id = auth.uid());
+  using (user_id = (select auth.uid()))
+  with check (
+    user_id = (select auth.uid())
+    and (
+      photo_path is null
+      or (storage.foldername(photo_path))[1] = (select auth.uid()::text)
+    )
+  );
 create policy stories_delete_own on public.stories
-  for delete to authenticated using (user_id = auth.uid());
+  for delete to authenticated using (user_id = (select auth.uid()));
 
 create policy story_products_select on public.story_products
   for select to authenticated
@@ -509,8 +638,8 @@ grant usage on schema public to anon, authenticated;
 
 grant select on public.products to authenticated;
 grant select, update, delete on public.user_products to authenticated;
-grant select, insert, update, delete on public.stories to authenticated;
-grant select, insert, delete on public.story_products to authenticated;
+grant select, update, delete on public.stories to authenticated;
+grant select, delete on public.story_products to authenticated;
 grant select, insert on public.repairs to authenticated;
 grant select, insert on public.ownership_transfers to authenticated;
 grant select, insert on public.leather_checks to authenticated;
@@ -522,15 +651,57 @@ grant select on public.product_units to authenticated;
 
 grant execute on function public.scan_product_unit(text) to anon, authenticated;
 grant execute on function public.claim_product_unit(text) to authenticated;
+revoke all on function public.create_story_with_products(text, text, text, text, date, text[]) from public, anon;
+grant execute on function public.create_story_with_products(text, text, text, text, date, text[]) to authenticated;
 grant execute on function public.is_unit_owner(uuid, uuid) to authenticated;
 grant execute on function public.current_owner_id(uuid) to authenticated;
 
 -- =============================================================================
--- Storage (버킷은 Dashboard 또는 아래 참고 — Storage RLS는 프로젝트에서 추가)
+-- Storage — Story 사진은 private, 사용자 UUID가 첫 번째 폴더
 -- =============================================================================
--- insert into storage.buckets (id, name, public) values ('story-photos', 'story-photos', false);
--- insert into storage.buckets (id, name, public) values ('repair-photos', 'repair-photos', false);
--- Storage policies: auth.uid()::text = (storage.foldername(name))[1]
+insert into storage.buckets (
+  id,
+  name,
+  public,
+  file_size_limit,
+  allowed_mime_types
+)
+values (
+  'story-photos',
+  'story-photos',
+  false,
+  8388608,
+  array['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
+)
+on conflict (id) do update
+set
+  public = excluded.public,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists story_photos_insert_own on storage.objects;
+create policy story_photos_insert_own on storage.objects
+  for insert to authenticated
+  with check (
+    bucket_id = 'story-photos'
+    and (storage.foldername(name))[1] = (select auth.uid()::text)
+  );
+
+drop policy if exists story_photos_select_own on storage.objects;
+create policy story_photos_select_own on storage.objects
+  for select to authenticated
+  using (
+    bucket_id = 'story-photos'
+    and (storage.foldername(name))[1] = (select auth.uid()::text)
+  );
+
+drop policy if exists story_photos_delete_own on storage.objects;
+create policy story_photos_delete_own on storage.objects
+  for delete to authenticated
+  using (
+    bucket_id = 'story-photos'
+    and (storage.foldername(name))[1] = (select auth.uid()::text)
+  );
 
 -- =============================================================================
 -- Seed (개발용 — 운영에서는 제거)

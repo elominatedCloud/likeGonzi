@@ -44,6 +44,19 @@ const seedStories: StoryRecord[] = [
     updated_at: "2026-01-17T10:00:00.000Z",
   },
   {
+    id: "spring-gallery",
+    product_id: "ella",
+    image_url: `${A}/ella-ai-concert.png`,
+    tag: "봄날의 갤러리 오프닝",
+    place: "서울 청담동",
+    memo: "검정 가방이 크림 수트의 포인트가 된 날.\n#Gallery #Spring",
+    story:
+      "새 작품을 처음 마주한 설렘과 검정 보스턴백의 단정한 실루엣이 봄 저녁을 완성했다.",
+    product_ids: ["ella"],
+    created_at: "2026-04-21T10:00:00.000Z",
+    updated_at: "2026-04-21T10:00:00.000Z",
+  },
+  {
     id: "bookstore-afternoon",
     product_id: "pina",
     image_url: `${A}/pina-bookstore-memory.png`,
@@ -55,6 +68,19 @@ const seedStories: StoryRecord[] = [
     product_ids: ["pina"],
     created_at: "2025-10-12T10:00:00.000Z",
     updated_at: "2025-10-12T10:00:00.000Z",
+  },
+  {
+    id: "museum-postcard",
+    product_id: "pina",
+    image_url: `${A}/pina-ai-museum.png`,
+    tag: "미술관에서 쓴 엽서",
+    place: "서울 덕수궁길",
+    memo: "전시의 여운을 짧은 문장으로 남긴 날.\n#미술관 #엽서",
+    story:
+      "전시의 여운을 엽서에 적는 동안 작은 지갑은 조용히 그날의 시간을 지켜보았다.",
+    product_ids: ["pina"],
+    created_at: "2026-08-04T10:00:00.000Z",
+    updated_at: "2026-08-04T10:00:00.000Z",
   },
 ];
 
@@ -102,7 +128,8 @@ export function createStory(
   const record: StoryRecord = {
     id: `story-${Date.now()}`,
     product_id: productId,
-    image_url: body.image_url,
+    image_url: body.image_url ?? body.photo_path ?? "",
+    photo_path: body.photo_path,
     tag: body.tag,
     place: body.place ?? "",
     memo: body.memo ?? "",
@@ -126,6 +153,7 @@ export function updateStory(
   if (!target) return null;
 
   if (body.image_url !== undefined) target.image_url = body.image_url;
+  if (body.photo_path !== undefined) target.photo_path = body.photo_path;
   if (body.tag !== undefined) target.tag = body.tag;
   if (body.place !== undefined) target.place = body.place;
   if (body.memo !== undefined) target.memo = body.memo;

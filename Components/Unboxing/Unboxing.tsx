@@ -5,19 +5,21 @@ import type { PointerEvent } from 'react';
 import Image from 'next/image';
 import styles from './Unboxing.module.css';
 import { useRouter } from 'next/navigation';
+import { AuthPanel } from '@/Components/auth/AuthPanel';
 
 const TOTAL_FRAMES = 31;
 
 export default function Unboxing() {
   const [progress, setProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [authOpen,setAuthOpen]=useState(false);
 
   const progressRef = useRef(0);
   const startY = useRef(0);
   const startProgress = useRef(0);
   const router = useRouter();
 
-  const MAX_DRAG = 260;
+  const MAX_DRAG = 190;
 
   // 31개 프레임 미리 로딩
   useEffect(() => {
@@ -99,6 +101,12 @@ export default function Unboxing() {
   const frameSrc =
     `/images/box/${String(frameNumber).padStart(4, '0')}.png`;
 
+  const completeDemoAuth=(mode:'login'|'signup')=>{
+    localStorage.setItem('likegonzi-demo-login','true');
+    if(mode==='signup')localStorage.setItem('likegonzi-demo-signup','true');
+    router.replace('/home');
+  };
+
   return (
     <main className={styles.page}>
 
@@ -135,16 +143,23 @@ export default function Unboxing() {
         ✓ 정품 인증 · MV8-4471
       </p>
 
+      {authOpen&&<button type="button" className={styles.authBackdrop} aria-label="로그인 창 닫기" onClick={()=>setAuthOpen(false)}/>}
+
       <div
-        className={`${styles.bottomSheet} ${
+        className={`${styles.bottomSheet} ${authOpen?styles.authSheet:''} ${
           isDragging ? styles.dragging : ''
         }`}
         style={{
-          transform: `translateY(${(1 - progress) * 260}px)`,
+          transform: authOpen?'translateY(0)':`translateY(${(1 - progress) * 190}px)`,
         }}
       >
-
-        <div
+        {authOpen?<>
+          <div className={styles.authSheetTop}>
+            <div className={styles.handle}/>
+            <button type="button" onClick={()=>setAuthOpen(false)} aria-label="계정 창 닫기">닫기</button>
+          </div>
+          <AuthPanel onComplete={completeDemoAuth}/>
+        </>:<><div
           className={styles.dragArea}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
@@ -154,9 +169,9 @@ export default function Unboxing() {
           <div className={styles.handle} />
 
           {progress < 0.5 && (
-            <p className={styles.dragGuide}>
+            <button type="button" className={styles.dragGuide} onClick={()=>updateProgress(1)}>
               위로 밀어 언박싱 시작하기
-            </p>
+            </button>
           )}
         </div>
 
@@ -170,19 +185,13 @@ export default function Unboxing() {
           <button
             type="button"
             className={styles.loginButton}
-            onClick={() => router.push('/login')}
+            onClick={()=>{updateProgress(1);setAuthOpen(true)}}
           >
             로그인 / 회원가입하고 계속하기
           </button>
 
-          <button
-            type="button"
-            className={styles.skipButton}
-          >
-            로그인 없이 둘러보기
-          </button>
         </div>
-
+        </>}
       </div>
 
     </main>

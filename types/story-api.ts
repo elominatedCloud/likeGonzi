@@ -3,6 +3,8 @@ export interface StoryRecord {
   product_id: string;
   /** 사진 URL 또는 data URL */
   image_url: string;
+  /** private Supabase Storage object path */
+  photo_path?: string;
   /** 제품 태그 / 제목 */
   tag: string;
   /** 장소 */
@@ -18,7 +20,10 @@ export interface StoryRecord {
 }
 
 export interface CreateStoryBody {
-  image_url: string;
+  /** 데모/외부 이미지 URL. photo_path가 있으면 생략 가능 */
+  image_url?: string;
+  /** private Supabase Storage object path */
+  photo_path?: string;
   tag: string;
   place?: string;
   memo?: string;
@@ -29,6 +34,7 @@ export interface CreateStoryBody {
 
 export interface UpdateStoryBody {
   image_url?: string;
+  photo_path?: string;
   tag?: string;
   place?: string;
   memo?: string;

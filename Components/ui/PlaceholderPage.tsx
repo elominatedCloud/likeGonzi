@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BottomNav } from "@/Components/ui/BottomNav";
+import { AmbientPattern } from "@/Components/ui/AmbientPattern";
 
 export default function PlaceholderPage({
   title,
@@ -10,6 +11,7 @@ export default function PlaceholderPage({
 }) {
   return (
     <main className="visetos-bg flex min-h-dvh flex-col pb-28">
+      <AmbientPattern />
       <div className="flex flex-1 flex-col items-center justify-center px-8 text-center">
         <p className="font-serif text-[12px] tracking-[0.18em] text-gold">
           MCM · STORYBOOK

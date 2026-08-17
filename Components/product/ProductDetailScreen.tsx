@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -16,11 +16,15 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/Components/ui/PageHeader";
 import { BottomNav } from "@/Components/ui/BottomNav";
-import type { Product, RepairRecord, Story } from "@/types";
+import { AmbientPattern } from "@/Components/ui/AmbientPattern";
+import { ProductStoryTimeline } from "@/Components/product/ProductStoryTimeline";
+import { showFeatureNotice } from "@/lib/feature-notice";
+import type { Product, RepairRecord } from "@/types";
+import type { StoryRecord } from "@/types/story-api";
 
 interface ProductDetailScreenProps {
   product: Product;
-  stories: Story[];
+  stories: StoryRecord[];
   repairs: RepairRecord[];
 }
 
@@ -39,8 +43,6 @@ export function ProductDetailScreen({
   const [editingName, setEditingName] = useState(false);
   const [slide, setSlide] = useState(0);
   const [showSerial, setShowSerial] = useState(false);
-  const [leatherPreview, setLeatherPreview] = useState<string | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
 
   const heroImages = useMemo(
     () => [product.cutoutImage, ...product.lifestyleImages],
@@ -57,14 +59,9 @@ export function ProductDetailScreen({
   const latestAiRepair =
     repairs.find((r) => r.source === "ai_custom") ?? repairs[0];
 
-  function onLeatherUpload(file?: File | null) {
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    setLeatherPreview(url);
-  }
-
   return (
     <main className="visetos-bg relative min-h-dvh pb-28">
+      <AmbientPattern variant="product" />
       <PageHeader
         title={name}
         backHref="/home"
@@ -116,21 +113,21 @@ export function ProductDetailScreen({
 
       <section className="soft-card mx-4 mt-2 px-4 py-4">
         <div className="flex items-start justify-between gap-3">
-          <h2 className="font-serif text-[28px] leading-none text-ink">{name}</h2>
-          <span className="mt-1 inline-flex shrink-0 items-center gap-1 rounded-full bg-[#eef6ea] px-2.5 py-1 text-[11px] font-medium text-[#3d6b3a]">
+          <h2 className="font-serif text-[28px] font-medium leading-8 text-ink">{name}</h2>
+          <span className="type-meta mt-1 inline-flex shrink-0 items-center gap-1 rounded-full bg-[#eef6ea] px-2.5 py-1 font-medium text-[#3d6b3a]">
             <BadgeCheck size={12} /> 정품 인증 완료
           </span>
         </div>
 
-        <p className="mt-3 text-[13px] text-ink-soft">
+        <p className="mt-3 text-[13px] leading-5 text-ink-soft">
           {product.color} · {shortMaterial(product.material)}
         </p>
-        <p className="mt-1 text-[12px] text-muted">{product.registeredAt}</p>
+        <p className="type-meta mt-1 text-muted">{product.registeredAt}</p>
 
         <button
           type="button"
           onClick={() => setShowSerial((v) => !v)}
-          className="mt-2 inline-flex items-center gap-1 text-[11px] text-muted"
+          className="type-meta mt-2 inline-flex items-center gap-1 text-muted"
         >
           인증 정보
           <ChevronDown
@@ -139,7 +136,7 @@ export function ProductDetailScreen({
           />
         </button>
         {showSerial && (
-          <p className="mt-1 text-[11px] tracking-wide text-muted/80">
+          <p className="type-meta mt-1 tracking-wide text-muted/80">
             {product.serial} · {product.store}
           </p>
         )}
@@ -148,155 +145,130 @@ export function ProductDetailScreen({
       <section className="mx-4 mt-5">
         <div className="mb-2 flex items-end justify-between">
           <div>
-            <p className="font-serif text-[12px] tracking-[0.16em] text-muted">
-              MATERIAL CARE
+            <p className="type-kicker text-muted">
+              제품 케어
             </p>
-            <h3 className="mt-1 text-[16px] font-semibold text-ink">
+            <h3 className="type-section-title mt-1 text-ink">
               비세토스 습도 · 오염 관리
             </h3>
           </div>
           <div className="flex gap-1.5">
-            <span className="rounded-md bg-cream-deep px-2 py-1 text-[11px] text-ink-soft">
+            <span className="type-meta rounded-md bg-cream-deep px-2 py-1 text-ink-soft">
               수선권 {product.repairVouchers}
             </span>
-            <span className="rounded-md bg-cream-deep px-2 py-1 text-[11px] text-ink-soft">
+            <span className="type-meta rounded-md bg-cream-deep px-2 py-1 text-ink-soft">
               클리닝권 {product.cleaningVouchers}
             </span>
           </div>
         </div>
         <Link
           href={`/products/${product.id}/care`}
-          className="text-[12px] text-cognac"
+          className="text-[13px] leading-5 text-cognac"
         >
           케어 가이드 보기 →
         </Link>
       </section>
 
       <section className="soft-card mx-4 mt-4 p-3">
-        <div className="flex gap-3">
-          <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-cream-deep">
-            <Image
-              src={latestAiRepair.thumbnail}
-              alt={latestAiRepair.title}
-              fill
-              className="object-cover"
-              sizes="64px"
-            />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[10px] tracking-[0.12em] text-muted">
-              REPAIR HISTORY · {repairs.length}
-            </p>
-            <p className="mt-1 text-[14px] font-semibold text-ink">
-              {latestAiRepair.title}
-            </p>
-            <p className="mt-0.5 text-[11px] text-muted">
-              {latestAiRepair.foundAt ?? latestAiRepair.date} 발견 / AI 커스텀
-            </p>
-            <div className="mt-2 flex items-center justify-between">
-              <Link
-                href={`/products/${product.id}/care?tab=repairs`}
-                className="text-[12px] text-cognac"
-              >
-                자세히 →
-              </Link>
-              <button
-                type="button"
-                className="inline-flex items-center gap-1 rounded-full bg-ink px-2.5 py-1 text-[11px] text-white"
-              >
-                <Sparkles size={12} />
-                AI로 수선 부위 찾기
-              </button>
+        {latestAiRepair ? (
+          <div className="flex gap-3">
+            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-cream-deep">
+              <Image
+                src={latestAiRepair.thumbnail}
+                alt={latestAiRepair.title}
+                fill
+                className="object-cover"
+                sizes="64px"
+              />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="type-kicker text-muted">
+                수선 이력 · {repairs.length}
+              </p>
+              <p className="mt-1 text-[15px] font-semibold leading-[22px] text-ink">
+                {latestAiRepair.title}
+              </p>
+              <p className="type-meta mt-0.5 text-muted">
+                {latestAiRepair.foundAt ?? latestAiRepair.date} 발견 / AI 커스텀
+              </p>
+              <div className="mt-2 flex items-center justify-between">
+                <Link
+                  href={`/products/${product.id}/care?tab=repairs`}
+                  className="text-[13px] leading-5 text-cognac"
+                >
+                  자세히 →
+                </Link>
+                <button
+                  type="button"
+                  className="type-meta inline-flex items-center gap-1 rounded-full bg-ink px-2.5 py-1 text-white"
+                >
+                  <Sparkles size={12} />
+                  AI로 수선 부위 찾기
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-        <p className="mt-3 rounded-xl bg-cream px-3 py-2 text-[11px] leading-relaxed text-ink-soft">
+        ) : (
+          <div className="flex items-center gap-3 rounded-xl bg-cream px-3 py-4">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white text-cognac">
+              <FileText size={20} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="type-kicker text-muted">수선 이력 · 0</p>
+              <p className="mt-1 text-[15px] font-semibold leading-[22px] text-ink">
+                아직 등록된 수선 이력이 없어요
+              </p>
+              <Link
+                href="/camera"
+                className="mt-1 inline-block text-[13px] leading-5 text-cognac"
+              >
+                첫 상태 사진 남기기 →
+              </Link>
+            </div>
+          </div>
+        )}
+        <p className="mt-3 rounded-xl bg-cream px-3 py-2 text-[13px] leading-5 text-ink-soft">
           제품을 촬영하면 AI가 마모·오염 구간을 표시하고, 원하는 이미지로
           커스텀 진단 카드를 만들 수 있어요.
         </p>
       </section>
 
-      <section className="soft-card mx-4 mt-4 overflow-hidden">
-        <div className="flex items-center justify-between px-4 pt-4">
-          <h3 className="font-serif text-[13px] tracking-[0.14em] text-ink">
-            MY STORYS
-          </h3>
-          <Link
-            href={`/products/${product.id}/stories`}
-            className="text-[12px] text-muted"
-          >
-            전체보기 →
-          </Link>
-        </div>
-        <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-4 pb-4">
-          {stories.map((story) => (
-            <article
-              key={story.id}
-              className="relative h-[210px] w-[148px] shrink-0 overflow-hidden rounded-2xl"
-            >
-              <Image
-                src={story.image}
-                alt={story.tag}
-                fill
-                className="object-cover"
-                sizes="148px"
-              />
-              <span className="ribbon-tag">
-                {story.tag} ({story.count})
-              </span>
-            </article>
-          ))}
-        </div>
-      </section>
+      <ProductStoryTimeline
+        product={product}
+        stories={stories}
+        limit={3}
+        allHref={`/products/${product.id}/stories`}
+      />
 
       <section className="soft-card mx-4 mt-4 p-4">
         <div className="mb-3 flex items-center justify-between">
           <div>
-            <p className="font-serif text-[12px] tracking-[0.14em] text-muted">
-              LEATHER CHECK
+            <p className="type-kicker text-muted">
+              직접 점검
             </p>
-            <h3 className="mt-1 text-[15px] font-semibold text-ink">
+            <h3 className="type-section-title mt-1 text-ink">
               가죽 · 하드웨어 직접 점검
             </h3>
           </div>
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            className="inline-flex items-center gap-1 rounded-full bg-cognac px-3 py-1.5 text-[12px] text-white"
+          <Link
+            href="/camera"
+            className="inline-flex items-center gap-1 rounded-full bg-cognac px-3 py-1.5 text-[13px] leading-5 text-white"
           >
             <Camera size={14} />
             사진 촬영
-          </button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="hidden"
-            onChange={(e) => onLeatherUpload(e.target.files?.[0])}
-          />
+          </Link>
         </div>
         <div className="relative h-36 overflow-hidden rounded-xl bg-cream-deep">
-          {leatherPreview ? (
-            <Image
-              src={leatherPreview}
-              alt="가죽 점검 사진"
-              fill
-              className="object-cover"
-              unoptimized
-            />
-          ) : (
-            <div className="flex h-full flex-col items-center justify-center gap-2 text-muted">
-              <div className="rounded-full border border-dashed border-cognac/40 px-4 py-3 text-center">
-                <p className="font-serif text-[18px] tracking-[0.2em] text-cognac/50">
-                  MCM
-                </p>
-                <p className="mt-1 text-[11px]">
-                  로고만이 아닌, 내 제품 사진을 올려 점검하세요
-                </p>
-              </div>
+          <div className="flex h-full flex-col items-center justify-center gap-2 text-muted">
+            <div className="rounded-full border border-dashed border-cognac/40 px-4 py-3 text-center">
+              <p className="font-serif text-[18px] tracking-[0.2em] text-cognac/50">
+                MCM
+              </p>
+              <p className="mt-1 text-[13px] leading-5">
+                카메라에서 내 제품 사진을 촬영해 점검하세요
+              </p>
             </div>
-          )}
+          </div>
         </div>
       </section>
 
@@ -312,8 +284,8 @@ export function ProductDetailScreen({
           <FileText size={18} />
         </div>
         <div className="flex-1">
-          <p className="text-[14px] font-semibold text-ink">제품 소유권 이전</p>
-          <p className="text-[12px] text-muted">소유권 이전 및 양도 신청</p>
+          <p className="text-[15px] font-semibold leading-[22px] text-ink">제품 소유권 이전</p>
+          <p className="text-[13px] leading-5 text-muted">소유권 이전 및 양도 신청</p>
         </div>
         <span className="text-muted">›</span>
       </Link>
@@ -375,6 +347,7 @@ export function ProductDetailScreen({
                 <li>
                   <button
                     type="button"
+                    onClick={() => showFeatureNotice("productTransfer")}
                     className="flex w-full items-center gap-3 rounded-xl bg-cream px-3 py-3 text-left text-[14px]"
                   >
                     <FileText size={16} className="text-cognac" />
@@ -384,6 +357,7 @@ export function ProductDetailScreen({
                 <li>
                   <button
                     type="button"
+                    onClick={() => showFeatureNotice("productRemoval")}
                     className="flex w-full items-center gap-3 rounded-xl bg-[#f8ecec] px-3 py-3 text-left text-[14px] text-[#8a3a3a]"
                   >
                     <Trash2 size={16} />

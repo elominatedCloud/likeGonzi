@@ -2,8 +2,9 @@ import { ProductDetailScreen } from "@/Components/product/ProductDetailScreen";
 import {
   getProduct,
   getRepairsByProduct,
-  getStoriesByProduct,
 } from "@/lib/data";
+import { normalizeProductId } from "@/lib/mock-db";
+import { listStories } from "@/lib/story-store";
 
 export default async function ProductPage({
   params,
@@ -12,7 +13,7 @@ export default async function ProductPage({
 }) {
   const { id } = await params;
   const product = getProduct(id);
-  const stories = getStoriesByProduct(product.id);
+  const stories = listStories(normalizeProductId(product.id));
   const repairs = getRepairsByProduct(product.id);
 
   return (

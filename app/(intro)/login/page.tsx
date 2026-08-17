@@ -1,150 +1,25 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import styles from './login.module.css';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { AuthPanel } from '@/Components/auth/AuthPanel';
+import styles from './login.module.css';
 
-export default function LoginPage() {
-  const router = useRouter();
-
-  const [id, setId] = useState('');
-  const [password, setPassword] = useState('');
-
-  const handleLogin = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    // 나중에 Supabase 로그인 연결
-    console.log('로그인:', id, password);
+export default function LoginPage(){
+  const router=useRouter();
+  const complete=(mode:'login'|'signup')=>{
+    localStorage.setItem('likegonzi-demo-login','true');
+    if(mode==='signup')localStorage.setItem('likegonzi-demo-signup','true');
+    router.replace('/home');
   };
 
-  return (
-    <main className={styles.page}>
-      <section className={styles.container}>
-
-        {/* 뒤로가기 */}
-        <button
-          type="button"
-          className={styles.backButton}
-          onClick={() => router.back()}
-          aria-label="뒤로가기"
-        >
-          ←
-        </button>
-
-        {/* 타이틀 */}
-        <header className={styles.header}>
-          <h1>
-            MCM과 함께
-            <br />
-            <strong>당신의 스토리를 시작하세요.</strong>
-          </h1>
-        </header>
-
-        {/* 로그인 폼 */}
-        <form
-          className={styles.loginForm}
-          onSubmit={handleLogin}
-        >
-          <div className={styles.inputBox}>
-            <label htmlFor="userId">ID:</label>
-
-            <input
-              id="userId"
-              type="text"
-              value={id}
-              onChange={(e) => setId(e.target.value)}
-              autoComplete="username"
-            />
-          </div>
-
-          <div className={styles.inputBox}>
-            <label htmlFor="password">PW:</label>
-
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-            />
-          </div>
-
-          <button
-            type="submit"
-            className={styles.loginButton}
-          >
-            로그인
-          </button>
-        </form>
-
-        {/* 또는 */}
-        <div className={styles.divider}>
-          <span />
-          <p>또는</p>
-          <span />
-        </div>
-
-        {/* 소셜 로그인 */}
-        <div className={styles.socialLogin}>
-            <button
-                type="button"
-                className={`${styles.socialButton} ${styles.google}`}
-            >
-                <Image
-                src="/icon/social/google.svg"
-                alt="Google"
-                width={22}
-                height={22}
-                className={styles.socialIcon}
-                />
-                Google 계정으로 계속하기
-            </button>
-
-            <button
-                type="button"
-                className={`${styles.socialButton} ${styles.kakao}`}
-            >
-                <Image
-                src="/icon/social/kakao.svg"
-                alt="Kakao"
-                width={22}
-                height={22}
-                className={styles.socialIcon}
-                />
-                Kakao 계정으로 계속하기
-            </button>
-
-            <button
-                type="button"
-                className={`${styles.socialButton} ${styles.naver}`}
-            >
-                <Image
-                src="/icon/social/naver.svg"
-                alt="Naver"
-                width={22}
-                height={22}
-                className={styles.socialIcon}
-                />
-                Naver 계정으로 계속하기
-            </button>
-            </div>
-
-        {/* 하단 링크 */}
-        <div className={styles.links}>
-          <Link href="/signup">
-            회원가입
-          </Link>
-
-          <span>·</span>
-
-          <Link href="/find-password">
-            비밀번호 찾기
-          </Link>
-        </div>
-
-      </section>
-    </main>
-  );
+  return <main className={styles.page}>
+    <button type="button" className={styles.back} onClick={()=>router.back()} aria-label="뒤로 가기">←</button>
+    <header className={styles.brand}>
+      <Image src="/icon/MCM_Logo.svg" alt="MCM" width={70} height={70} priority/>
+      <p>MCM STORYBOOK</p>
+      <h1>당신의 MCM 이야기를<br/>한곳에 간직하세요.</h1>
+    </header>
+    <div className={styles.sheet}><AuthPanel onComplete={complete}/></div>
+  </main>;
 }

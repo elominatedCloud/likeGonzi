@@ -2,7 +2,7 @@
 
 장남준 담당 IA **2.1 기록 작성 / 2.2 기록 상세** 대응입니다.
 
-Next.js App Router에서는 페이지 라우트와 겹치지 않도록 **`/api` prefix** 를 둡니다.  
+Next.js App Router에서는 페이지 라우트와 겹치지 않도록 **`/api` prefix** 를 둡니다.
 (명세 경로 `/products/{id}/stories` ≡ 구현 경로 `/api/products/{id}/stories`)
 
 ## Endpoints
@@ -17,7 +17,7 @@ Next.js App Router에서는 페이지 라우트와 겹치지 않도록 **`/api` 
 
 ### product_id
 
-남준 FE 기준: `stark` | `ella` | `pina`  
+남준 FE 기준: `stark` | `ella` | `pina`
 홈/제품상세 기준: `stark-backpack` | `ella-boston`
 
 ### Request body (POST)

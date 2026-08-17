@@ -29,12 +29,11 @@ export const products: Product[] = [
     material: "Visetos",
     color: "Cognac",
     year: 2024,
-    cutoutImage:
-      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=80",
+    cutoutImage: "/camera/stark-product.png",
     lifestyleImages: [
-      "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=80",
-      "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80",
-      "https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=900&q=80",
+      "/FE-namjun/assets/로그_타임라인-1.png",
+      "/FE-namjun/assets/로그_타임라인-2.png",
+      "/FE-namjun/assets/로그_타임라인-3.png",
     ],
     careScore: 92,
     repairVouchers: 1,
@@ -50,10 +49,9 @@ export const products: Product[] = [
     material: "Visetos leather / gold hardware",
     color: "Black",
     year: 2023,
-    cutoutImage:
-      "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80",
+    cutoutImage: "/FE-namjun/assets/로그_스토리북-3.png",
     lifestyleImages: [
-      "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80",
+      "/FE-namjun/assets/ella-jazz-memory.png",
     ],
     careScore: 88,
     repairVouchers: 0,
@@ -119,8 +117,7 @@ export const repairRecords: RepairRecord[] = [
     date: "2026.06.01",
     title: "오른쪽 숄더 스트랩 보강",
     location: "AI 커스텀 진단",
-    thumbnail:
-      "https://images.unsplash.com/photo-1622560480605-d83b829ac78c?auto=format&fit=crop&w=300&q=80",
+    thumbnail: "/camera/care-stark.png",
     source: "ai_custom",
     foundAt: "2026.06",
   },

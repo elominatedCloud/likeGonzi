@@ -1,10 +1,6 @@
-import PlaceholderPage from "@/Components/ui/PlaceholderPage";
+import { redirect } from "next/navigation";
+import { MCM_OFFICIAL_SHOP_URL } from "@/lib/navigation";
 
 export default function ShopPage() {
-  return (
-    <PlaceholderPage
-      title="쇼핑"
-      description="샵 영역은 IA상 범위 보류입니다."
-    />
-  );
+  redirect(MCM_OFFICIAL_SHOP_URL);
 }

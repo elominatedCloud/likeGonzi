@@ -26,7 +26,7 @@ export function PageHeader({
         <ArrowLeft size={20} strokeWidth={1.6} />
       </Link>
       <h1
-        className={`text-[17px] tracking-wide text-ink ${serif ? "font-serif" : "font-medium"}`}
+        className={`text-[18px] leading-7 tracking-[0.01em] text-ink ${serif ? "font-serif font-medium" : "font-semibold"}`}
       >
         {title}
       </h1>

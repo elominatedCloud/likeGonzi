@@ -1,9 +1,9 @@
 # API 명세서 구현 현황 (IA 순서)
 
-> Next.js 페이지와 충돌을 피하기 위해 실제 경로는 **`/api` prefix** 를 사용합니다.  
+> Next.js 페이지와 충돌을 피하기 위해 실제 경로는 **`/api` prefix** 를 사용합니다.
 > 명세 `/products/...` ≡ 구현 `/api/products/...`
 
-데모 계정: `gonji@mcm.test` / `password123`  
+데모 계정: `gonji@mcm.test` / `password123`
 Authorization 없으면 기본 유저(곤지)로 동작합니다.
 
 ---

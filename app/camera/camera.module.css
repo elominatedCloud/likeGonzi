@@ -1,0 +1,455 @@
+.stage {
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: #211f1e;
+  color: #2d1f11;
+}
+
+.phone {
+  position: relative;
+  width: min(100%, 393px);
+  height: 852px;
+  max-height: 100dvh;
+  overflow: hidden;
+  background: #f9f6f1;
+  isolation: isolate;
+  box-shadow: 0 14px 50px #0007;
+}
+
+.topChrome {
+  position: relative;
+  z-index: 20;
+  height: 104px;
+  background: #fbfaf7f2;
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid #d9d0c6;
+}
+
+.statusBar {
+  height: 37px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 0 32px 7px;
+  color: #111;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.signal {
+  font-size: 10px;
+  letter-spacing: 2px;
+}
+
+.appBar {
+  height: 67px;
+  display: grid;
+  grid-template-columns: 54px 1fr 54px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 18px;
+}
+
+.logo {
+  width: 34px;
+  height: 29px;
+  object-fit: contain;
+  filter: brightness(.28);
+}
+
+.screenTitle {
+  justify-self: center;
+  margin: 0;
+  color: #35271d;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+
+.bellButton {
+  position: relative;
+  justify-self: end;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  opacity: 1;
+}
+
+.bellButton img {
+  object-fit: contain;
+  filter: brightness(.35);
+}
+
+.bellButton span {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #9c6f42;
+  box-shadow: 0 0 0 2px #fbfaf7;
+}
+
+.viewfinder {
+  position: absolute;
+  inset: 104px 0 72px;
+  overflow: hidden;
+  background: #4d3726;
+}
+
+.fallbackImage,
+.cameraVideo,
+.cameraShade {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.fallbackImage,
+.cameraVideo {
+  object-fit: cover;
+}
+
+.cameraVideo {
+  z-index: 2;
+  opacity: 0;
+  transition: opacity .25s ease;
+}
+
+.videoVisible {
+  opacity: 1;
+}
+
+.cameraShade {
+  z-index: 3;
+  pointer-events: none;
+  background: linear-gradient(180deg, #1c110b99 0, transparent 25%, transparent 62%, #1a100aad 100%);
+}
+
+.instructions {
+  position: absolute;
+  z-index: 5;
+  top: 23px;
+  left: 22px;
+  right: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  color: white;
+  text-align: center;
+  text-shadow: 0 1px 5px #0009;
+}
+
+.instructions strong {
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.instructions span {
+  font-size: 11px;
+  font-weight: 550;
+  opacity: .88;
+}
+
+.notice {
+  position: absolute;
+  z-index: 11;
+  left: 50%;
+  bottom: 80px;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100% - 28px);
+  min-height: 33px;
+  padding: 7px 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 11px;
+  color: white;
+  background: #24170ec7;
+  backdrop-filter: blur(7px);
+  font-size: 10px;
+  box-shadow: 0 5px 14px #0004;
+}
+
+.notice button {
+  border: 0;
+  border-radius: 999px;
+  padding: 4px 7px;
+  color: #3a2517;
+  background: #fff;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.captureControls {
+  position: absolute;
+  z-index: 8;
+  left: 28px;
+  right: 28px;
+  bottom: 16px;
+  display: grid;
+  grid-template-columns: 74px 1fr 74px;
+  align-items: end;
+  justify-items: center;
+}
+
+.utilityButton {
+  width: 66px;
+  min-height: 65px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  border: 0;
+  color: white;
+  background: transparent;
+  text-shadow: 0 1px 3px #000b;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.utilityButton span {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #281b13b3;
+  backdrop-filter: blur(7px);
+  box-shadow: inset 0 0 0 1px #fff4;
+}
+
+.utilityButton:disabled {
+  cursor: wait;
+  opacity: .56;
+}
+
+.shutter {
+  width: 74px;
+  height: 74px;
+  display: grid;
+  place-items: center;
+  border: 3px solid white;
+  border-radius: 50%;
+  background: #fff4;
+  box-shadow: 0 0 0 3px #8d643d, 0 5px 18px #0005, inset 0 0 0 5px white;
+  color: white;
+  cursor: pointer;
+}
+
+.shutter span {
+  width: 53px;
+  height: 53px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #3a2518bd;
+  backdrop-filter: blur(6px);
+}
+
+.reviewPanel {
+  position: absolute;
+  z-index: 30;
+  inset: 0;
+  background: #1f1712;
+}
+
+.reviewPhoto,
+.reviewShade {
+  position: absolute;
+  inset: 0;
+}
+
+.reviewPhoto {
+  background-size: cover;
+  background-position: center;
+}
+
+.reviewShade {
+  background: linear-gradient(180deg, #170e08a8 0, transparent 35%, #170e08d9 100%);
+}
+
+.reviewHeading {
+  position: absolute;
+  top: 34px;
+  left: 22px;
+  right: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: white;
+  text-align: center;
+}
+
+.reviewHeading strong {
+  font-size: 16px;
+}
+
+.reviewHeading span {
+  font-size: 11px;
+  opacity: .82;
+}
+
+.reviewActions {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: 24px;
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 10px;
+}
+
+.reviewActions button {
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid #fff7;
+  border-radius: 13px;
+  color: white;
+  background: #23170dc4;
+  backdrop-filter: blur(8px);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.reviewActions .reviewPrimary {
+  border-color: #f4e9db;
+  color: #2c1b10;
+  background: #fbf6ed;
+}
+
+.bottomNav {
+  position: absolute;
+  z-index: 50;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: #fffdfaf2;
+  backdrop-filter: blur(18px);
+  border-top: 1px solid #ded5cb;
+}
+
+.navItem,
+.navCamera {
+  width: 20%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  border: 0;
+  color: #3c2c20;
+  background: transparent;
+  text-decoration: none;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.navItem img {
+  object-fit: contain;
+}
+
+.navItem:disabled {
+  opacity: .48;
+}
+
+.navCamera {
+  position: relative;
+  width: 54px;
+  height: 54px;
+  margin-top: -14px;
+  border: 3px solid white;
+  border-radius: 50%;
+  background: #382317;
+  box-shadow: 0 0 0 2px #382317, 0 5px 12px #3d241d48;
+}
+
+.navCamera img {
+  object-fit: contain;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.bellButton:focus-visible,
+.utilityButton:focus-visible,
+.shutter:focus-visible,
+.navItem:focus-visible,
+.navCamera:focus-visible,
+.reviewActions button:focus-visible {
+  outline: 3px solid #f2c994;
+  outline-offset: 2px;
+}
+
+@media (max-height: 760px) {
+  .phone {
+    height: 100dvh;
+  }
+
+  .topChrome {
+    height: 92px;
+  }
+
+  .statusBar {
+    height: 32px;
+  }
+
+  .appBar {
+    height: 60px;
+  }
+
+  .viewfinder {
+    top: 92px;
+  }
+
+  .instructions {
+    top: 16px;
+  }
+}
+
+@media (min-width: 700px) {
+  .stage {
+    padding: 28px 0;
+  }
+
+  .phone {
+    max-height: none;
+    border-radius: 32px;
+    box-shadow: 0 20px 70px #0009, inset 0 0 0 1px #fff8;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cameraVideo {
+    transition: none;
+  }
+}

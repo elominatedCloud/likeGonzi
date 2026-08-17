@@ -58,15 +58,16 @@ export async function POST(request: Request, context: RouteContext) {
   if (!body) {
     return fail("INVALID_JSON", "Request body must be valid JSON");
   }
-  if (!body.image_url?.trim()) {
-    return fail("VALIDATION_ERROR", "image_url is required");
+  if (!body.image_url?.trim() && !body.photo_path?.trim()) {
+    return fail("VALIDATION_ERROR", "image_url or photo_path is required");
   }
   if (!body.tag?.trim()) {
     return fail("VALIDATION_ERROR", "tag is required (제품 태그/제목)");
   }
 
   const created = createStory(id, {
-    image_url: body.image_url.trim(),
+    image_url: body.image_url?.trim(),
+    photo_path: body.photo_path?.trim(),
     tag: body.tag.trim(),
     place: body.place?.trim() ?? "",
     memo: body.memo?.trim() ?? "",

@@ -4,12 +4,13 @@
 
 ## 상품별 데모
 
+- 전체 제품 타임라인: `/log/timeline`
 - Storybook: `/log/storybook`
 - Stark: `/log/stark/timeline`, `/log/stark/record/seongsu-inspiration`, `/log/stark/record/new`, `/log/stark/ai-recommendation`
 - Ella: `/log/ella/timeline`, `/log/ella/record/jazz-evening`, `/log/ella/record/new`, `/log/ella/ai-recommendation`
 - Pina: `/log/pina/timeline`, `/log/pina/record/bookstore-afternoon`, `/log/pina/record/new`, `/log/pina/ai-recommendation`
 
-각 타임라인 뒤에 `/my`, `/product`를 붙이면 내 기록/제품 이력 탭을 직접 확인할 수 있습니다. 기록 작성은 각 타임라인의 `+ 기록 추가`로 진입하며 다른 보유 상품을 함께 선택할 수 있습니다. 하단 카메라는 추후 기능을 위해 비활성 상태입니다. 루트 `/`는 전체 데모 링크 모음입니다.
+바텀 바의 로그는 전체 제품 타임라인으로 이동합니다. 각 상품 타임라인 뒤에 `/my`, `/product`를 붙이면 내 기록/제품 이력 탭을 직접 확인할 수 있습니다. 기록 작성은 각 타임라인의 `+ 기록 추가` 또는 중앙 카메라로 진입하며 다른 보유 상품을 함께 선택할 수 있습니다. 루트 `/`는 전체 데모 링크 모음입니다.
 
 ## 구조
 
@@ -31,4 +32,3 @@
 - `DELETE /api/products/{product_id}/stories/{story_id}`
 
 `product_id` 예: `stark`, `ella`, `pina`
-

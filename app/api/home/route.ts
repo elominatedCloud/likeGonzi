@@ -1,4 +1,4 @@
-import { fail, ok } from "@/lib/api-response";
+import { ok } from "@/lib/api-response";
 import { requireUserOrDemo } from "@/lib/auth-guard";
 import { buildHome } from "@/lib/mock-db";
 

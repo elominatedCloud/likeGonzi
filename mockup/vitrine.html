@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MCM Luxury Book — Vitrine 시안 v2</title>
+<style>
+/* 시안 시트는 라이트 고정. 앱 본체 토큰은 다크도 지원한다 (design-system.md §1). */
+:root{
+  --cog:139,90,43;
+  --cog-lite:196,150,102;
+  --ink:#221E1A;
+  --paper:#FCFAF7;
+  --board:#EFEAE3;
+  --board-ink:#4A423A;
+  --glass:255,255,255;
+  --glassA:.58;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--board);color:var(--board-ink);
+     font-family:-apple-system,BlinkMacSystemFont,"Pretendard","Apple SD Gothic Neo",sans-serif;
+     padding:40px 24px 64px}
+.head{max-width:1160px;margin:0 auto 30px}
+.kicker{font-size:11px;letter-spacing:.14em;opacity:.55}
+h1{font-size:26px;font-weight:500;margin:6px 0 8px;color:var(--ink)}
+.lede{font-size:14px;line-height:1.7;opacity:.8;max-width:640px}
+.sheet{max-width:1160px;margin:0 auto;display:grid;
+       grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:32px}
+.cell{display:flex;flex-direction:column}
+.caption{margin-top:12px;font-size:12.5px;line-height:1.65;opacity:.75}
+.caption b{font-weight:500;opacity:1;color:var(--ink)}
+.tag{display:inline-block;font-size:10px;letter-spacing:.08em;padding:3px 9px;
+     border-radius:20px;border:0.5px solid currentColor;opacity:.55;margin-bottom:9px;align-self:flex-start}
+
+/* ── 기기 프레임 ───────────────────── */
+.phone{position:relative;width:100%;aspect-ratio:9/19.2;border-radius:30px;overflow:hidden;
+       background:var(--paper);
+       box-shadow:0 24px 46px -22px rgba(90,70,50,.4), 0 0 0 0.5px rgba(90,70,50,.16);
+       display:flex;flex-direction:column}
+.status{flex:none;display:flex;justify-content:space-between;padding:12px 20px 0;
+        font-size:10px;color:var(--ink);opacity:.45}
+
+/* ── 비세토스 격자 · 크리스탈 ───────── */
+.veil{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.veil>*{position:absolute}
+
+/* 마름모 = 컷팅된 원석. conic 하드스톱이 패싯을 만든다 */
+.dia{width:14px;height:19px;margin:-9.5px 0 0 -7px;
+     clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);
+     background:conic-gradient(from 0deg at 50% 50%,
+        rgba(255,255,255,.92)   0deg   6deg,
+        rgba(var(--cog),.30)    6deg  86deg,
+        rgba(255,255,255,.78)  86deg  94deg,
+        rgba(var(--cog),.62)   94deg 174deg,
+        rgba(255,255,255,.88) 174deg 182deg,
+        rgba(var(--cog),.38) 182deg 262deg,
+        rgba(255,255,255,.70) 262deg 270deg,
+        rgba(var(--cog),.55) 270deg 360deg);
+     filter:drop-shadow(0 1px 1.5px rgba(var(--cog),.42));
+     animation:flip 4.2s ease-in-out infinite}
+
+/* 로고 = 유리에 각인된 마크. 회전 안 한다 — 브랜드는 고정 */
+.mark{width:24px;height:21px;margin:-10.5px 0 0 -12px;
+      filter:drop-shadow(0 1px 1px rgba(var(--cog),.35))
+             drop-shadow(0 0 .5px rgba(255,255,255,.9))}
+.mark svg{width:100%;height:100%;display:block}
+.veil.soft>*{opacity:.55}
+
+@keyframes flip{
+  0%  {transform:perspective(240px) rotateY(-74deg) rotateX( 8deg)}
+  50% {transform:perspective(240px) rotateY( 74deg) rotateX(-8deg) translateZ(5px)}
+  100%{transform:perspective(240px) rotateY(-74deg) rotateX( 8deg)}
+}
+
+/* ── 유리 ─────────────────────────── */
+.glass{background:rgba(var(--glass),var(--glassA));
+       -webkit-backdrop-filter:blur(16px) saturate(1.3);
+               backdrop-filter:blur(16px) saturate(1.3);
+       border:0.5px solid rgba(255,255,255,.6);border-radius:12px;
+       box-shadow:0 1px 2px rgba(120,95,70,.08)}
+@supports not (backdrop-filter: blur(1px)){
+  .glass{background:var(--paper);border-color:rgba(var(--cog),.2)}
+}
+
+/* ── 홀로그램 — 정품·소유의 증표에만 ── */
+.irid{position:relative;overflow:hidden;border-radius:14px;background:#c8c4bf;isolation:isolate}
+.irid::before{content:'';position:absolute;inset:-45%;z-index:0;
+  background:conic-gradient(from calc(200deg + var(--tilt,0deg)) at 35% 32%,
+    #ffd7a8,#aadcff,#d2c4ff,#ffc6e8,#bdffdd,#fff4c2,#ffd7a8);
+  filter:blur(22px) saturate(1.4);opacity:.85;
+  animation:swirl 18s linear infinite}
+.irid::after{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(104deg,transparent 36%,rgba(255,255,255,.9) 50%,transparent 64%);
+  animation:sweep 7s ease-in-out infinite}
+.irid>*{position:relative;z-index:2}
+@keyframes swirl{to{transform:rotate(360deg)}}
+@keyframes sweep{0%,100%{transform:translateX(-42%)}50%{transform:translateX(42%)}}
+
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 11px 4px 7px;
+       border-radius:20px;font-size:10px;font-weight:500;color:#2a2622}
+.badge .m{width:15px;height:13px}
+.badge .m svg{width:100%;height:100%;display:block}
+
+/* ── 제품 ─────────────────────────── */
+.prod{width:118px;height:126px;border-radius:9px;
+  background:linear-gradient(105deg,rgba(var(--cog),.24),rgba(var(--cog),.5) 55%,rgba(var(--cog),.34));
+  border:0.5px solid rgba(var(--cog),.55);
+  box-shadow:0 20px 30px -13px rgba(var(--cog),.55),0 2px 4px rgba(var(--cog),.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;color:var(--ink);text-align:center;line-height:1.5;
+  animation:bob 6s ease-in-out infinite}
+.handle{width:50px;height:24px;border:3px solid rgba(var(--cog),.45);border-bottom:none;
+        border-radius:26px 26px 0 0;margin-bottom:-3px}
+.floor{width:88px;height:8px;margin-top:18px;border-radius:50%;
+       background:rgba(var(--cog),.26);filter:blur(5px);animation:shade 6s ease-in-out infinite}
+.boxpk{width:132px;height:84px;border-radius:6px;
+  background:linear-gradient(100deg,rgba(var(--cog),.3),rgba(var(--cog),.52) 55%,rgba(var(--cog),.38));
+  border:0.5px solid rgba(var(--cog),.58);
+  box-shadow:0 18px 26px -12px rgba(var(--cog),.55);
+  display:flex;align-items:center;justify-content:center}
+.boxpk .m{width:46px;height:40px}
+.boxpk .m svg{width:100%;height:100%;display:block}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes shade{0%,100%{transform:scaleX(1);opacity:.34}50%{transform:scaleX(.85);opacity:.18}}
+
+/* ── UI 조각 ──────────────────────── */
+.body{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;
+      padding:14px 16px 0;gap:10px;min-height:0}
+.eyebrow{font-size:9px;letter-spacing:.13em;color:var(--ink);opacity:.5}
+.title{font-size:21px;font-weight:500;color:var(--ink);line-height:1.16;margin-top:3px}
+.sub{font-size:11px;color:var(--ink);opacity:.58;line-height:1.55}
+.pad{padding:12px 14px}
+.row{display:flex;justify-content:space-between;font-size:11px;padding:3px 0;color:var(--ink)}
+.row span:first-child{opacity:.55}
+.cta{text-align:center;font-size:12px;font-weight:500;padding:12px;border-radius:8px;
+     background:var(--ink);color:var(--paper)}
+.nav{flex:none;position:relative;z-index:2;border-top:0.5px solid rgba(var(--cog),.16);
+     display:flex;align-items:flex-end;justify-content:space-around;padding:9px 6px 16px;
+     background:rgba(255,255,255,.55);
+     -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.nv{font-size:9px;color:var(--ink);opacity:.42;text-align:center;width:42px;line-height:1.6}
+.nv.on{opacity:1;font-weight:500}
+.fab{width:40px;height:40px;border-radius:50%;background:var(--ink);color:var(--paper);
+     display:flex;align-items:center;justify-content:center;font-size:13px;margin-bottom:-2px}
+.node{width:13px;height:17px;flex:none;
+      clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);
+      background:conic-gradient(from 0deg at 50% 50%,
+        rgba(255,255,255,.9) 0deg 6deg, rgba(var(--cog),.45) 6deg 86deg,
+        rgba(255,255,255,.75) 86deg 94deg, rgba(var(--cog),.8) 94deg 174deg,
+        rgba(255,255,255,.85) 174deg 182deg, rgba(var(--cog),.5) 182deg 262deg,
+        rgba(255,255,255,.7) 262deg 270deg, rgba(var(--cog),.7) 270deg 360deg);
+      filter:drop-shadow(0 1px 1.5px rgba(var(--cog),.4))}
+.node.off{background:none;box-shadow:inset 0 0 0 1.2px rgba(var(--cog),.4);filter:none}
+
+@media (prefers-reduced-motion: reduce){
+  .dia,.prod,.floor,.irid::before,.irid::after{animation:none}
+}
+</style>
+</head>
+<body>
+
+<!-- 마크 정의. 공식 에셋 오면 이 symbol 안쪽만 교체하면 전체가 바뀐다. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="crys" x1="0" y1="0" x2="0.9" y2="1">
+      <stop offset="0"    stop-color="rgba(255,255,255,.95)"/>
+      <stop offset="0.22" stop-color="rgba(196,150,102,.95)"/>
+      <stop offset="0.52" stop-color="rgba(139,90,43,.92)"/>
+      <stop offset="0.74" stop-color="rgba(255,255,255,.85)"/>
+      <stop offset="1"    stop-color="rgba(139,90,43,.9)"/>
+    </linearGradient>
+  </defs>
+  <symbol id="mcm" viewBox="0 0 120 104">
+    <g fill="none" stroke="url(#crys)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 42V18l11 18 11-18v24"/>
+      <path d="M70 24A13 13 0 1 0 70 38"/>
+      <path d="M86 42V18l11 18 11-18v24"/>
+      <circle cx="60" cy="62" r="5"/>
+      <path d="M54 61C42 53 28 51 16 56"/>
+      <path d="M66 61C78 53 92 51 104 56"/>
+    </g>
+    <g fill="url(#crys)">
+      <ellipse cx="46" cy="55" rx="7" ry="4" transform="rotate(-20 46 55)"/>
+      <ellipse cx="33" cy="52" rx="7" ry="4" transform="rotate(-12 33 52)"/>
+      <ellipse cx="21" cy="54" rx="7" ry="4" transform="rotate(-4 21 54)"/>
+      <ellipse cx="74" cy="55" rx="7" ry="4" transform="rotate(20 74 55)"/>
+      <ellipse cx="87" cy="52" rx="7" ry="4" transform="rotate(12 87 52)"/>
+      <ellipse cx="99" cy="54" rx="7" ry="4" transform="rotate(4 99 54)"/>
+    </g>
+  </symbol>
+  <!-- 단색 버전 — 카드·박스처럼 배경이 어두운 곳에서 -->
+  <symbol id="mcm-flat" viewBox="0 0 120 104">
+    <g fill="none" stroke="currentColor" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 42V18l11 18 11-18v24"/>
+      <path d="M70 24A13 13 0 1 0 70 38"/>
+      <path d="M86 42V18l11 18 11-18v24"/>
+      <circle cx="60" cy="62" r="5"/>
+      <path d="M54 61C42 53 28 51 16 56"/>
+      <path d="M66 61C78 53 92 51 104 56"/>
+    </g>
+    <g fill="currentColor">
+      <ellipse cx="46" cy="55" rx="7" ry="4" transform="rotate(-20 46 55)"/>
+      <ellipse cx="33" cy="52" rx="7" ry="4" transform="rotate(-12 33 52)"/>
+      <ellipse cx="21" cy="54" rx="7" ry="4" transform="rotate(-4 21 54)"/>
+      <ellipse cx="74" cy="55" rx="7" ry="4" transform="rotate(20 74 55)"/>
+      <ellipse cx="87" cy="52" rx="7" ry="4" transform="rotate(12 87 52)"/>
+      <ellipse cx="99" cy="54" rx="7" ry="4" transform="rotate(4 99 54)"/>
+    </g>
+  </symbol>
+</svg>
+
+<div class="head">
+  <div class="kicker">MCM LUXURY BOOK · DESIGN SYSTEM</div>
+  <h1>Vitrine — 시안 v2</h1>
+  <div class="lede">밝은 웜 페이퍼 위에 크리스탈 비세토스가 박히고, 유리 패널이 뜬다.
+  바람은 <b>일정한 대각선이 아니라 돌풍처럼 굽이쳐</b> 지나간다. 홀로그램은 정품·소유의 증표에만.</div>
+</div>
+
+<div class="sheet">
+
+  <!-- 01 언박싱 -->
+  <div class="cell">
+    <span class="tag">01 · 언박싱 0%</span>
+    <div class="phone">
+      <div class="veil" data-step="30"></div>
+      <div class="status"><span>9:41</span><span>LTE</span></div>
+      <div class="body" style="align-items:center;justify-content:center;gap:20px">
+        <div class="boxpk"><span class="m" style="color:#fff">
+          <svg><use href="#mcm-flat"/></svg></span></div>
+        <span class="badge irid" style="border-radius:20px">
+          <span class="m"><svg><use href="#mcm-flat"/></svg></span>정품 확인 · MV8·4471
+        </span>
+        <div style="text-align:center;margin-top:26px">
+          <div style="font-size:17px;color:var(--ink);opacity:.3">↓</div>
+          <div class="sub" style="margin-top:4px">스크롤하여 열기</div>
+        </div>
+      </div>
+      <div style="height:26px"></div>
+    </div>
+    <div class="caption"><b>제품명 없음.</b> 크리스탈이 굽이치며 반짝이고 박스는 닫혀 있다.
+    유일한 홀로그램은 정품 배지 — 여기서부터 "진짜고, 이제 네 것"이 시작된다.</div>
+  </div>
+
+  <!-- 02 제품 상세 -->
+  <div class="cell">
+    <span class="tag">02 · 제품 상세</span>
+    <div class="phone">
+      <div class="veil" data-step="28" style="bottom:44%"></div>
+      <div class="status"><span>9:41</span><span>LTE</span></div>
+      <div class="body" style="padding-top:6px">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0">
+          <div class="handle"></div>
+          <div class="prod">Stark<br>Backpack</div>
+          <div class="floor"></div>
+        </div>
+        <div class="glass pad">
+          <div class="eyebrow">VISETOS · COGNAC</div>
+          <div class="title">Stark Backpack</div>
+          <div class="row" style="margin-top:8px"><span>시리얼</span><span>MV8·4471</span></div>
+          <div class="row"><span>제조</span><span>2026.01 · Italy</span></div>
+        </div>
+        <div class="glass pad" style="display:flex;gap:10px;align-items:center">
+          <div style="width:26px;height:26px;border-radius:7px;background:rgba(var(--cog),.18);
+                      display:flex;align-items:center;justify-content:center;font-size:12px">☂</div>
+          <div><div style="font-size:12px;font-weight:500;color:var(--ink)">장마철 케어</div>
+               <div class="sub">코티드 캔버스 · 습기 40% 3일</div></div>
+        </div>
+        <div class="cta" style="margin-bottom:14px">수선 접수</div>
+      </div>
+      <div class="nav">
+        <div class="nv">⌂<br>홈</div><div class="nv">☰<br>로그</div>
+        <div class="fab">◉</div>
+        <div class="nv">▤<br>샵</div><div class="nv">○<br>마이</div>
+      </div>
+    </div>
+    <div class="caption"><b>패턴은 상단 절반만.</b> 유리가 있어 글자는 또렷하고 크리스탈은 비친다 —
+    "패턴 위 본문 금지" 규칙이 여기서 사라진다.</div>
+  </div>
+
+  <!-- 03 마이 · 멤버십 -->
+  <div class="cell">
+    <span class="tag">03 · 마이 — 멤버십 카드</span>
+    <div class="phone">
+      <div class="veil soft" data-step="26" style="bottom:62%"></div>
+      <div class="status"><span>9:41</span><span>LTE</span></div>
+      <div class="body">
+        <div class="eyebrow">MEMBERSHIP</div>
+        <div class="title" style="margin-bottom:6px">서지우님</div>
+
+        <div class="irid" id="card" style="padding:16px 16px 18px;aspect-ratio:1.6/1;
+             display:flex;flex-direction:column;justify-content:space-between">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <span style="width:36px;height:31px;color:#2a2622;display:block">
+              <svg style="width:100%;height:100%;display:block"><use href="#mcm-flat"/></svg></span>
+            <span style="font-size:10px;letter-spacing:.12em;color:#2a2622;opacity:.8">1976 · MÜNCHEN</span>
+          </div>
+          <div>
+            <div style="font-size:10px;letter-spacing:.1em;color:#2a2622;opacity:.7">ARCHIVE MEMBER</div>
+            <div style="font-size:22px;font-weight:500;color:#1e1b18;line-height:1.1;margin-top:2px">GOLD</div>
+            <div style="font-size:10px;color:#2a2622;opacity:.75;margin-top:4px">누적 3년 · 제품 2점 · 기록 14</div>
+          </div>
+        </div>
+
+        <div class="glass pad" style="margin-top:4px">
+          <div class="row"><span>쿠폰함</span><span>2</span></div>
+          <div class="row"><span>수선 접수 내역</span><span>1</span></div>
+          <div class="row"><span>내 제품 관리</span><span>2</span></div>
+        </div>
+
+        <div class="glass pad">
+          <div class="sub" style="margin-bottom:8px">올해의 비세토스</div>
+          <div style="display:flex;gap:5px">
+            <i class="node"></i><i class="node"></i><i class="node"></i>
+            <i class="node off"></i><i class="node off"></i><i class="node off"></i>
+            <i class="node off"></i><i class="node off"></i><i class="node off"></i>
+            <i class="node off"></i><i class="node off"></i><i class="node off"></i>
+          </div>
+          <div class="sub" style="margin-top:7px">3 / 12 · 9개 더 채우면 한 행 완성</div>
+        </div>
+      </div>
+      <div class="nav">
+        <div class="nv">⌂<br>홈</div><div class="nv">☰<br>로그</div>
+        <div class="fab">◉</div>
+        <div class="nv">▤<br>샵</div><div class="nv on">○<br>마이</div>
+      </div>
+    </div>
+    <div class="caption"><b>홀로그램은 여기 하나뿐.</b> 카드 위에서 마우스를 움직이면 빛이 따라온다.
+    아래 유리는 무채색으로 남겨 카드가 유일한 주인공이 되게 한다.</div>
+  </div>
+
+</div>
+
+<script>
+/* 위상 필드 — 서로 안 맞는 주파수의 사인 3개를 겹치면
+   격자를 가로지르는 경로가 굽이친다. 대각선 기울기(= 전체가 한 방향으로 눕는 원인)를 뺐다. */
+function phase(x, y){
+  return Math.sin(x*0.0130 + y*0.0071)
+       + Math.sin(x*0.0052 - y*0.0169) * 0.8
+       + Math.sin((x + y) * 0.0091)    * 0.6;
+}
+/* 결정적 해시 — 타일마다 주기를 흔들어 절대 다시 동기화되지 않게 한다 */
+function hash(x, y){
+  var n = Math.sin(x*12.9898 + y*78.233) * 43758.5453;
+  return n - Math.floor(n);
+}
+
+function veil(el){
+  var step = +el.dataset.step || 28;
+  var w = el.clientWidth, h = el.clientHeight;
+  if(!w || !h) return;
+  var rowH = step * 0.86;
+  var cols = Math.ceil(w/step)+2, rows = Math.ceil(h/rowH)+2;
+  var f = document.createDocumentFragment();
+  for(var r=0; r<rows; r++){
+    for(var c=0; c<cols; c++){
+      var x = c*step + (r%2 ? step/2 : 0);
+      var y = r*rowH;
+      var node;
+      if((r + c) % 2 === 0){          // 로고와 마름모가 번갈아 = 실제 비세토스 구성
+        node = document.createElement('span');
+        node.className = 'mark';
+        node.innerHTML = '<svg><use href="#mcm"/></svg>';
+      } else {
+        node = document.createElement('i');
+        node.className = 'dia';
+        var hv = hash(x, y);
+        node.style.animationDuration = (3.4 + hv*2.4).toFixed(2) + 's';
+        node.style.animationDelay    = (-(phase(x, y)*1.6 + hv*0.6)).toFixed(2) + 's';
+      }
+      node.style.left = x + 'px';
+      node.style.top  = y + 'px';
+      f.appendChild(node);
+    }
+  }
+  el.replaceChildren(f);
+}
+function paint(){ document.querySelectorAll('.veil').forEach(veil); }
+paint();
+var t; addEventListener('resize', function(){ clearTimeout(t); t = setTimeout(paint, 180); });
+
+/* 홀로그램 틸트 — 포인터를 따라 빛이 돈다.
+   ponytail: 데스크톱 포인터만. iOS 자이로는 권한 요청 제스처가 필요해 해커톤 범위 밖. */
+var card = document.getElementById('card');
+if(card){
+  card.addEventListener('pointermove', function(e){
+    var r = card.getBoundingClientRect();
+    card.style.setProperty('--tilt',
+      (((e.clientX - r.left)/r.width) * 220 - 110).toFixed(0) + 'deg');
+  });
+  card.addEventListener('pointerleave', function(){ card.style.setProperty('--tilt','0deg'); });
+}
+</script>
+
+</body>
+</html>

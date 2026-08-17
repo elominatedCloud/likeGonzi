@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/Components/ui/PageHeader";
 import { BottomNav } from "@/Components/ui/BottomNav";
+import { AmbientPattern } from "@/Components/ui/AmbientPattern";
 import { clinicTips } from "@/lib/data";
 import type { Product, RepairRecord } from "@/types";
 import { cn } from "@/lib/cn";
@@ -42,6 +43,7 @@ export function CareGuideScreen({ product, repairs }: CareGuideScreenProps) {
 
   return (
     <main className="visetos-bg relative min-h-dvh pb-28">
+      <AmbientPattern variant="product" />
       <PageHeader title="MATERIAL CARE" backHref={`/products/${product.id}`} />
 
       <section className="soft-card mx-4 mt-2 flex items-center gap-4 px-4 py-5">
