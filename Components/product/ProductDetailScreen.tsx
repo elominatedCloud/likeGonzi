@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
+import { SafeImage } from "@/Components/ui/SafeImage";
 import Link from "next/link";
 import {
   BadgeCheck,
@@ -89,7 +89,7 @@ export function ProductDetailScreen({
               slide === index ? "hero-fade opacity-100" : "opacity-0"
             }`}
           >
-            <Image
+            <SafeImage
               src={src}
               alt={`${name} image ${index + 1}`}
               fill
@@ -175,7 +175,7 @@ export function ProductDetailScreen({
       <section className="soft-card mx-4 mt-4 p-3">
         <div className="flex gap-3">
           <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-cream-deep">
-            <Image
+            <SafeImage
               src={latestAiRepair.thumbnail}
               alt={latestAiRepair.title}
               fill
@@ -200,13 +200,13 @@ export function ProductDetailScreen({
               >
                 자세히 →
               </Link>
-              <button
-                type="button"
+              <Link
+                href={`/products/${product.id}/repairs/new`}
                 className="inline-flex items-center gap-1 rounded-full bg-ink px-2.5 py-1 text-[11px] text-white"
               >
                 <Sparkles size={12} />
                 AI로 수선 부위 찾기
-              </button>
+              </Link>
             </div>
           </div>
         </div>
@@ -234,7 +234,7 @@ export function ProductDetailScreen({
               key={story.id}
               className="relative h-[210px] w-[148px] shrink-0 overflow-hidden rounded-2xl"
             >
-              <Image
+              <SafeImage
                 src={story.image}
                 alt={story.tag}
                 fill
@@ -278,12 +278,11 @@ export function ProductDetailScreen({
         </div>
         <div className="relative h-36 overflow-hidden rounded-xl bg-cream-deep">
           {leatherPreview ? (
-            <Image
+            <SafeImage
               src={leatherPreview}
               alt="가죽 점검 사진"
               fill
               className="object-cover"
-              unoptimized
             />
           ) : (
             <div className="flex h-full flex-col items-center justify-center gap-2 text-muted">

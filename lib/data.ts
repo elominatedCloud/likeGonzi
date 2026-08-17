@@ -8,6 +8,7 @@ import type {
   Story,
   UserProfile,
 } from "@/types";
+import { IMG } from "@/lib/images";
 
 export const currentUser: UserProfile = {
   id: "user-gonji",
@@ -29,13 +30,8 @@ export const products: Product[] = [
     material: "Visetos",
     color: "Cognac",
     year: 2024,
-    cutoutImage:
-      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=80",
-    lifestyleImages: [
-      "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=80",
-      "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80",
-      "https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=900&q=80",
-    ],
+    cutoutImage: IMG.stark,
+    lifestyleImages: [IMG.commute, IMG.lifestyle1, IMG.anniversary],
     careScore: 92,
     repairVouchers: 1,
     cleaningVouchers: 1,
@@ -50,11 +46,8 @@ export const products: Product[] = [
     material: "Visetos leather / gold hardware",
     color: "Black",
     year: 2023,
-    cutoutImage:
-      "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80",
-    lifestyleImages: [
-      "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80",
-    ],
+    cutoutImage: IMG.ella,
+    lifestyleImages: [IMG.lifestyle1],
     careScore: 88,
     repairVouchers: 0,
     cleaningVouchers: 1,
@@ -67,8 +60,7 @@ export const stories: Story[] = [
     productId: "stark-backpack",
     tag: "출근",
     count: 2,
-    image:
-      "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=700&q=80",
+    image: IMG.commute,
     date: "2026.07.18",
   },
   {
@@ -76,8 +68,7 @@ export const stories: Story[] = [
     productId: "stark-backpack",
     tag: "기념일",
     count: 3,
-    image:
-      "https://images.unsplash.com/photo-1541849546-216549ae216d?auto=format&fit=crop&w=700&q=80",
+    image: IMG.anniversary,
     date: "2026.06.02",
   },
 ];
@@ -89,8 +80,7 @@ export const repairRecords: RepairRecord[] = [
     date: "2026.05.12",
     title: "오른쪽 숄더 스트랩 교체",
     location: "강남 플래그십 스토어",
-    thumbnail:
-      "https://images.unsplash.com/photo-1590874103328-eac38a67478a?auto=format&fit=crop&w=300&q=80",
+    thumbnail: IMG.strap,
     source: "store",
   },
   {
@@ -99,8 +89,7 @@ export const repairRecords: RepairRecord[] = [
     date: "2026.03.20",
     title: "비세토스 로고 패널 클리닝",
     location: "MCM Care Studio",
-    thumbnail:
-      "https://images.unsplash.com/photo-1591561954557-26941169b49e?auto=format&fit=crop&w=300&q=80",
+    thumbnail: IMG.clinic,
     source: "store",
   },
   {
@@ -109,8 +98,7 @@ export const repairRecords: RepairRecord[] = [
     date: "2025.11.04",
     title: "지퍼 슬라이더 교체",
     location: "강남 플래그십 스토어",
-    thumbnail:
-      "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=300&q=80",
+    thumbnail: IMG.zipper,
     source: "store",
   },
   {
@@ -119,8 +107,7 @@ export const repairRecords: RepairRecord[] = [
     date: "2026.06.01",
     title: "오른쪽 숄더 스트랩 보강",
     location: "AI 커스텀 진단",
-    thumbnail:
-      "https://images.unsplash.com/photo-1622560480605-d83b829ac78c?auto=format&fit=crop&w=300&q=80",
+    thumbnail: IMG.strap,
     source: "ai_custom",
     foundAt: "2026.06",
   },

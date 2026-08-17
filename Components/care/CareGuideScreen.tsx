@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Image from "next/image";
+import { SafeImage } from "@/Components/ui/SafeImage";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
   Droplets,
@@ -118,12 +119,13 @@ export function CareGuideScreen({ product, repairs }: CareGuideScreenProps) {
       ) : (
         <section className="mx-4 mt-4 space-y-3">
           {sortedRepairs.map((repair) => (
-            <article
+            <Link
               key={repair.id}
+              href={`/products/${product.id}/repairs`}
               className="soft-card flex items-center gap-3 px-3 py-3"
             >
               <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-cream-deep">
-                <Image
+                <SafeImage
                   src={repair.thumbnail}
                   alt={repair.title}
                   fill
@@ -141,16 +143,21 @@ export function CareGuideScreen({ product, repairs }: CareGuideScreenProps) {
                   {repair.source === "ai_custom" ? " · AI 커스텀" : ""}
                 </p>
               </div>
-            </article>
+            </Link>
           ))}
-          <button
-            type="button"
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-cognac/40 bg-white/50 py-4 text-[13px] text-cognac"
-          >
-            <Sparkles size={14} />
-            AI로 수선 부위 촬영 · 진단
-          </button>
         </section>
+      )}
+
+      {tab === "repairs" && (
+        <div className="pointer-events-none fixed bottom-[88px] left-1/2 z-30 w-full max-w-[430px] -translate-x-1/2">
+          <Link
+            href={`/products/${product.id}/repairs/new`}
+            className="pointer-events-auto ml-auto mr-5 flex w-fit items-center gap-1.5 rounded-full bg-cognac-deep px-4 py-3 text-[13px] font-medium text-white shadow-[0_8px_20px_rgba(110,67,44,0.35)]"
+          >
+            <span className="text-[18px] leading-none">+</span>
+            수선 접수
+          </Link>
+        </div>
       )}
 
       <BottomNav />

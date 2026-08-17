@@ -25,6 +25,9 @@ export async function POST(request: Request, context: Ctx) {
     title?: string;
     condition_tags?: string[];
     location?: string;
+    thumbnail_url?: string;
+    source?: "store" | "ai_custom" | "user";
+    memo?: string;
   }>(request);
 
   const repair = createRepair(product_id, body ?? {});

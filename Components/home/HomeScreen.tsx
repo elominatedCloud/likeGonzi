@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import { SafeImage } from "@/Components/ui/SafeImage";
 import { Bell, Leaf, Star } from "lucide-react";
 import { BottomNav } from "@/Components/ui/BottomNav";
 import {
@@ -52,7 +52,7 @@ export function HomeScreen() {
                 className="soft-card relative w-[168px] shrink-0 overflow-hidden"
               >
                 <div className="relative h-[150px] bg-gradient-to-b from-[#ebe4da] to-white">
-                  <Image
+                  <SafeImage
                     src={product.cutoutImage}
                     alt={product.name}
                     fill

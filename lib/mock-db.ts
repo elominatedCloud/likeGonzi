@@ -2,6 +2,8 @@
  * MVP 인메모리 DB — Supabase 연결 전 멋사 엔드포인트 검수용
  */
 
+import { IMG } from "@/lib/images";
+
 export type Membership = "SILVER" | "GOLD" | "PLATINUM";
 
 export interface DbUser {
@@ -49,6 +51,8 @@ export interface DbRepair {
   source: "store" | "ai_custom" | "user";
   status: RepairStatus;
   condition_tags: string[];
+  receipt_no: string;
+  memo?: string;
   ai_image_url?: string;
   created_at: string;
   updated_at: string;
@@ -102,8 +106,7 @@ function db() {
           color: "Cognac",
           year: 2024,
           store: "MCM Seoul",
-          cutout_image:
-            "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=80",
+          cutout_image: IMG.stark,
           care_score: 92,
           repair_vouchers: 1,
           cleaning_vouchers: 1,
@@ -118,8 +121,7 @@ function db() {
           color: "Black",
           year: 2023,
           store: "MCM Gangnam",
-          cutout_image:
-            "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80",
+          cutout_image: IMG.ella,
           care_score: 88,
           repair_vouchers: 0,
           cleaning_vouchers: 1,
@@ -134,7 +136,7 @@ function db() {
           color: "Black",
           year: 2025,
           store: "MCM Seoul",
-          cutout_image: "/FE-namjun/assets/로그_스토리북-4.png",
+          cutout_image: IMG.pina,
           care_score: 90,
           repair_vouchers: 1,
           cleaning_vouchers: 0,
@@ -149,8 +151,7 @@ function db() {
           color: "Cognac",
           year: 2026,
           store: "Campaign",
-          cutout_image:
-            "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=80",
+          cutout_image: IMG.stark,
           care_score: 100,
           repair_vouchers: 0,
           cleaning_vouchers: 0,
@@ -179,13 +180,12 @@ function db() {
           product_id: "stark",
           title: "오른쪽 숄더 스트랩 교체",
           location: "강남 플래그십 스토어",
-          thumbnail_url:
-            "https://images.unsplash.com/photo-1590874103328-eac38a67478a?auto=format&fit=crop&w=300&q=80",
+          thumbnail_url: IMG.strap,
           source: "store",
           status: "completed",
           condition_tags: ["strap", "wear"],
-          ai_image_url:
-            "https://images.unsplash.com/photo-1622560480605-d83b829ac78c?auto=format&fit=crop&w=400&q=80",
+          receipt_no: "R-20260512-001",
+          ai_image_url: IMG.strap,
           created_at: "2026-05-12T00:00:00.000Z",
           updated_at: "2026-05-20T00:00:00.000Z",
         },
@@ -194,15 +194,27 @@ function db() {
           product_id: "stark",
           title: "오른쪽 숄더 스트랩 보강",
           location: "AI 커스텀 진단",
-          thumbnail_url:
-            "https://images.unsplash.com/photo-1622560480605-d83b829ac78c?auto=format&fit=crop&w=300&q=80",
+          thumbnail_url: IMG.strap,
           source: "ai_custom",
           status: "submitted",
-          condition_tags: ["strap"],
-          ai_image_url:
-            "https://images.unsplash.com/photo-1622560480605-d83b829ac78c?auto=format&fit=crop&w=400&q=80",
+          condition_tags: ["strap", "wear"],
+          receipt_no: "R-20240816-014",
+          ai_image_url: IMG.strap,
           created_at: "2026-06-01T00:00:00.000Z",
-          updated_at: "2026-06-01T00:00:00.000Z",
+          updated_at: "2026-08-10T00:00:00.000Z",
+        },
+        {
+          id: "repair-3",
+          product_id: "ella",
+          title: "코너 마모 보강 접수",
+          location: "접수 대기",
+          thumbnail_url: IMG.ella,
+          source: "user",
+          status: "submitted",
+          condition_tags: ["corner", "wear"],
+          receipt_no: "R-20260812-008",
+          created_at: "2026-08-12T00:00:00.000Z",
+          updated_at: "2026-08-12T00:00:00.000Z",
         },
       ],
       transfers: [
@@ -344,23 +356,49 @@ export function listRepairs(productId: string) {
     .sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
 }
 
+export function getRepair(productId: string, repairId: string) {
+  const id = normalizeProductId(productId);
+  return (
+    db().repairs.find((r) => r.id === repairId && r.product_id === id) ?? null
+  );
+}
+
+export function listMyRepairs(userId: string) {
+  const owned = new Set(listMyProducts(userId).map((p) => p.id));
+  return db()
+    .repairs.filter((r) => owned.has(r.product_id))
+    .sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+}
+
 export function createRepair(
   productId: string,
-  body: { title?: string; condition_tags?: string[]; location?: string },
+  body: {
+    title?: string;
+    condition_tags?: string[];
+    location?: string;
+    thumbnail_url?: string;
+    source?: DbRepair["source"];
+    ai_image_url?: string;
+    memo?: string;
+  },
 ) {
   const id = normalizeProductId(productId);
   if (!getProduct(id)) return null;
   const now = new Date().toISOString();
+  const ymd = now.slice(0, 10).replaceAll("-", "");
+  const seq = String(db().repairs.length + 1).padStart(3, "0");
   const repair: DbRepair = {
     id: `repair-${Date.now()}`,
     product_id: id,
     title: body.title ?? "수선 접수",
     location: body.location ?? "접수 대기",
-    thumbnail_url:
-      "https://images.unsplash.com/photo-1590874103328-eac38a67478a?auto=format&fit=crop&w=300&q=80",
-    source: "user",
+    thumbnail_url: body.thumbnail_url ?? IMG.strap,
+    source: body.source ?? "user",
     status: "submitted",
     condition_tags: body.condition_tags ?? [],
+    receipt_no: `R-${ymd}-${seq}`,
+    memo: body.memo,
+    ai_image_url: body.ai_image_url,
     created_at: now,
     updated_at: now,
   };

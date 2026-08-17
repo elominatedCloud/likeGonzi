@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { SafeImage } from "@/Components/ui/SafeImage";
 import { BadgeCheck, Star } from "lucide-react";
 import { PageHeader } from "@/Components/ui/PageHeader";
 import { BottomNav } from "@/Components/ui/BottomNav";
@@ -33,7 +33,7 @@ export function ProductStoriesScreen({
       />
 
       <section className="relative mx-auto h-[220px] w-full max-w-[320px]">
-        <Image
+        <SafeImage
           src={product.cutoutImage}
           alt={product.name}
           fill
@@ -72,7 +72,7 @@ export function ProductStoriesScreen({
               key={story.id}
               className="relative h-[320px] w-full overflow-hidden rounded-2xl shadow-[0_10px_24px_rgba(43,33,28,0.08)]"
             >
-              <Image
+              <SafeImage
                 src={story.image}
                 alt={story.tag}
                 fill
