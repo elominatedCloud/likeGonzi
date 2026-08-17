@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import { SafeImage } from "@/Components/ui/SafeImage";
 import { Bell, Star } from "lucide-react";
 import { BottomNav } from "@/Components/ui/BottomNav";
 import { AmbientPattern } from "@/Components/ui/AmbientPattern";
@@ -55,7 +55,7 @@ export function HomeScreen() {
                 className="relative h-[435px] w-[271px] shrink-0 snap-start overflow-hidden rounded-[20px] bg-[#d0aa84]"
               >
                 <div className="relative h-[316px] bg-[#d0aa84]">
-                  <Image
+                  <SafeImage
                     src={product.cutoutImage}
                     alt={product.name}
                     fill

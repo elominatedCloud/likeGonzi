@@ -22,6 +22,8 @@ Authorization 없으면 기본 유저(곤지)로 동작합니다.
 | 0.5/1.1 제품 상세 | GET | `/api/products/{product_id}` |
 | 수선 이력 | GET | `/api/products/{product_id}/repairs` |
 | 수선 신청 | POST | `/api/products/{product_id}/repairs` |
+| 수선 단건 | GET | `/api/products/{product_id}/repairs/{repair_id}` |
+| 내 수선 내역 | GET | `/api/repairs` |
 | Story 목록 (제품 로그 필터) | GET | `/api/products/{product_id}/stories` |
 | 2.1 Story 생성 (남준) | POST | `/api/products/{product_id}/stories` |
 | 2.2 Story 단건 (남준) | GET | `/api/products/{product_id}/stories/{story_id}` |

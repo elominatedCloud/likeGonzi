@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
+import { SafeImage } from "@/Components/ui/SafeImage";
 import Link from "next/link";
 import {
   BadgeCheck,
@@ -86,7 +86,7 @@ export function ProductDetailScreen({
               slide === index ? "hero-fade opacity-100" : "opacity-0"
             }`}
           >
-            <Image
+            <SafeImage
               src={src}
               alt={`${name} image ${index + 1}`}
               fill
@@ -173,7 +173,7 @@ export function ProductDetailScreen({
         {latestAiRepair ? (
           <div className="flex gap-3">
             <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-cream-deep">
-              <Image
+              <SafeImage
                 src={latestAiRepair.thumbnail}
                 alt={latestAiRepair.title}
                 fill
@@ -193,18 +193,18 @@ export function ProductDetailScreen({
               </p>
               <div className="mt-2 flex items-center justify-between">
                 <Link
-                  href={`/products/${product.id}/care?tab=repairs`}
+                  href={`/products/${product.id}/repairs`}
                   className="text-[13px] leading-5 text-cognac"
                 >
                   자세히 →
                 </Link>
-                <button
-                  type="button"
+                <Link
+                  href={`/products/${product.id}/repairs/new`}
                   className="type-meta inline-flex items-center gap-1 rounded-full bg-ink px-2.5 py-1 text-white"
                 >
                   <Sparkles size={12} />
-                  AI로 수선 부위 찾기
-                </button>
+                  수선 접수
+                </Link>
               </div>
             </div>
           </div>
@@ -219,17 +219,17 @@ export function ProductDetailScreen({
                 아직 등록된 수선 이력이 없어요
               </p>
               <Link
-                href="/camera"
+                href={`/products/${product.id}/repairs/new`}
                 className="mt-1 inline-block text-[13px] leading-5 text-cognac"
               >
-                첫 상태 사진 남기기 →
+                첫 수선 접수하기 →
               </Link>
             </div>
           </div>
         )}
         <p className="mt-3 rounded-xl bg-cream px-3 py-2 text-[13px] leading-5 text-ink-soft">
-          제품을 촬영하면 AI가 마모·오염 구간을 표시하고, 원하는 이미지로
-          커스텀 진단 카드를 만들 수 있어요.
+          제품 사진과 상태 메모를 등록하면 수선 접수 후 진행 단계를 확인할 수
+          있어요.
         </p>
       </section>
 

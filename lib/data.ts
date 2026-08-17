@@ -8,6 +8,7 @@ import type {
   Story,
   UserProfile,
 } from "@/types";
+import { IMG } from "@/lib/images";
 
 export const currentUser: UserProfile = {
   id: "user-gonji",
@@ -29,11 +30,11 @@ export const products: Product[] = [
     material: "Visetos",
     color: "Cognac",
     year: 2024,
-    cutoutImage: "/camera/stark-product.png",
+    cutoutImage: IMG.stark,
     lifestyleImages: [
-      "/FE-namjun/assets/로그_타임라인-1.png",
-      "/FE-namjun/assets/로그_타임라인-2.png",
-      "/FE-namjun/assets/로그_타임라인-3.png",
+      IMG.zipper,
+      IMG.commute,
+      IMG.anniversary,
     ],
     careScore: 92,
     repairVouchers: 1,
@@ -49,10 +50,8 @@ export const products: Product[] = [
     material: "Visetos leather / gold hardware",
     color: "Black",
     year: 2023,
-    cutoutImage: "/FE-namjun/assets/로그_스토리북-3.png",
-    lifestyleImages: [
-      "/FE-namjun/assets/ella-jazz-memory.png",
-    ],
+    cutoutImage: IMG.ella,
+    lifestyleImages: [IMG.ellaJazz],
     careScore: 88,
     repairVouchers: 0,
     cleaningVouchers: 1,
@@ -65,8 +64,7 @@ export const stories: Story[] = [
     productId: "stark-backpack",
     tag: "출근",
     count: 2,
-    image:
-      "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=700&q=80",
+    image: IMG.commute,
     date: "2026.07.18",
   },
   {
@@ -74,8 +72,7 @@ export const stories: Story[] = [
     productId: "stark-backpack",
     tag: "기념일",
     count: 3,
-    image:
-      "https://images.unsplash.com/photo-1541849546-216549ae216d?auto=format&fit=crop&w=700&q=80",
+    image: IMG.anniversary,
     date: "2026.06.02",
   },
 ];
@@ -87,8 +84,7 @@ export const repairRecords: RepairRecord[] = [
     date: "2026.05.12",
     title: "오른쪽 숄더 스트랩 교체",
     location: "강남 플래그십 스토어",
-    thumbnail:
-      "https://images.unsplash.com/photo-1590874103328-eac38a67478a?auto=format&fit=crop&w=300&q=80",
+    thumbnail: IMG.strap,
     source: "store",
   },
   {
@@ -97,8 +93,7 @@ export const repairRecords: RepairRecord[] = [
     date: "2026.03.20",
     title: "비세토스 로고 패널 클리닝",
     location: "MCM Care Studio",
-    thumbnail:
-      "https://images.unsplash.com/photo-1591561954557-26941169b49e?auto=format&fit=crop&w=300&q=80",
+    thumbnail: IMG.clinic,
     source: "store",
   },
   {
@@ -107,8 +102,7 @@ export const repairRecords: RepairRecord[] = [
     date: "2025.11.04",
     title: "지퍼 슬라이더 교체",
     location: "강남 플래그십 스토어",
-    thumbnail:
-      "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=300&q=80",
+    thumbnail: IMG.zipper,
     source: "store",
   },
   {
@@ -117,7 +111,7 @@ export const repairRecords: RepairRecord[] = [
     date: "2026.06.01",
     title: "오른쪽 숄더 스트랩 보강",
     location: "AI 커스텀 진단",
-    thumbnail: "/camera/care-stark.png",
+    thumbnail: IMG.strap,
     source: "ai_custom",
     foundAt: "2026.06",
   },

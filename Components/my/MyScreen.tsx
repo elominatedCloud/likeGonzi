@@ -6,6 +6,7 @@ import { useState } from "react";
 import {
   BookOpenText,
   ChevronRight,
+  ClipboardList,
   LoaderCircle,
   LogOut,
   Package,
@@ -41,6 +42,12 @@ const menuItems = [
     label: "케어 & 리페어",
     description: "관리 가이드와 수선 여정",
     icon: Wrench,
+  },
+  {
+    href: "/my/repairs",
+    label: "수선 접수 내역",
+    description: "접수 상태와 진행 단계 확인",
+    icon: ClipboardList,
   },
 ] as const;
 

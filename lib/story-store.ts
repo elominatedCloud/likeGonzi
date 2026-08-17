@@ -1,13 +1,12 @@
 import type { CreateStoryBody, StoryRecord, UpdateStoryBody } from "@/types/story-api";
-
-const A = "/FE-namjun/assets";
+import { IMG } from "@/lib/images";
 
 /** 멋사 명세 검수용 시드 데이터 (남준 FE 상품 id 기준) */
 const seedStories: StoryRecord[] = [
   {
     id: "seongsu-inspiration",
     product_id: "stark",
-    image_url: `${A}/로그_타임라인-2.png`,
+    image_url: IMG.commute,
     tag: "성수에서 만난 새로운 영감",
     place: "서울 성수동",
     memo: "전시를 보고 카페에 들른 여유로운 날.\n#성수 #전시 #Backpack",
@@ -20,7 +19,7 @@ const seedStories: StoryRecord[] = [
   {
     id: "paris-trip",
     product_id: "stark",
-    image_url: `${A}/로그_타임라인-3.png`,
+    image_url: IMG.anniversary,
     tag: "파리 여행",
     place: "프랑스 파리",
     memo: "첫 여름 휴가, 가방과 함께한 파리.\n#여름휴가 #파리",
@@ -33,7 +32,7 @@ const seedStories: StoryRecord[] = [
   {
     id: "jazz-evening",
     product_id: "ella",
-    image_url: `${A}/ella-jazz-memory.png`,
+    image_url: IMG.ellaJazz,
     tag: "재즈 선율과 함께한 저녁",
     place: "서울 한남동",
     memo: "작은 공연장에서 만난 깊은 선율.\n#재즈 #한남 #Evening",
@@ -46,7 +45,7 @@ const seedStories: StoryRecord[] = [
   {
     id: "spring-gallery",
     product_id: "ella",
-    image_url: `${A}/ella-ai-concert.png`,
+    image_url: IMG.ellaConcert,
     tag: "봄날의 갤러리 오프닝",
     place: "서울 청담동",
     memo: "검정 가방이 크림 수트의 포인트가 된 날.\n#Gallery #Spring",
@@ -59,7 +58,7 @@ const seedStories: StoryRecord[] = [
   {
     id: "bookstore-afternoon",
     product_id: "pina",
-    image_url: `${A}/pina-bookstore-memory.png`,
+    image_url: IMG.pinaStore,
     tag: "책갈피 사이에 남은 오후",
     place: "서울 서촌",
     memo: "독립서점에서 발견한 한 권의 책.\n#서촌 #북카페 #Wallet",
@@ -72,7 +71,7 @@ const seedStories: StoryRecord[] = [
   {
     id: "museum-postcard",
     product_id: "pina",
-    image_url: `${A}/pina-ai-museum.png`,
+    image_url: IMG.pinaMuseum,
     tag: "미술관에서 쓴 엽서",
     place: "서울 덕수궁길",
     memo: "전시의 여운을 짧은 문장으로 남긴 날.\n#미술관 #엽서",
