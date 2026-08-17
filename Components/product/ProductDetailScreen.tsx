@@ -17,8 +17,8 @@ import {
 import { PageHeader } from "@/Components/ui/PageHeader";
 import { BottomNav } from "@/Components/ui/BottomNav";
 import { AmbientPattern } from "@/Components/ui/AmbientPattern";
-import { ProductStoryTimeline } from "@/Components/product/ProductStoryTimeline";
 import { showFeatureNotice } from "@/lib/feature-notice";
+import { getLogProductId } from "@/lib/product-routes";
 import type { Product, RepairRecord } from "@/types";
 import type { StoryRecord } from "@/types/story-api";
 
@@ -233,12 +233,62 @@ export function ProductDetailScreen({
         </p>
       </section>
 
-      <ProductStoryTimeline
-        product={product}
-        stories={stories}
-        limit={3}
-        allHref={`/products/${product.id}/stories`}
-      />
+      <section className="soft-card mx-4 mt-4 overflow-hidden pb-4 pt-4">
+        <div className="flex items-center justify-between px-4">
+          <h3 className="font-serif text-[14px] font-semibold tracking-[0.08em] text-cognac">
+            MY STORIES
+          </h3>
+          <Link
+            href={`/products/${product.id}/stories`}
+            className="text-[12px] leading-5 text-muted"
+          >
+            전체보기 →
+          </Link>
+        </div>
+
+        {stories.length ? (
+          <div className="no-scrollbar mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4">
+            {stories.slice(0, 3).map((story) => (
+              <Link
+                key={story.id}
+                href={`/log/${getLogProductId(product.id)}/record/${story.id}`}
+                className="relative h-[238px] w-[174px] shrink-0 snap-start overflow-hidden rounded-[18px] bg-cream-deep shadow-[0_8px_20px_rgba(43,33,28,0.12)]"
+                aria-label={`${story.tag} 사진 기록 보기`}
+              >
+                <SafeImage
+                  src={story.image_url}
+                  alt={`${story.tag} 기록 사진`}
+                  fill
+                  className="object-cover"
+                  sizes="174px"
+                  unoptimized
+                />
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/45 to-transparent px-3 pb-3 pt-12 text-white">
+                  <p className="text-[10px] text-white/70">
+                    {story.created_at.slice(0, 10).replaceAll("-", ".")}
+                  </p>
+                  <p className="mt-1 line-clamp-2 text-[14px] font-semibold leading-5">
+                    {story.tag}
+                  </p>
+                  <p className="mt-1 truncate text-[10px] text-white/75">
+                    {story.place || "장소 미지정"}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="mx-4 mt-3 rounded-[16px] border border-dashed border-cognac/25 bg-cream/70 px-5 py-8 text-center">
+            <p className="text-[13px] font-semibold text-ink">아직 남긴 사진 기록이 없어요.</p>
+            <Link
+              href={`/log/${getLogProductId(product.id)}/record/new`}
+              className="mt-2 inline-block text-[12px] text-cognac"
+            >
+              첫 기록 남기기 →
+            </Link>
+          </div>
+        )}
+      </section>
 
       <section className="soft-card mx-4 mt-4 p-4">
         <div className="mb-3 flex items-center justify-between">
