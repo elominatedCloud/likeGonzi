@@ -196,3 +196,52 @@ export function toTransferDTO(row: TransferRow, currentUserId: string): Transfer
     created_at: row.created_at,
   };
 }
+
+// ------------------------------------------------------------
+// stories
+// ------------------------------------------------------------
+
+export interface StoryRow {
+  id: string;
+  user_id: string;
+  tag: string | null;
+  photo_url: string | null;
+  location: string | null;
+  memo: string | null;
+  story: string | null;
+  story_date: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface StoryDTO {
+  id: string;
+  product_id: string;
+  image_url: string;
+  tag: string;
+  place: string;
+  memo: string;
+  story?: string;
+  product_ids: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * story_products에서 조회한 이 story에 연결된 product_unit_id 목록을 같이 받아서 DTO로 변환.
+ * product_id(단수)는 mock-db 호환을 위해 첫 번째 연결 제품으로 채움.
+ */
+export function toStoryDTO(row: StoryRow, productIds: string[]): StoryDTO {
+  return {
+    id: row.id,
+    product_id: productIds[0] ?? "",
+    image_url: row.photo_url ?? "",
+    tag: row.tag ?? "",
+    place: row.location ?? "",
+    memo: row.memo ?? "",
+    story: row.story ?? undefined,
+    product_ids: productIds,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  };
+}
