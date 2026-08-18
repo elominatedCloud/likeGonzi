@@ -161,3 +161,38 @@ export function toProfileDTO(row: ProfileRow): ProfileDTO {
     repair_vouchers: row.repair_vouchers,
   };
 }
+
+// ------------------------------------------------------------
+// ownership_transfers
+// ------------------------------------------------------------
+
+export interface TransferRow {
+  id: string;
+  product_unit_id: string;
+  from_user_id: string;
+  to_email: string;
+  status: string;
+  created_at: string;
+}
+
+export interface TransferDTO {
+  id: string;
+  product_id: string;
+  from_user_id: string;
+  to_email: string;
+  direction: "sent" | "received";
+  status: string;
+  created_at: string;
+}
+
+export function toTransferDTO(row: TransferRow, currentUserId: string): TransferDTO {
+  return {
+    id: row.id,
+    product_id: row.product_unit_id,
+    from_user_id: row.from_user_id,
+    to_email: row.to_email,
+    direction: row.from_user_id === currentUserId ? "sent" : "received",
+    status: row.status,
+    created_at: row.created_at,
+  };
+}
