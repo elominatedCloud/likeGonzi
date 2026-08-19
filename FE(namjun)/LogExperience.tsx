@@ -129,26 +129,32 @@ export function AllTimelinePage(){
 
 export function TimelinePage({productId,tab='all'}:{productId:ProductId;tab?:Tab}){
   const p=products[productId];
-  const [storyRecords,setStoryRecords]=useState<StoryRecord[]>([]);
-  const [deleted,setDeleted]=useState<string[]>([]);
-  const [careRecords,setCareRecords]=useState<CareRecord[]>([]);
+  const [timeline,setTimeline]=useState<TimelineEntry[]>([]);
+
+  // 전체 타임라인과 같은 소스를 쓴다(등록·기록·수선 모두 DB).
+  // 예전에는 제품 이력이 하드코딩, 케어 기록이 localStorage라 수선이 안 보였다.
   useEffect(()=>{
     let active=true;
-    listStoriesRequest(productId).then(result=>{
-      if(active&&result.ok)setStoryRecords(result.data);
-    });
-    try{
-      setDeleted(JSON.parse(localStorage.getItem(DELETED_RECORDS_KEY)??'[]'));
-      setCareRecords(JSON.parse(localStorage.getItem(CARE_RECORDS_KEY)??'[]'));
-    }catch{
-      setDeleted([]);setCareRecords([]);
-    }
+    apiFetch<TimelineEntry[]>(`/api/timeline?product=${encodeURIComponent(productId)}`)
+      .then(result=>{
+        if(active&&result.ok)setTimeline(result.data);
+      }).catch(()=>{});
     return()=>{active=false};
   },[productId]);
-  const storyEntries:Entry[]=storyRecords.map(r=>({id:r.id,kind:'memory',date:r.created_at.slice(0,10).replaceAll('-','.'),title:r.tag,place:r.place,sub:`${r.place||'장소 미지정'} · ${(r.product_ids?.length?r.product_ids:[productId]).map(id=>products[id as ProductId]?.short??id).join(' + ')}`,note:r.memo,image:r.image_url,story:r.story}));
-  const careEntries:Entry[]=careRecords.filter(r=>r.productId===productId).map(r=>({id:`care-${r.id}`,kind:'care',date:r.date,title:r.title,sub:r.sub,note:r.note,image:r.image}));
-  const visibleBase=p.entries.filter(e=>e.kind!=='memory'&&(!e.id||!deleted.includes(`${productId}:${e.id}`)));
-  const shown=[...visibleBase,...careEntries,...storyEntries].filter(e=>tab==='all'||(tab==='mine'?e.kind==='memory':e.kind!=='memory')).sort((a,b)=>a.date.localeCompare(b.date));
+
+  const shown:Entry[]=timeline
+    .filter(entry=>tab==='all'||(tab==='mine'?entry.kind==='story':entry.kind!=='story'))
+    .map(entry=>({
+      id:entry.id,
+      kind:(entry.kind==='story'?'memory':entry.kind==='repair'?'care':'product') as Entry['kind'],
+      date:entry.date.replaceAll('-','.'),
+      title:entry.title,
+      place:entry.place??undefined,
+      sub:`${entry.place||'장소 미지정'} · ${entry.product_name}`,
+      note:entry.note??undefined,
+      image:entry.image??undefined,
+    }))
+    .sort((a,b)=>a.date.localeCompare(b.date));
   return <Shell height={976}><div className={styles.timelineHead}><StatusTitle title={p.short}/><Link href={`/log/${p.id}/record/new`} className={styles.addRecord}>+ 기록 추가</Link></div><div className={styles.tabs}><Link className={tab==='all'?styles.on:''} href={`/log/${p.id}/timeline`}>전체</Link><Link className={tab==='mine'?styles.on:''} href={`/log/${p.id}/timeline/my`}>내 기록</Link><Link className={tab==='product'?styles.on:''} href={`/log/${p.id}/timeline/product`}>제품 이력</Link></div><div className={`${styles.timeline} ${tab!=='all'?styles.compactTimeline:''}`}><p className={styles.eyebrow}>MY MEMORY</p>{shown.map((e,i)=><Link href={e.id?`/log/${p.id}/record/${e.id}`:'#'} className={styles.timelineCard} key={`${e.date}-${e.id??i}`}><div className={styles.timelineText}><small>{e.date} · {e.kind==='memory'?'내 기록':'제품 이력'}</small><h2>{e.title}</h2><p>{e.sub}</p>{e.note&&<p className={styles.note}>{e.note}</p>}</div>{e.image?<img loading="lazy" src={e.image} alt=""/>:<span className={styles.shield}>✓</span>}</Link>)}</div></Shell>
 }
 function StatusTitle({title}:{title:string}){const router=useRouter();return <><button className={styles.back} onClick={()=>router.back()}>←</button><h1 className={styles.productTitle}>{title}</h1></>}
