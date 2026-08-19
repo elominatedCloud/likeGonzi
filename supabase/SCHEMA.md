@@ -61,9 +61,11 @@ owned_by_other → 이미 다른 사용자 등록
 `schema.sql`을 실행한 뒤에는 Story 조회 시 `photo_path`로 짧은 만료 시간의
 signed URL을 발급해 표시해야 합니다.
 
-Story와 `story_products`의 직접 INSERT 권한은 열지 않고, 인증 사용자만
-`create_story_with_products` RPC를 실행할 수 있습니다. RPC는 선택한 slug의
-제품을 모두 현재 사용자가 소유하는지 확인한 뒤 한 트랜잭션으로 저장합니다.
+private Storage 사진은 인증 사용자만 `create_story_with_products` RPC로 저장합니다.
+RPC는 선택한 slug의 제품을 모두 현재 사용자가 소유하는지 확인한 뒤 한
+트랜잭션으로 저장합니다. 기존 `photo_url` API 호환을 위한 직접 INSERT도
+authenticated 역할에 열려 있지만, `stories.user_id`와 제품 소유권을 검사하는
+RLS를 모두 통과해야 하며 서버 Route Handler에서만 호출합니다.
 
 ## 수선 status
 

@@ -12,6 +12,7 @@ import type {
   StoryRecord,
   UpdateStoryBody,
 } from "@/types/story-api";
+import { supabase } from "@/lib/supabase";
 
 type ApiResult<T> = ApiSuccess<T> | ApiError;
 
@@ -19,10 +20,15 @@ async function request<T>(
   path: string,
   init?: RequestInit,
 ): Promise<ApiResult<T>> {
+  const { data } = supabase
+    ? await supabase.auth.getSession()
+    : { data: { session: null } };
+  const accessToken = data.session?.access_token;
   const res = await fetch(path, {
     ...init,
     headers: {
       "Content-Type": "application/json",
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       ...(init?.headers ?? {}),
     },
   });

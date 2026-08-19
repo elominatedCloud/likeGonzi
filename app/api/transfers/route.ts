@@ -1,9 +1,20 @@
 import { fail, ok, readJson } from "@/lib/api-response";
-import { requireSupabaseUser } from "@/lib/auth-guard";
+import { requireSupabaseUser, requireUserOrDemo } from "@/lib/auth-guard";
 import { toTransferDTO, type TransferRow } from "@/lib/mappers";
+import { createTransfer, listTransfers } from "@/lib/mock-db";
+import {
+  productSlugsForUnitIds,
+  resolveOwnedProductRef,
+} from "@/lib/supabase-product-refs";
+import { getBearerToken } from "@/lib/supabase-server";
 
 /** GET /api/transfers — 보낸/받은 소유권 이전 목록 (RLS로 본인 관련 것만 조회됨) */
 export async function GET(request: Request) {
+  if (!getBearerToken(request)) {
+    const { user } = requireUserOrDemo(request);
+    return ok(listTransfers(user.id));
+  }
+
   const { user, supabase, error } = await requireSupabaseUser(request);
   if (error) return error;
 
@@ -17,23 +28,60 @@ export async function GET(request: Request) {
     return fail("QUERY_FAILED", qError.message, 500);
   }
 
-  return ok((data as TransferRow[]).map((row) => toTransferDTO(row, user.id)));
+  const rows = data as TransferRow[];
+  const slugByUnitId = await productSlugsForUnitIds(
+    supabase,
+    rows.map((row) => row.product_unit_id),
+  );
+  return ok(
+    rows.map((row) =>
+      toTransferDTO(
+        row,
+        user.id,
+        slugByUnitId[row.product_unit_id] ?? row.product_unit_id,
+      ),
+    ),
+  );
 }
 
 /** POST /api/transfers — 소유권 이전 신청 (본인 소유 제품만 가능, RLS가 검증) */
 export async function POST(request: Request) {
-  const { user, supabase, error } = await requireSupabaseUser(request);
-  if (error) return error;
-
   const body = await readJson<{ product_id?: string; to_email?: string }>(request);
   if (!body?.product_id || !body?.to_email) {
     return fail("VALIDATION_ERROR", "product_id and to_email are required", 400);
   }
 
+  if (!getBearerToken(request)) {
+    const { user } = requireUserOrDemo(request);
+    const transfer = createTransfer({
+      userId: user.id,
+      product_id: body.product_id,
+      to_email: body.to_email,
+    });
+    return transfer
+      ? ok(transfer, 201)
+      : fail(
+          "TRANSFER_FAILED",
+          "제품을 찾을 수 없거나 소유 제품이 아닙니다",
+          400,
+        );
+  }
+
+  const { user, supabase, error } = await requireSupabaseUser(request);
+  if (error) return error;
+  const productRef = await resolveOwnedProductRef(supabase, body.product_id);
+  if (!productRef) {
+    return fail(
+      "TRANSFER_FAILED",
+      "제품을 찾을 수 없거나 소유 제품이 아닙니다",
+      400,
+    );
+  }
+
   const { data, error: insertError } = await supabase
     .from("ownership_transfers")
     .insert({
-      product_unit_id: body.product_id,
+      product_unit_id: productRef.unitId,
       from_user_id: user.id,
       to_email: body.to_email,
     })
@@ -49,5 +97,5 @@ export async function POST(request: Request) {
     );
   }
 
-  return ok(toTransferDTO(data as TransferRow, user.id), 201);
+  return ok(toTransferDTO(data as TransferRow, user.id, productRef.slug), 201);
 }

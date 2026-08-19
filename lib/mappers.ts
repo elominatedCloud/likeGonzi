@@ -185,10 +185,14 @@ export interface TransferDTO {
   created_at: string;
 }
 
-export function toTransferDTO(row: TransferRow, currentUserId: string): TransferDTO {
+export function toTransferDTO(
+  row: TransferRow,
+  currentUserId: string,
+  productId = row.product_unit_id,
+): TransferDTO {
   return {
     id: row.id,
-    product_id: row.product_unit_id,
+    product_id: productId,
     from_user_id: row.from_user_id,
     to_email: row.to_email,
     direction: row.from_user_id === currentUserId ? "sent" : "received",
@@ -206,6 +210,7 @@ export interface StoryRow {
   user_id: string;
   tag: string | null;
   photo_url: string | null;
+  photo_path: string | null;
   location: string | null;
   memo: string | null;
   story: string | null;
@@ -231,11 +236,15 @@ export interface StoryDTO {
  * story_products에서 조회한 이 story에 연결된 product_unit_id 목록을 같이 받아서 DTO로 변환.
  * product_id(단수)는 mock-db 호환을 위해 첫 번째 연결 제품으로 채움.
  */
-export function toStoryDTO(row: StoryRow, productIds: string[]): StoryDTO {
+export function toStoryDTO(
+  row: StoryRow,
+  productIds: string[],
+  imageUrl = row.photo_url ?? "",
+): StoryDTO {
   return {
     id: row.id,
     product_id: productIds[0] ?? "",
-    image_url: row.photo_url ?? "",
+    image_url: imageUrl,
     tag: row.tag ?? "",
     place: row.location ?? "",
     memo: row.memo ?? "",

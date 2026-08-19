@@ -638,8 +638,10 @@ grant usage on schema public to anon, authenticated;
 
 grant select on public.products to authenticated;
 grant select, update, delete on public.user_products to authenticated;
-grant select, update, delete on public.stories to authenticated;
-grant select, delete on public.story_products to authenticated;
+-- Route Handler가 RLS 검증 아래에서 legacy photo_url 기록도 생성할 수 있게 한다.
+-- private Storage 기록은 create_story_with_products RPC를 우선 사용한다.
+grant select, insert, update, delete on public.stories to authenticated;
+grant select, insert, delete on public.story_products to authenticated;
 grant select, insert on public.repairs to authenticated;
 grant select, insert on public.ownership_transfers to authenticated;
 grant select, insert on public.leather_checks to authenticated;
