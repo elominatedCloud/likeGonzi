@@ -24,6 +24,7 @@ export default function CarePage() {
       <CareGuideScreen
         product={product}
         repairs={data.recent_activity.repairs.map(toRepairView)}
+        storyCount={data.recent_activity.stories.length}
       />
     </Suspense>
   );

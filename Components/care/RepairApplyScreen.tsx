@@ -7,10 +7,11 @@ import { Camera, Check, MapPin, PackageCheck } from "lucide-react";
 import { PageHeader } from "@/Components/ui/PageHeader";
 import { BottomNav } from "@/Components/ui/BottomNav";
 import { ProductMiniCard } from "@/Components/care/ProductMiniCard";
+import { AreaBoxPicker } from "@/Components/care/AreaBoxPicker";
 import { apiFetch } from "@/lib/api-client";
 import { persistStoryPhoto } from "@/lib/story-photo-storage";
 import { cn } from "@/lib/cn";
-import { AREA_TAGS, CONDITION_TYPES, areaLabel, formatDate } from "@/lib/repair";
+import { CONDITION_TYPES, areaLabel, formatDate } from "@/lib/repair";
 import type { DbRepair } from "@/lib/mock-db";
 
 interface RepairApplyScreenProps {
@@ -189,22 +190,13 @@ export function RepairApplyScreen({
 
       <section className="mx-4 mt-6">
         <p className="text-[11px] tracking-[0.16em] text-muted">REPAIR AREA</p>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {AREA_TAGS.map((tag) => (
-            <button
-              key={tag.id}
-              type="button"
-              onClick={() => setArea(tag.id)}
-              className={cn(
-                "rounded-full border px-3.5 py-1.5 text-[13px]",
-                area === tag.id
-                  ? "border-ink bg-ink text-white"
-                  : "border-black/15 bg-white/70 text-ink-soft",
-              )}
-            >
-              {tag.label}
-            </button>
-          ))}
+        <div className="mt-2">
+          <AreaBoxPicker
+            image={productImage}
+            productKey={productId}
+            value={area}
+            onChange={setArea}
+          />
         </div>
       </section>
 

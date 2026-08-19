@@ -14,6 +14,8 @@ import {
 } from '@/lib/story-api-client';
 import { COMPANIONS, OCCASIONS, type CompanionId, type OccasionId } from '@/types/story-api';
 import { normalizePlace } from '@/lib/place-normalize';
+import { apiFetch } from '@/lib/api-client';
+import type { TimelineEntry } from '@/app/api/timeline/route';
 import { persistCloudStory, persistStoryPhoto, removeStoryPhoto } from '@/lib/story-photo-storage';
 import type { StoryRecord } from '@/types/story-api';
 import { getProductDetailPath } from '@/lib/product-routes';
@@ -61,47 +63,33 @@ type UnifiedTimelineEntry=Entry&{productIds:ProductId[]};
 /* eslint-disable react-hooks/set-state-in-effect */
 export function AllTimelinePage(){
   const [tab,setTab]=useState<Tab>('all');
-  const [storyRecords,setStoryRecords]=useState<StoryRecord[]>([]);
-  const [deleted,setDeleted]=useState<string[]>([]);
-  const [careRecords,setCareRecords]=useState<CareRecord[]>([]);
+  const [timeline,setTimeline]=useState<TimelineEntry[]>([]);
 
+  // 등록·기록·수선을 서버에서 한 줄기로 받아온다.
+  // 예전에는 제품 이력이 하드코딩, 케어 기록이 localStorage라 수선을 접수해도
+  // 여기 안 나타나고 기기를 바꾸면 사라졌다.
   useEffect(()=>{
     let active=true;
-    Promise.all(ALL_PRODUCT_IDS.map(productId=>listStoriesRequest(productId))).then(results=>{
-      if(!active)return;
-      const unique=new Map<string,StoryRecord>();
-      results.forEach(result=>{
-        if(!result.ok)return;
-        result.data.forEach(record=>unique.set(record.id,record));
-      });
-      setStoryRecords([...unique.values()]);
-    });
-    try{
-      setDeleted(JSON.parse(localStorage.getItem(DELETED_RECORDS_KEY)??'[]'));
-      setCareRecords(JSON.parse(localStorage.getItem(CARE_RECORDS_KEY)??'[]'));
-    }catch{
-      setDeleted([]);setCareRecords([]);
-    }
+    apiFetch<TimelineEntry[]>('/api/timeline').then(result=>{
+      if(!active||!result.ok)return;
+      setTimeline(result.data);
+    }).catch(()=>{});
     return()=>{active=false};
   },[]);
 
-  const productEntries:UnifiedTimelineEntry[]=ALL_PRODUCT_IDS.flatMap(productId=>
-    products[productId].entries
-      .filter(entry=>entry.kind!=='memory'&&(!entry.id||!deleted.includes(`${productId}:${entry.id}`)))
-      .map(entry=>({...entry,productIds:[productId]})),
-  );
-  const careEntries:UnifiedTimelineEntry[]=careRecords.map(record=>({
-    id:`care-${record.id}`,kind:'care',date:record.date,title:record.title,sub:record.sub,note:record.note,image:record.image,productIds:[record.productId],
-  }));
-  const storyEntries:UnifiedTimelineEntry[]=storyRecords.map(record=>{
-    const tagged=(record.product_ids?.filter(id=>id in products) as ProductId[]|undefined)??[];
-    const fallback=(record.product_id in products?record.product_id:'stark') as ProductId;
-    const related=tagged.length?tagged:[fallback];
-    return {id:record.id,kind:'memory',date:record.created_at.slice(0,10).replaceAll('-','.'),title:record.tag,place:record.place,sub:`${record.place||'장소 미지정'} · ${related.map(id=>products[id].short).join(' + ')}`,note:record.memo,image:record.image_url,story:record.story,productIds:related};
-  });
-  const shown=[...productEntries,...careEntries,...storyEntries]
-    .filter(entry=>tab==='all'||(tab==='mine'?entry.kind==='memory':entry.kind!=='memory'))
-    .sort((a,b)=>b.date.localeCompare(a.date));
+  const shown:UnifiedTimelineEntry[]=timeline
+    .filter(entry=>tab==='all'||(tab==='mine'?entry.kind==='story':entry.kind!=='story'))
+    .map(entry=>({
+      id:entry.id,
+      kind:entry.kind==='story'?'memory':entry.kind==='repair'?'care':'product',
+      date:entry.date.replaceAll('-','.'),
+      title:entry.title,
+      place:entry.place??undefined,
+      sub:`${entry.place||'장소 미지정'} · ${entry.product_name}`,
+      note:entry.note??undefined,
+      image:entry.image??undefined,
+      productIds:[entry.product_slug as ProductId],
+    }));
 
   const entryHref=(entry:UnifiedTimelineEntry)=>{
     const productId=entry.productIds[0];

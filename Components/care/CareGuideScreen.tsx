@@ -23,6 +23,8 @@ import { cn } from "@/lib/cn";
 interface CareGuideScreenProps {
   product: Product;
   repairs: RepairRecord[];
+  /** 케어 점수 내역 표시용. compute_care_score와 같은 규칙으로 계산한다. */
+  storyCount?: number;
 }
 
 const tipIcons = {
@@ -32,7 +34,7 @@ const tipIcons = {
   moisture: Droplets,
 };
 
-export function CareGuideScreen({ product, repairs }: CareGuideScreenProps) {
+export function CareGuideScreen({ product, repairs, storyCount = 0 }: CareGuideScreenProps) {
   const searchParams = useSearchParams();
   const initial =
     searchParams.get("tab") === "repairs" ? "repairs" : "tips";
@@ -44,9 +46,11 @@ export function CareGuideScreen({ product, repairs }: CareGuideScreenProps) {
       [...repairs].sort((a, b) => (a.date < b.date ? 1 : -1)),
     [repairs],
   );
-  // care_score는 현재 DB 기본값(상수)이다. 계산 로직이 없으므로 내역을
-  // 역산해서 합을 맞추지 않는다. 실제로 셀 수 있는 값만 보여준다.
-  const repairRecordCount = repairs.length;
+  // compute_care_score(DB)와 같은 규칙으로 내역을 보여준다.
+  // 역산해서 합을 맞추지 않고, 각 항목을 실제 건수에서 그대로 계산한다.
+  const storyBonus = Math.min(12, storyCount * 3);
+  const repairBonus = Math.min(12, repairs.length * 6);
+  const recentBonus = Math.max(0, product.careScore - 70 - storyBonus - repairBonus);
 
   return (
     <main className="visetos-bg relative min-h-dvh pb-28">
@@ -64,18 +68,20 @@ export function CareGuideScreen({ product, repairs }: CareGuideScreenProps) {
               {product.careScore}{" "}
               <span className="text-[16px] text-muted">/ 100점</span>
             </p>
-            <p className="mt-1 text-[12px] text-ink-soft">데모 기준 고정 점수</p>
+            <p className="mt-1 text-[12px] text-ink-soft">등록된 기록과 관리 이력으로 계산</p>
           </div>
           <ChevronDown size={17} className={`shrink-0 text-muted transition ${scoreOpen ? "rotate-180" : ""}`}/>
         </button>
         {scoreOpen && (
           <div className="border-t border-black/5 bg-cream/65 px-4 py-4">
-            <p className="text-[11px] leading-[17px] text-muted">실제 센서나 진단 결과가 아닙니다. 현재 버전에서는 제품 등록 시 부여되는 고정 점수를 그대로 보여주며, 상태에 따라 변하지 않습니다.</p>
+            <p className="text-[11px] leading-[17px] text-muted">실제 센서나 이미지 진단이 아니라, 등록된 기록과 관리 이력만으로 계산합니다.</p>
             <dl className="mt-3 space-y-2 text-[12px]">
-              <div className="flex justify-between"><dt className="text-ink-soft">등록 시 부여된 점수</dt><dd className="font-semibold text-ink">{product.careScore}점</dd></div>
-              <div className="flex justify-between"><dt className="text-ink-soft">등록된 관리·수선 기록</dt><dd className="font-semibold text-ink">{repairRecordCount}건</dd></div>
+              <div className="flex justify-between"><dt className="text-ink-soft">기본 점수</dt><dd className="font-semibold text-ink">70점</dd></div>
+              <div className="flex justify-between"><dt className="text-ink-soft">사진 기록 {storyCount}건</dt><dd className="font-semibold text-ink">+{storyBonus}점</dd></div>
+              <div className="flex justify-between"><dt className="text-ink-soft">관리·수선 {repairs.length}건</dt><dd className="font-semibold text-ink">+{repairBonus}점</dd></div>
+              <div className="flex justify-between"><dt className="text-ink-soft">최근 90일 내 활동</dt><dd className="font-semibold text-ink">+{recentBonus}점</dd></div>
             </dl>
-            <p className="mt-3 text-[10px] text-muted">기록을 반영한 점수 산정은 다음 버전에서 제공됩니다.</p>
+            <p className="mt-3 text-[10px] text-muted">기록이 늘면 점수도 함께 올라갑니다. 최대 100점.</p>
           </div>
         )}
       </section>

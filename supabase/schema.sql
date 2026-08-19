@@ -253,7 +253,8 @@ create or replace view public.my_products_view as
          pu.year,
          pu.cutout_image,
          pu.lifestyle_images,
-         pu.care_score,
+         -- 상수가 아니라 등록된 기록·수선으로 계산한다.
+         public.compute_care_score(pu.id) as care_score,
          pu.repair_vouchers,
          pu.cleaning_vouchers,
          up.user_id,
@@ -614,6 +615,47 @@ begin
   end loop;
 end;
 $$;
+
+-- 케어 점수 산출.
+-- 예전에는 product_units.care_score가 상수(default 90)였고 UI가 내역을 역산해
+-- 합을 맞추고 있었다. 실제로 셀 수 있는 신호로 계산한다.
+--   기본 70 + 기록 1건당 3(최대 12) + 수선 1건당 6(최대 12)
+--   + 최근 90일 내 활동 6. 상한 100.
+-- 센서나 이미지 진단이 아니라 등록된 기록만 본다.
+create or replace function public.compute_care_score(p_unit_id uuid)
+returns integer
+language sql
+stable
+security definer
+set search_path to 'public'
+as $$
+  with story_stats as (
+    select count(*) as n, max(s.story_date) as last_at
+      from public.stories s
+      join public.story_products sp on sp.story_id = s.id
+     where sp.product_unit_id = p_unit_id
+  ),
+  repair_stats as (
+    select count(*) as n, max(r.created_at::date) as last_at
+      from public.repairs r
+     where r.product_unit_id = p_unit_id
+  )
+  select least(100,
+    70
+    + least(12, (select n from story_stats)::int * 3)
+    + least(12, (select n from repair_stats)::int * 6)
+    + case
+        when greatest(
+               coalesce((select last_at from story_stats), '1970-01-01'::date),
+               coalesce((select last_at from repair_stats), '1970-01-01'::date)
+             ) >= current_date - 90
+        then 6 else 0
+      end
+  )::int;
+$$;
+
+revoke all on function public.compute_care_score(uuid) from public;
+grant execute on function public.compute_care_score(uuid) to authenticated;
 
 -- 동의 참여 현황(집계 수치만).
 -- profiles는 RLS가 "본인 행만"이라 운영자도 자기 것 하나만 센다.
