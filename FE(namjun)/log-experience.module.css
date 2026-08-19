@@ -43,3 +43,10 @@
 .detailContent,.form,.aiContent{padding-bottom:132px}
 .detailLoading{padding:80px 24px;text-align:center;color:#76695d;font-size:14px}
 .comingSoon{background:#e8dfd4!important;color:#75685d!important;cursor:not-allowed!important}
+
+/* 상황·동행 선택 칩. 자유 텍스트 대신 정해진 값을 고르게 해서 집계가 가능해진다. */
+.chipRow{display:flex;flex-wrap:wrap;gap:6px;padding:2px 1px 7px}
+.chipRow button{flex:none;padding:7px 12px;border:1px solid #e6dbcd;border-radius:22px;background:#fff;color:#6e6259;font-size:12px;line-height:16px;cursor:pointer}
+.chipRow button:hover{background:#faf6f1}
+.chipRow button.chipOn{border-color:#9f7c57;background:#6e432c;color:#fff;font-weight:600}
+.chipRow button:focus-visible{outline:2px solid #9f7c57;outline-offset:2px}

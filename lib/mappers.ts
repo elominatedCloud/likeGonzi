@@ -1,3 +1,5 @@
+import type { CompanionId, OccasionId } from "@/types/story-api";
+
 /**
  * snake_case(DB) → 기존 API 응답 계약(mock-db.ts 시절 필드명) 변환 계층.
  *
@@ -235,6 +237,10 @@ export interface StoryRow {
   location: string | null;
   memo: string | null;
   story: string | null;
+  occasion: string[] | null;
+  companion: string | null;
+  city: string | null;
+  country: string | null;
   story_date: string;
   created_at: string;
   updated_at: string;
@@ -248,6 +254,11 @@ export interface StoryDTO {
   place: string;
   memo: string;
   story?: string;
+  /** 집계 가능한 상황 축 — tag/place(자유 텍스트)와 별개 */
+  occasion: OccasionId[];
+  companion?: CompanionId;
+  city?: string;
+  country?: string;
   product_ids: string[];
   created_at: string;
   updated_at: string;
@@ -270,6 +281,10 @@ export function toStoryDTO(
     place: row.location ?? "",
     memo: row.memo ?? "",
     story: row.story ?? undefined,
+    occasion: (row.occasion ?? []) as OccasionId[],
+    companion: (row.companion ?? undefined) as CompanionId | undefined,
+    city: row.city ?? undefined,
+    country: row.country ?? undefined,
     product_ids: productIds,
     created_at: row.created_at,
     updated_at: row.updated_at,

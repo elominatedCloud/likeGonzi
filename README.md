@@ -2,16 +2,19 @@
 
 Next.js + TypeScript + Supabase 기반 MCM 제품 아카이브 앱입니다.
 
+QR/NFC 태그로 실물 제품과 디지털 기록을 연결하고, 구매 → 사용 → 관리 → 수선 → 리캡까지
+제품의 생애주기를 하나의 여정으로 남깁니다.
+
 ## 화면 범위
 
-1. **스플래시 / 시작 / 로그인** (`/`, `/start`, `/login`) — 기존 팀 구현
-2. **홈** (`/home`) — 내 제품, 케어 알림, 생일 혜택, ESG 카드, 라이프스타일 제안
-3. **제품 상세** (`/products/[id]`) — 누끼→라이프스타일 슬라이드, 메뉴(삭제/이름수정/소유권이전), AI 수선, 가죽 점검
-4. **케어 가이드** (`/products/[id]/care`) — 케어 점수, 클리닉 tip / 수선 기록
+1. **스플래시 / 시작 / 로그인** (`/`, `/start`, `/login`)
+2. **홈** (`/home`) — 내 제품 캐러셀, 케어 알림, 멤버십 혜택, AI Recap, ESG 카드
+3. **제품 상세** (`/products/[id]`) — 누끼→라이프스타일 슬라이드, 제품 관리(이름 수정 / 연동 해제), 수선 이력, 기록
+4. **케어 가이드** (`/products/[id]/care`) — 케어 점수, 클리닉 tip, 수선 기록
 5. **수선 접수·진행** (`/products/[id]/repairs`) — 부위 선택, 접수, 진행 상태 조회
-6. **로그 경험** (`/log/...`) — FE(namjun) 타임라인·스토리북
-7. **Story API** — 남준 명세 2.1/2.2 (`docs/STORY_API.md`)
-8. **전체 API** — IA 명세 엔드포인트 (`docs/API.md`)
+6. **로그 경험** (`/log/...`) — FE(namjun) 타임라인·스토리북·기록 작성
+7. **운영 도구** (`/admin`) — 개체 발급, QR 시트 출력 (운영자 전용)
+8. **API 명세** — Story API (`docs/STORY_API.md`), 전체 API (`docs/API.md`)
 
 ## 실행
 
@@ -22,11 +25,172 @@ npm run dev
 
 브라우저에서 [http://localhost:3000](http://localhost:3000)
 
-## Supabase
+## 환경 변수
 
-1. `.env.local.example`을 참고해 `.env.local` 작성 (`.env*`는 gitignore)
-2. `supabase/schema.sql`을 Supabase SQL Editor에서 실행
-3. 홈·제품 상세 UI는 현재 `lib/data.ts` 목 데이터로 동작합니다
+`.env.local`에 아래 값을 넣습니다. `.env*`는 gitignore 대상입니다.
+
+```
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+OPENAI_API_KEY=...            # 없어도 앱은 동작합니다(아래 AI 항목 참고)
+```
+
+> `OPENAI_API_KEY`에 `NEXT_PUBLIC_` 접두사를 붙이면 안 됩니다. 브라우저 번들에 그대로 실립니다.
+> 서버 라우트(`lib/ai.ts`)에서만 읽습니다.
+
+## Supabase 세팅
+
+1. `supabase/schema.sql`을 SQL Editor에서 실행
+2. `supabase/seed.sql` 실행 (데모 제품 + IR용 상황 데이터)
+3. 운영자 지정 — 계정을 만든 뒤 아래를 실행합니다. 계정을 지웠다 다시 만들면
+   uuid가 바뀌므로 이메일 기준으로 부여합니다.
+
+```sql
+update public.profiles set is_admin = true
+ where id in (select id from auth.users where email = '운영자_이메일');
+```
+
+`schema.sql`은 실제 Supabase 프로젝트의 스냅샷입니다. 스키마를 바꿀 때는 이 파일을
+직접 고치지 말고 **마이그레이션을 적용한 뒤 다시 뽑아** 파일과 DB가 갈라지지 않게 합니다.
+
+---
+
+# 구현 내용
+
+## 1. 데이터 연동 — mock-db 제거
+
+`lib/mock-db.ts` 기반으로 동작하던 API를 전부 Supabase로 옮겼습니다.
+홈·제품 상세·케어·수선·기록 화면도 정적 데이터가 아니라 실제 API를 읽습니다.
+
+- `/api/home`, `/api/repairs`, 수선 목록·상세·접수, `/api/transfers`
+- 화면 전환: `lib/use-product-detail.ts` 훅 하나로 통일, 공통 로딩·에러 화면(`ProductLoadState`)
+
+**공통 인증 클라이언트** (`lib/api-client.ts`)
+브라우저에서 `/api/*`를 부를 때 Supabase access token을 자동으로 싣습니다.
+401이 오면 `/login?returnTo=현재경로`로 보냅니다.
+
+**제품 식별자** — FE는 slug(`stark`)를, DB는 `product_units` UUID를 씁니다.
+`resolveOwnedProductRef`가 둘 다 받아 소유 중인 개체로 해석합니다.
+소유 여부는 **RLS가 아니라 `user_id`로 직접 거릅니다** — 운영자는 RLS상 모든 개체가
+보이기 때문에 RLS에만 의존하면 남의 개체가 잡힙니다.
+
+## 2. QR 제품 등록
+
+- **실물 태그 QR** → `https://앱/start?tag={tag_code}` → 스캔 결과에 따라
+  내 제품 이동 / 등록 / 타인 소유 안내로 분기. 로그인 후 자동 등록(`claim=1`)까지 이어집니다.
+- **앱 내 QR 인식** (`/camera?mode=qr`) — 카메라 탭에서 `BarcodeDetector`로 인식합니다.
+  로그인이 필요하며, 미지원 브라우저(Safari)는 **태그 코드 직접 입력**으로 폴백합니다.
+- **QR 생성** (`/admin/tags`) — 가운데 MCM 로고를 넣습니다. 로고가 모듈을 가리므로
+  오류 정정 레벨을 자동으로 H(30% 복구)로 올립니다. 인쇄/PDF, SVG 저장 지원.
+- **개체 발급** (`/admin/units`) — 제품·매장·연도·수량을 넣으면 `tag_code`/`serial_no`를
+  자동 채번합니다. 동시 발급 시 번호가 겹치지 않도록 `issue_product_units` RPC가
+  `products` 행을 잠그고 DB 안에서 처리합니다.
+
+> QR을 뽑을 때 **주소를 배포 주소로 바꿔야** 합니다. localhost로 만든 QR은 다른 기기에서 열리지 않습니다.
+
+## 3. AI (OpenAI)
+
+`lib/ai.ts` — 서버 전용 래퍼. **키가 없으면 규칙 기반 문구로 폴백**하므로
+키 없이도 데모가 멈추지 않습니다.
+
+- **Story 생성** — 기록 저장 시 사용자가 직접 쓴 글이 없으면 태그·장소·메모·날짜로 문장을 만듭니다.
+- **Recap** (`/api/products/{id}/recap`) — 쌓인 기록·수선을 요약합니다.
+  생성 시점의 기록 수를 `product_recaps`에 같이 저장해 **건수가 바뀔 때만 재생성**합니다.
+
+프롬프트(`lib/ai-prompts.ts`)에는 "적지 않은 사실(장소·동행·날씨·감정)을 지어내지 말 것",
+"제품을 칭찬·평가하지 말 것", "총평으로 끝내지 말 것" 제약이 들어 있습니다.
+또한 **재료가 없으면 API를 아예 부르지 않습니다** — 장소·메모가 둘 다 없는 기록,
+기록·수선이 0건인 Recap은 모델이 빈칸을 지어내므로 기본 문구로 폴백합니다.
+
+## 4. 상황 데이터 구조화 (IR 핵심)
+
+`stories.tag`는 자유 텍스트 **제목**("성수에서 만난 새로운 영감")이고 `location`도
+"서울 성수동" / "프랑스 파리"가 섞여 있어 집계가 불가능했습니다.
+원문은 그대로 두고 집계 가능한 축을 따로 추가했습니다.
+
+| 컬럼 | 내용 |
+|---|---|
+| `occasion text[]` | 출근·여행·전시·모임·데이트·운동·일상 (다중, GIN 인덱스) |
+| `companion text` | 혼자·친구·가족·연인·동료 (단일, CHECK 제약) |
+| `city` / `country` | 정규화된 도시명 / ISO 3166-1 alpha-2 (복합 인덱스) |
+
+기록 작성 화면에서 **칩 선택**으로 받습니다(자유 입력 아님).
+도시·국가는 `lib/place-normalize.ts`의 시드 도시 표로 매칭합니다 —
+**지오코딩 API를 붙이지 않았습니다.** 표에 없는 장소는 비워 두고 원문만 남깁니다.
+
+## 5. B2B 집계 뷰
+
+| 뷰 | 내용 |
+|---|---|
+| `brand_occasion_usage` | 제품 모델 × 상황별 기록 수 |
+| `brand_repair_hotspots` | 제품 모델 × 수선 부위/증상별 건수 |
+| `brand_city_usage` | 제품 모델 × 국가/도시별 기록 수 |
+
+세 뷰 모두 **개인 식별자를 반환하지 않고 집계 수치만** 내보냅니다.
+
+- **k-익명성** — 5건 미만 그룹은 제외합니다. 소수 그룹은 특정 개인의 행동으로 역추적될 수 있습니다.
+- **동의** — `analytics_consent = true`인 사용자만 집계합니다. 철회하면 다음 조회부터 즉시 빠집니다.
+- **접근 통제** — 뷰에는 RLS 정책을 걸 수 없고(정책은 기반 테이블에만 붙습니다),
+  `security_invoker`를 켜면 `stories` RLS가 "본인 것만"이라 집계 자체가 불가능해집니다.
+  그래서 **뷰 본문에 `is_admin()` 조건**을 넣고 anon 권한을 회수했습니다.
+
+## 6. 동의 모델
+
+`profiles.analytics_consent` / `analytics_consent_at`. 기본값 `false`이며
+상태와 시각이 어긋나지 않도록 CHECK 제약이 걸려 있습니다.
+**동의 없이도 앱의 모든 개인 기능은 정상 동작합니다.** 집계 대상에서만 빠집니다.
+
+## 7. 이벤트 로깅
+
+`product_events` — `scan`, `unbox_complete`, `register`, `story_create`,
+`repair_submit`, `recap_view`, `share`.
+스캔은 비로그인도 가능하므로 `user_id`가 `null`인 행이 들어갑니다.
+읽기는 운영자만 가능합니다.
+
+배치·큐를 쓰지 않고 발생 시점에 단순 insert 합니다.
+`logProductEvent`는 **절대 throw하지 않습니다** — 로깅 실패로 등록이나 기록 저장이
+실패하면 안 되기 때문입니다.
+
+## 8. 소유권 — 이전 대신 연동 해제
+
+이메일 기반 소유권 이전은 수락 플로우·알림·만료 처리가 필요합니다.
+같은 결과를 이미 있는 API 두 개로 얻을 수 있어 **연동 해제** 방식으로 바꿨습니다.
+
+내 계정에서 해제 → 태그가 다시 미등록 상태 → 다음 소유자가 스캔해서 등록.
+**사진 기록과 수선 이력은 제품에 그대로 남습니다.**
+
+`ownership_transfers` 테이블과 API는 남아 있지만 **FE에서 사용하지 않습니다.**
+
+## 9. 사진 저장
+
+사용자가 찍은 사진(기록·수선)은 private Storage 버킷 `story-photos`에 저장하고,
+읽을 때 임시 서명 URL을 발급합니다(`lib/supabase-photo-url.ts`).
+경로 첫 폴더가 `auth.uid()`여야 하는 RLS가 걸려 있습니다.
+
+제품 목업 이미지는 Storage에 올리지 않고 `/public`에서 서빙합니다 —
+CDN 캐시가 되고 egress 비용이 들지 않습니다.
+
+## 10. 반응형
+
+앱 화면은 모바일 프레임을 씁니다. **폰에서는 항상 화면을 꽉 채우고**,
+태블릿 이상(640px~)에서만 430px 프레임을 가운데 세웁니다.
+
+큰 폰(갤럭시 480px, 아이폰 Pro Max 440px)까지 430px로 묶으면 양옆에 죽은 여백이
+생기기 때문에, `--app-frame` 변수를 미디어 쿼리로 전환합니다.
+바텀바·카메라 프레임·플로팅바가 모두 이 변수를 참조합니다.
+
+운영 도구(`/admin`)는 표와 QR 시트를 넓게 봐야 해서 프레임을 벗어납니다.
+
+---
+
+## 알려진 제약
+
+- **`care_score`는 상수입니다.** 등록 시 부여되는 고정 점수를 그대로 보여주며 상태에
+  따라 변하지 않습니다. UI에도 그렇게 명시했습니다. "AI 분석"으로 설명하면 안 됩니다.
+- **NFC는 미구현입니다.** NDEF에 같은 URL을 굽으면 동작하지만 쓰기 도구가 없습니다.
+- SNS 공유, 통합 타임라인(`/api/timeline`), 프로필 조회·수정(`/api/me`),
+  비밀번호 재설정은 미구현입니다.
+- 수선의 `memo`·접수 방식·예상 비용/기간은 저장하지 않습니다(컬럼 없음).
 
 ## 페르소나 키워드
 

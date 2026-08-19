@@ -25,6 +25,10 @@ type CloudStoryInput = {
   memo?: string;
   storyDate: string;
   productSlugs: string[];
+  occasion?: string[];
+  companion?: string | null;
+  city?: string | null;
+  country?: string | null;
 };
 
 export type CloudStoryRecord = {
@@ -108,6 +112,10 @@ export async function persistCloudStory(
     p_memo: input.memo ?? null,
     p_story_date: input.storyDate,
     p_product_slugs: input.productSlugs,
+    p_occasion: input.occasion ?? [],
+    p_companion: input.companion ?? null,
+    p_city: input.city ?? null,
+    p_country: input.country ?? null,
   });
 
   if (error) {

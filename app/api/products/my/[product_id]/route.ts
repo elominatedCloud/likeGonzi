@@ -1,5 +1,6 @@
 import { fail, ok } from "@/lib/api-response";
 import { requireSupabaseUser } from "@/lib/auth-guard";
+import { logProductEvent } from "@/lib/product-events";
 import { resolveOwnedProductRef } from "@/lib/supabase-product-refs";
 
 type Ctx = { params: Promise<{ product_id: string }> };
@@ -37,6 +38,13 @@ export async function POST(request: Request, context: Ctx) {
 
   const productUnitId = (data as { product_unit_id: string }[] | null)?.[0]
     ?.product_unit_id;
+
+  await logProductEvent(supabase, {
+    type: "register",
+    userId: user.id,
+    productUnitId: productUnitId ?? null,
+    meta: { tag_code: tagCode },
+  });
 
   return ok({ product_id: productUnitId, tag_code: tagCode, registered: true }, 201);
 }

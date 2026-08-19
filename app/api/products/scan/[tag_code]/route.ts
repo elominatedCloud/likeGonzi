@@ -1,4 +1,5 @@
 import { fail, ok } from "@/lib/api-response";
+import { logProductEvent } from "@/lib/product-events";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 type Ctx = { params: Promise<{ tag_code: string }> };
@@ -46,6 +47,15 @@ export async function GET(request: Request, context: Ctx) {
       : ownership_status === "unregistered"
         ? "register_confirm"
         : "owned_by_other";
+
+  // 비로그인 스캔도 기록한다(user_id는 null).
+  const { data: authData } = await supabase.auth.getUser();
+  await logProductEvent(supabase, {
+    type: "scan",
+    userId: authData.user?.id ?? null,
+    productUnitId: row.product_unit_id,
+    meta: { tag_code, ownership_status },
+  });
 
   return ok({
     tag_code,

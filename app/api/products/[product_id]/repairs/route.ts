@@ -2,6 +2,7 @@ import { fail, ok, readJson } from "@/lib/api-response";
 import { requireSupabaseUser } from "@/lib/auth-guard";
 import { type RepairRow } from "@/lib/mappers";
 import { toSupabaseRepairDTOs } from "@/lib/supabase-repair-mapper";
+import { logProductEvent } from "@/lib/product-events";
 import { resolveOwnedProductRef } from "@/lib/supabase-product-refs";
 
 type Ctx = { params: Promise<{ product_id: string }> };
@@ -83,6 +84,13 @@ export async function POST(request: Request, context: Ctx) {
     console.error("[repairs] insert error", insError);
     return fail("REPAIR_CREATE_FAILED", insError.message, status);
   }
+  await logProductEvent(supabase, {
+    type: "repair_submit",
+    userId: user.id,
+    productUnitId: productRef.unitId,
+    meta: { condition_tags: body?.condition_tags ?? [] },
+  });
+
   const [dto] = await toSupabaseRepairDTOs(supabase, [data as RepairRow], {
     [productRef.unitId]: productRef.slug,
   });

@@ -12,6 +12,8 @@ import {
   getStory as getStoryRequest,
   listStories as listStoriesRequest,
 } from '@/lib/story-api-client';
+import { COMPANIONS, OCCASIONS, type CompanionId, type OccasionId } from '@/types/story-api';
+import { normalizePlace } from '@/lib/place-normalize';
 import { persistCloudStory, persistStoryPhoto, removeStoryPhoto } from '@/lib/story-photo-storage';
 import type { StoryRecord } from '@/types/story-api';
 import { getProductDetailPath } from '@/lib/product-routes';
@@ -243,6 +245,9 @@ export function RecordWritePage({productId,initialAiImage}:{productId:ProductId;
   const [pickerOpen,setPickerOpen]=useState(false);
   const [photo,setPhoto]=useState(p.timelineImage);
   const [memo,setMemo]=useState(p.memoryCopy);
+  // 상황·동행은 자유 텍스트가 아니라 정해진 값에서 고른다(집계 가능해야 해서).
+  const [occasion,setOccasion]=useState<OccasionId[]>([]);
+  const [companion,setCompanion]=useState<CompanionId|null>(null);
   const [saving,setSaving]=useState(false);
   const [saveError,setSaveError]=useState('');
 
@@ -272,6 +277,9 @@ export function RecordWritePage({productId,initialAiImage}:{productId:ProductId;
     if(id===productId)return;
     setSelectedIds(current=>current.includes(id)?current.filter(value=>value!==id):[...current,id]);
   };
+  const toggleOccasion=(id:OccasionId)=>{
+    setOccasion(current=>current.includes(id)?current.filter(value=>value!==id):[...current,id]);
+  };
   const load=(e:ChangeEvent<HTMLInputElement>)=>{
     const f=e.target.files?.[0];
     if(!f)return;
@@ -292,6 +300,8 @@ export function RecordWritePage({productId,initialAiImage}:{productId:ProductId;
         ?`${selectedIds.map(id=>products[id].short).join('와 ')}의 하루`
         :`${p.short}와 함께한 새로운 기록`;
       const story=`${selectedIds.map(id=>products[id].short).join(', ')}와 함께한 순간이 하나의 소중한 기록으로 남았다.`;
+      // 장소 원문은 그대로 두고 집계용 city/country를 함께 채운다.
+      const place=normalizePlace(p.place);
       const persisted=await persistStoryPhoto(photo,productId);
       let createdId='';
       if(persisted.mode==='cloud'){
@@ -303,6 +313,10 @@ export function RecordWritePage({productId,initialAiImage}:{productId:ProductId;
             memo,
             storyDate:now.toISOString().slice(0,10),
             productSlugs:selectedIds,
+            occasion,
+            companion,
+            city:place.city,
+            country:place.country,
           });
           createdId=created.id;
         }catch(error){
@@ -317,6 +331,10 @@ export function RecordWritePage({productId,initialAiImage}:{productId:ProductId;
           memo,
           story,
           product_ids:selectedIds,
+          occasion,
+          companion:companion??undefined,
+          city:place.city??undefined,
+          country:place.country??undefined,
           date:now.toISOString(),
         });
         if(!response.ok)throw new Error(response.error.message);
@@ -345,6 +363,14 @@ export function RecordWritePage({productId,initialAiImage}:{productId:ProductId;
       {pickerOpen&&<div className={styles.productList} role="listbox" aria-label="보유 상품 복수 선택">{Object.values(products).map(item=>{const selected=selectedIds.includes(item.id);return <button key={item.id} onClick={()=>toggle(item.id)} className={selected?styles.productSelected:''} aria-pressed={selected}><img loading="lazy" src={item.image} alt=""/><span><b>{item.short}</b><small>{item.material}{item.id===productId?' · 현재 타임라인':''}</small></span><strong>{selected?'✓':'＋'}</strong></button>})}</div>}
       <label>PLACE</label>
       <div className={styles.field}>⌖　{p.place}<a href={maps} target="_blank" rel="noreferrer">장소 변경　›</a></div>
+      <label>OCCASION <small>어떤 상황이었는지 골라주세요. 여러 개 선택할 수 있어요.</small></label>
+      <div className={styles.chipRow} role="group" aria-label="상황 선택">
+        {OCCASIONS.map(item=>{const on=occasion.includes(item.id);return <button key={item.id} type="button" aria-pressed={on} className={on?styles.chipOn:''} onClick={()=>toggleOccasion(item.id)}>{item.label}</button>})}
+      </div>
+      <label>COMPANION <small>누구와 함께였나요?</small></label>
+      <div className={styles.chipRow} role="group" aria-label="동행 선택">
+        {COMPANIONS.map(item=>{const on=companion===item.id;return <button key={item.id} type="button" aria-pressed={on} className={on?styles.chipOn:''} onClick={()=>setCompanion(on?null:item.id)}>{item.label}</button>})}
+      </div>
       <label htmlFor="memo">MEMO</label>
       <div className={styles.memo}><textarea id="memo" maxLength={100} value={memo} onChange={e=>setMemo(e.target.value)}/><small>{memo.length} / 100</small></div>
       <label>AI IMAGE SUGGESTION <small>(MVP 제외)</small></label>

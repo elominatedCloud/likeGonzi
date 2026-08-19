@@ -44,8 +44,9 @@ export function CareGuideScreen({ product, repairs }: CareGuideScreenProps) {
       [...repairs].sort((a, b) => (a.date < b.date ? 1 : -1)),
     [repairs],
   );
-  const repairBonus = Math.min(8, repairs.length * 2);
-  const recentCheckBonus = Math.max(0, product.careScore - 80 - repairBonus);
+  // care_score는 현재 DB 기본값(상수)이다. 계산 로직이 없으므로 내역을
+  // 역산해서 합을 맞추지 않는다. 실제로 셀 수 있는 값만 보여준다.
+  const repairRecordCount = repairs.length;
 
   return (
     <main className="visetos-bg relative min-h-dvh pb-28">
@@ -63,19 +64,18 @@ export function CareGuideScreen({ product, repairs }: CareGuideScreenProps) {
               {product.careScore}{" "}
               <span className="text-[16px] text-muted">/ 100점</span>
             </p>
-            <p className="mt-1 text-[12px] text-ink-soft">최근 관리 기록을 반영한 프로토타입 점수</p>
+            <p className="mt-1 text-[12px] text-ink-soft">데모 기준 고정 점수</p>
           </div>
           <ChevronDown size={17} className={`shrink-0 text-muted transition ${scoreOpen ? "rotate-180" : ""}`}/>
         </button>
         {scoreOpen && (
           <div className="border-t border-black/5 bg-cream/65 px-4 py-4">
-            <p className="text-[11px] leading-[17px] text-muted">현재는 실제 센서나 진단 결과가 아닌 등록된 관리·수선 기록을 기준으로 계산한 데모 산정입니다.</p>
+            <p className="text-[11px] leading-[17px] text-muted">실제 센서나 진단 결과가 아닙니다. 현재 버전에서는 제품 등록 시 부여되는 고정 점수를 그대로 보여주며, 상태에 따라 변하지 않습니다.</p>
             <dl className="mt-3 space-y-2 text-[12px]">
-              <div className="flex justify-between"><dt className="text-ink-soft">제품 등록 기본 점수</dt><dd className="font-semibold text-ink">80점</dd></div>
-              <div className="flex justify-between"><dt className="text-ink-soft">관리·수선 기록 반영</dt><dd className="font-semibold text-ink">+{repairBonus}점</dd></div>
-              <div className="flex justify-between"><dt className="text-ink-soft">최근 상태 점검 반영</dt><dd className="font-semibold text-ink">+{recentCheckBonus}점</dd></div>
+              <div className="flex justify-between"><dt className="text-ink-soft">등록 시 부여된 점수</dt><dd className="font-semibold text-ink">{product.careScore}점</dd></div>
+              <div className="flex justify-between"><dt className="text-ink-soft">등록된 관리·수선 기록</dt><dd className="font-semibold text-ink">{repairRecordCount}건</dd></div>
             </dl>
-            <p className="mt-3 text-[10px] text-muted">최근 갱신 · 2026.08.19</p>
+            <p className="mt-3 text-[10px] text-muted">기록을 반영한 점수 산정은 다음 버전에서 제공됩니다.</p>
           </div>
         )}
       </section>

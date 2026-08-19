@@ -48,3 +48,66 @@ on conflict (tag_code) do nothing;
 -- insert into public.user_products (user_id, product_unit_id)
 -- values ('<YOUR_AUTH_UID>', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
 -- on conflict (product_unit_id) do nothing;
+
+-- ------------------------------------------------------------
+-- IR 데모용 상황 데이터
+--
+-- 분량 근거: brand_* 집계 뷰가 k-익명성으로 5건 미만 그룹을 제외한다.
+-- occasion 7종에 20건을 "골고루" 뿌리면 그룹당 3건이라 전부 잘려 뷰가 빈다.
+-- 그래서 상위 조합에 몰아 45건을 넣어 (모델 x occasion), (모델 x 도시)가
+-- 모두 5건을 넘기게 한다.
+--
+-- 계정은 이미 가입돼 있어야 한다(auth.users의 email로 찾는다).
+-- ------------------------------------------------------------
+
+-- 집계 대상이 되려면 동의가 있어야 한다(데모 계정 한정).
+update public.profiles
+   set analytics_consent = true,
+       analytics_consent_at = now()
+ where id in (
+   select id from auth.users
+    where email in ('gonji.test.mcm@gmail.com', 'test2@mcm.test', 'admin@test.com')
+ )
+   and not analytics_consent;
+
+with spec(email, slug, occasion, companion, city, country, cnt) as (
+  values
+    ('gonji.test.mcm@gmail.com', 'stark', array['commute'],   'colleagues', '서울', 'KR', 7),
+    ('gonji.test.mcm@gmail.com', 'stark', array['daily'],     'solo',       '서울', 'KR', 6),
+    ('gonji.test.mcm@gmail.com', 'stark', array['travel'],    'friends',    '도쿄', 'JP', 5),
+    ('test2@mcm.test',           'pina',  array['date'],      'partner',    '서울', 'KR', 6),
+    ('test2@mcm.test',           'pina',  array['gathering'], 'friends',    '서울', 'KR', 5),
+    ('test2@mcm.test',           'pina',  array['daily'],     'solo',       '부산', 'KR', 5),
+    ('admin@test.com',           'ella',  array['travel'],    'family',     '파리', 'FR', 6),
+    ('admin@test.com',           'ella',  array['exhibition'],'friends',    '도쿄', 'JP', 5)
+),
+owner_model(email, slug) as (
+  select distinct email, slug from spec
+),
+inserted as (
+  insert into public.stories
+    (user_id, tag, photo_url, location, memo, story_date, occasion, companion, city, country)
+  select u.id,
+         spec.city || '에서의 순간 ' || g,
+         '/FE-namjun/assets/로그_타임라인-1.png',
+         spec.city || ' 일대',
+         null,
+         current_date - (g * 7),
+         spec.occasion, spec.companion, spec.city, spec.country
+    from spec
+    join auth.users u on u.email = spec.email
+   cross join generate_series(1, spec.cnt) as g
+  returning id, user_id
+)
+insert into public.story_products (story_id, product_unit_id)
+select i.id,
+       (select up.product_unit_id
+          from public.user_products up
+          join public.product_units pu on pu.id = up.product_unit_id
+          join public.products p on p.id = pu.product_id
+          join auth.users u2 on u2.id = up.user_id
+          join owner_model om on om.email = u2.email
+         where up.user_id = i.user_id and p.slug = om.slug
+         limit 1)
+  from inserted i
+ on conflict do nothing;

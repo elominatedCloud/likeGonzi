@@ -1,4 +1,6 @@
 import { generateStory } from "@/lib/ai-prompts";
+import { normalizePlace } from "@/lib/place-normalize";
+import { logProductEvent } from "@/lib/product-events";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { fail, ok, readJson } from "@/lib/api-response";
 import { requireSupabaseUser } from "@/lib/auth-guard";
@@ -163,6 +165,11 @@ export async function POST(request: Request, context: RouteContext) {
 
   const productName = await productNameForUnit(supabase, resolved.refs[0].unitId);
 
+  // 장소 원문은 그대로 두고, 집계용 city/country를 함께 채운다.
+  const place = normalizePlace(body.place);
+  const occasion = body.occasion ?? [];
+  const companion = body.companion ?? null;
+
   const requestedDate = body.date ? new Date(body.date) : new Date();
   if (Number.isNaN(requestedDate.getTime())) {
     return fail("VALIDATION_ERROR", "date must be a valid date");
@@ -179,6 +186,10 @@ export async function POST(request: Request, context: RouteContext) {
         p_memo: body.memo?.trim() || null,
         p_story_date: storyDate,
         p_product_slugs: resolved.refs.map((ref) => ref.slug),
+        p_occasion: occasion,
+        p_companion: companion,
+        p_city: place.city,
+        p_country: place.country,
       },
     );
     const storyId = (created as { id?: string } | null)?.id;
@@ -209,6 +220,13 @@ export async function POST(request: Request, context: RouteContext) {
       return fail("STORY_CREATE_FAILED", "저장된 기록을 확인하지 못했습니다", 500);
     }
 
+    await logProductEvent(supabase, {
+      type: "story_create",
+      userId: user.id,
+      productUnitId: resolved.refs[0].unitId,
+      meta: { occasion, companion, city: place.city, country: place.country },
+    });
+
     const [dto] = await toSupabaseStoryDTOs(
       supabase,
       [storyRow as StoryRow],
@@ -233,6 +251,10 @@ export async function POST(request: Request, context: RouteContext) {
         date: storyDate,
       })),
     story_date: storyDate,
+    occasion,
+    companion,
+    city: place.city,
+    country: place.country,
   };
   const { data: storyRow, error: insertError } = await supabase
     .from("stories")
@@ -257,6 +279,13 @@ export async function POST(request: Request, context: RouteContext) {
     console.error("[stories POST] link error", linkError);
     return fail("STORY_CREATE_FAILED", "제품 연결에 실패했습니다", 400);
   }
+
+  await logProductEvent(supabase, {
+    type: "story_create",
+    userId: user.id,
+    productUnitId: unitIds[0] ?? null,
+    meta: { occasion, companion, city: place.city, country: place.country },
+  });
 
   const [dto] = await toSupabaseStoryDTOs(
     supabase,

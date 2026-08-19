@@ -30,11 +30,19 @@ create table if not exists public.profiles (
   updated_at timestamptz default now(),
   -- 운영 도구(/admin) 접근 권한. is_admin() 함수와 RLS 정책이 이 값을 본다.
   is_admin boolean default false not null,
+  -- 브랜드 집계 통계 포함 동의. false면 brand_* 뷰에서 즉시 제외된다.
+  -- 동의 없이도 앱의 개인 기능은 전부 정상 동작한다.
+  analytics_consent boolean default false not null,
+  analytics_consent_at timestamptz,
   constraint profiles_pkey primary key (id),
   constraint profiles_id_fkey foreign key (id) references auth.users (id) on delete cascade,
   constraint profiles_membership_check check (membership = any (array['SILVER'::text, 'GOLD'::text, 'PLATINUM'::text])),
   constraint profiles_cleaning_coupons_check check (cleaning_coupons >= 0),
-  constraint profiles_repair_vouchers_check check (repair_vouchers >= 0)
+  constraint profiles_repair_vouchers_check check (repair_vouchers >= 0),
+  constraint profiles_analytics_consent_at_check check (
+    (analytics_consent and analytics_consent_at is not null)
+    or (not analytics_consent and analytics_consent_at is null)
+  )
 );
 
 -- 제품 모델(Stark Backpack 등). 개체가 아니라 카탈로그.
@@ -102,6 +110,11 @@ create table if not exists public.stories (
   memo text,
   story text,
   trip_label text,
+  -- 집계 가능한 상황 축. tag/location은 자유 텍스트라 집계가 안 돼서 따로 둔다.
+  occasion text[] not null default '{}'::text[],   -- commute, travel, exhibition, gathering, date, workout, daily
+  companion text,                                   -- solo, friends, family, partner, colleagues
+  city text,                                        -- 정규화된 도시명
+  country text,                                     -- ISO 3166-1 alpha-2
   story_date date default current_date,
   created_at timestamptz default now(),
   updated_at timestamptz default now(),
@@ -110,7 +123,12 @@ create table if not exists public.stories (
   constraint stories_photo_reference_required check (
     nullif(btrim(photo_url), ''::text) is not null
     or nullif(btrim(photo_path), ''::text) is not null
-  )
+  ),
+  constraint stories_companion_check check (
+    companion is null
+    or companion in ('solo', 'friends', 'family', 'partner', 'colleagues')
+  ),
+  constraint stories_country_check check (country is null or country ~ '^[A-Z]{2}$')
 );
 
 -- 기록 ↔ 개체 다대다. 한 사진에 여러 제품을 태그할 수 있다.
@@ -176,6 +194,25 @@ create table if not exists public.product_recaps (
   constraint product_recaps_product_unit_id_user_id_key unique (product_unit_id, user_id)
 );
 
+-- 제품 생애주기 이벤트 로그.
+-- 배치·큐 없이 발생 시점에 단순 insert 한다. 로깅 실패가 등록·기록 저장을
+-- 막으면 안 되므로 호출부(lib/product-events.ts)는 절대 throw하지 않는다.
+create table if not exists public.product_events (
+  id uuid primary key default gen_random_uuid(),
+  -- 스캔은 비로그인도 가능해서 user_id가 없을 수 있다.
+  user_id uuid references public.profiles (id) on delete set null,
+  product_unit_id uuid references public.product_units (id) on delete set null,
+  event_type text not null,
+  occurred_at timestamptz not null default now(),
+  meta jsonb not null default '{}'::jsonb,
+  constraint product_events_type_check check (
+    event_type in (
+      'scan', 'unbox_complete', 'register', 'story_create',
+      'repair_submit', 'recap_view', 'share'
+    )
+  )
+);
+
 -- ------------------------------------------------------------
 -- 인덱스
 -- ------------------------------------------------------------
@@ -188,12 +225,17 @@ create index if not exists idx_stories_user_id_date on public.stories (user_id, 
 create index if not exists idx_stories_tag on public.stories (tag);
 create index if not exists idx_stories_trip_label on public.stories (trip_label);
 create index if not exists stories_photo_path_idx on public.stories (photo_path) where photo_path is not null;
+-- occasion은 배열 포함 검색(&&, @>)으로 집계하므로 GIN
+create index if not exists stories_occasion_idx on public.stories using gin (occasion);
+create index if not exists stories_country_city_idx on public.stories (country, city);
 create index if not exists idx_story_products_product_unit_id on public.story_products (product_unit_id);
 create index if not exists idx_repairs_product_unit_id on public.repairs (product_unit_id);
 create index if not exists idx_repairs_product_unit_id_status on public.repairs (product_unit_id, status);
 create index if not exists idx_ownership_transfers_product_unit_id on public.ownership_transfers (product_unit_id);
 create index if not exists idx_ownership_transfers_to_email on public.ownership_transfers (to_email);
 create index if not exists product_recaps_user_idx on public.product_recaps (user_id);
+create index if not exists product_events_type_time_idx on public.product_events (event_type, occurred_at desc);
+create index if not exists product_events_unit_idx on public.product_events (product_unit_id);
 
 -- ------------------------------------------------------------
 -- 뷰
@@ -223,6 +265,60 @@ create or replace view public.my_products_view as
     from public.user_products up
     join public.product_units pu on pu.id = up.product_unit_id
     join public.products p on p.id = pu.product_id;
+
+-- ------------------------------------------------------------
+-- B2B 집계 뷰
+--
+-- 접근 통제: 뷰에는 RLS 정책을 걸 수 없다(정책은 기반 테이블에만 붙는다).
+-- security_invoker를 켜면 stories RLS가 "본인 것만"이라 집계 자체가 불가능해진다.
+-- 그래서 뷰 본문에 is_admin() 조건을 넣어 운영자가 아니면 빈 결과가 나오게 한다.
+--
+-- 개인정보: user_id 등 식별자를 일절 반환하지 않는다. 집계 수치만 내보낸다.
+-- k-익명성: 5건 미만 그룹은 제외한다. 소수 그룹은 특정 개인의 행동으로 역추적될 수 있다.
+-- 동의: analytics_consent = true 인 사용자만 집계한다. 철회하면 다음 조회부터 바로 빠진다.
+-- ------------------------------------------------------------
+
+create or replace view public.brand_occasion_usage as
+  select p.slug as product_slug, p.product_name, o.occasion, count(*) as story_count
+    from public.stories s
+    join public.profiles pr on pr.id = s.user_id and pr.analytics_consent
+    join public.story_products sp on sp.story_id = s.id
+    join public.product_units pu on pu.id = sp.product_unit_id
+    join public.products p on p.id = pu.product_id
+   cross join lateral unnest(s.occasion) as o(occasion)
+   where public.is_admin()
+   group by p.slug, p.product_name, o.occasion
+  having count(*) >= 5;
+
+-- repairs.condition_tags는 처음부터 text[]로 구조화돼 있어 바로 집계된다.
+create or replace view public.brand_repair_hotspots as
+  select p.slug as product_slug, p.product_name, t.condition_tag, count(*) as repair_count
+    from public.repairs r
+    join public.profiles pr on pr.id = r.user_id and pr.analytics_consent
+    join public.product_units pu on pu.id = r.product_unit_id
+    join public.products p on p.id = pu.product_id
+   cross join lateral unnest(r.condition_tags) as t(condition_tag)
+   where public.is_admin()
+   group by p.slug, p.product_name, t.condition_tag
+  having count(*) >= 5;
+
+create or replace view public.brand_city_usage as
+  select p.slug as product_slug, p.product_name, s.country, s.city, count(*) as story_count
+    from public.stories s
+    join public.profiles pr on pr.id = s.user_id and pr.analytics_consent
+    join public.story_products sp on sp.story_id = s.id
+    join public.product_units pu on pu.id = sp.product_unit_id
+    join public.products p on p.id = pu.product_id
+   where public.is_admin() and s.country is not null and s.city is not null
+   group by p.slug, p.product_name, s.country, s.city
+  having count(*) >= 5;
+
+revoke all on public.brand_occasion_usage from anon;
+revoke all on public.brand_repair_hotspots from anon;
+revoke all on public.brand_city_usage from anon;
+grant select on public.brand_occasion_usage to authenticated;
+grant select on public.brand_repair_hotspots to authenticated;
+grant select on public.brand_city_usage to authenticated;
 
 -- ------------------------------------------------------------
 -- 함수
@@ -364,7 +460,12 @@ create or replace function public.create_story_with_products(
   p_location text default null,
   p_memo text default null,
   p_story_date date default current_date,
-  p_product_slugs text[] default '{}'::text[]
+  p_product_slugs text[] default '{}'::text[],
+  -- 상황 축. 기존 호출부(인자 6개)가 깨지지 않도록 전부 default를 준다.
+  p_occasion text[] default '{}'::text[],
+  p_companion text default null,
+  p_city text default null,
+  p_country text default null
 )
 returns jsonb
 language plpgsql
@@ -415,14 +516,21 @@ begin
     raise exception 'PRODUCT_NOT_OWNED' using errcode = '42501';
   end if;
 
-  insert into public.stories (user_id, tag, photo_path, location, memo, story_date)
+  insert into public.stories (
+    user_id, tag, photo_path, location, memo, story_date,
+    occasion, companion, city, country
+  )
   values (
     v_user_id,
     btrim(p_tag),
     p_photo_path,
     nullif(btrim(p_location), ''),
     nullif(btrim(p_memo), ''),
-    coalesce(p_story_date, current_date)
+    coalesce(p_story_date, current_date),
+    coalesce(p_occasion, '{}'::text[]),
+    nullif(btrim(p_companion), ''),
+    nullif(btrim(p_city), ''),
+    nullif(btrim(p_country), '')
   )
   returning id into v_story_id;
 
@@ -546,6 +654,7 @@ alter table public.story_products enable row level security;
 alter table public.repairs enable row level security;
 alter table public.ownership_transfers enable row level security;
 alter table public.product_recaps enable row level security;
+alter table public.product_events enable row level security;
 
 -- profiles
 drop policy if exists profiles_select_own on public.profiles;
@@ -690,6 +799,19 @@ create policy product_recaps_insert_own on public.product_recaps
 drop policy if exists product_recaps_update_own on public.product_recaps;
 create policy product_recaps_update_own on public.product_recaps
   for update to authenticated using (auth.uid() = user_id);
+
+-- product_events: 본인 이벤트만 남길 수 있고(비로그인 스캔은 user_id null),
+-- 읽기는 운영자만. 개별 사용자에게 돌려줄 화면이 없다.
+drop policy if exists product_events_insert_own on public.product_events;
+create policy product_events_insert_own on public.product_events
+  for insert with check (user_id is null or user_id = auth.uid());
+
+drop policy if exists product_events_select_admin on public.product_events;
+create policy product_events_select_admin on public.product_events
+  for select to authenticated using (public.is_admin());
+
+grant insert on public.product_events to anon, authenticated;
+grant select on public.product_events to authenticated;
 
 -- ------------------------------------------------------------
 -- Storage
