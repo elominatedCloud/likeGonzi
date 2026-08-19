@@ -1,10 +1,15 @@
 import { fail, ok } from "@/lib/api-response";
 import { requireSupabaseUser } from "@/lib/auth-guard";
 import { type RepairRow } from "@/lib/mappers";
-import { toSupabaseRepairDTOs } from "@/lib/supabase-repair-mapper";
 import { productSlugsForUnitIds } from "@/lib/supabase-product-refs";
+import { toSupabaseRepairDTOs } from "@/lib/supabase-repair-mapper";
 
-/** GET /api/repairs — 내 제품 수선 접수 내역 (RLS로 본인 것만) */
+/**
+ * GET /api/repairs — 내 제품 전체 수선 접수 내역 (제품 무관, 마이 화면용)
+ *
+ * repairs_select_own RLS가 user_id = auth.uid()로 이미 본인 것만 걸러주지만,
+ * 의도를 드러내기 위해 쿼리에서도 한 번 더 명시한다.
+ */
 export async function GET(request: Request) {
   const { user, supabase, error } = await requireSupabaseUser(request);
   if (error) return error;
