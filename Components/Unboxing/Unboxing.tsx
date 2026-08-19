@@ -6,7 +6,7 @@ import Image from 'next/image';
 import styles from './Unboxing.module.css';
 import { useRouter } from 'next/navigation';
 import { CircleAlert, ShieldCheck, UserRound } from 'lucide-react';
-import { apiFetch, hasSupabaseSession } from '@/lib/api-client';
+import { apiFetch, hasSupabaseSession, trackEvent } from '@/lib/api-client';
 
 const TOTAL_FRAMES = 31;
 export type ScanState = 'mine' | 'unregistered' | 'owned' | 'error';
@@ -232,6 +232,7 @@ export default function Unboxing({
 
   const handlePrimaryAction=async()=>{
     updateProgress(1);
+    trackEvent('unbox_complete', scan?.product_id ?? null, { tag_code: tagCode ?? null });
 
     if(scanState==='mine'){
       router.push(`/products/${scan?.product_id ?? 'stark-backpack'}`);

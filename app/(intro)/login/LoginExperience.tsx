@@ -55,7 +55,7 @@ export function LoginExperience({
     return () => { cancelled = true };
   }, [returnTo, intent]);
 
-  const complete = async ({mode,email,password,nickname}:AuthSubmission) => {
+  const complete = async ({mode,email,password,nickname,analyticsConsent}:AuthSubmission) => {
     if(!supabase){
       throw new Error('Supabase 설정을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.');
     }
@@ -68,7 +68,7 @@ export function LoginExperience({
         body:JSON.stringify({
           email,
           password,
-          ...(mode==='signup'?{nickname}:{}),
+          ...(mode==='signup'?{nickname,analytics_consent:Boolean(analyticsConsent)}:{}),
         }),
       });
     }catch{

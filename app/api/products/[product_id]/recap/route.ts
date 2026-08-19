@@ -1,6 +1,7 @@
 import { fail, ok } from "@/lib/api-response";
 import { requireSupabaseUser } from "@/lib/auth-guard";
 import { generateRecap } from "@/lib/ai-prompts";
+import { logProductEvent } from "@/lib/product-events";
 import type { RepairRow, StoryRow } from "@/lib/mappers";
 import { resolveOwnedProductRef } from "@/lib/supabase-product-refs";
 
@@ -82,6 +83,12 @@ export async function GET(request: Request, context: Ctx) {
     cached.repair_count === repairs.length;
 
   if (cached && isFresh && !forceRefresh) {
+    await logProductEvent(supabase, {
+      type: "recap_view",
+      userId: user.id,
+      productUnitId: productRef.unitId,
+      meta: { cached: true },
+    });
     return ok({
       content: cached.content,
       is_ai: cached.is_ai,
@@ -133,6 +140,13 @@ export async function GET(request: Request, context: Ctx) {
     // 저장 실패해도 본문은 돌려준다 — 다음 요청에서 다시 만들면 된다.
     console.error("[recap] cache upsert error", upsertError);
   }
+
+  await logProductEvent(supabase, {
+    type: "recap_view",
+    userId: user.id,
+    productUnitId: productRef.unitId,
+    meta: { cached: false, is_ai: generated !== null },
+  });
 
   return ok({
     content,

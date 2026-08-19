@@ -17,6 +17,9 @@ export default function AdminLayout({
         <div className="mt-1 flex flex-wrap items-baseline gap-x-4 gap-y-1">
           <h1 className="text-[20px] font-bold text-ink">운영 도구</h1>
           <nav className="flex gap-3 text-[13px]">
+            <Link href="/admin/insights" className="text-cognac-deep underline-offset-4 hover:underline">
+              브랜드 인사이트
+            </Link>
             <Link href="/admin/units" className="text-cognac-deep underline-offset-4 hover:underline">
               개체 발급 · QR 시트
             </Link>

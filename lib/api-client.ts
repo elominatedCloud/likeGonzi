@@ -50,3 +50,18 @@ export async function hasSupabaseSession(): Promise<boolean> {
   const { data } = await supabase.auth.getSession();
   return Boolean(data.session);
 }
+
+/**
+ * 화면에서 발생하는 이벤트를 남긴다.
+ * 실패해도 무시한다 — 로깅 때문에 사용자 흐름이 끊기면 안 된다.
+ */
+export function trackEvent(
+  type: "unbox_complete" | "share" | "recap_view",
+  productUnitId?: string | null,
+  meta: Record<string, unknown> = {},
+) {
+  void apiFetch("/api/events", {
+    method: "POST",
+    body: JSON.stringify({ type, product_unit_id: productUnitId ?? null, meta }),
+  }).catch(() => {});
+}

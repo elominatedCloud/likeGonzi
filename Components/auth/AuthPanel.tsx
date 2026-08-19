@@ -22,6 +22,8 @@ export interface AuthSubmission {
   email: string;
   password: string;
   nickname?: string;
+  /** 브랜드 집계 통계 참여 동의(선택). 가입 시에만 쓰인다. */
+  analyticsConsent?: boolean;
 }
 
 interface AuthPanelProps {
@@ -37,6 +39,7 @@ export function AuthPanel({initialMode='login',onComplete,initialError=''}:AuthP
   const [password,setPassword]=useState('');
   const [passwordConfirm,setPasswordConfirm]=useState('');
   const [termsAccepted,setTermsAccepted]=useState(false);
+  const [analyticsConsent,setAnalyticsConsent]=useState(false);
   const [error,setError]=useState(initialError);
   const [isSubmitting,setIsSubmitting]=useState(false);
 
@@ -76,7 +79,7 @@ export function AuthPanel({initialMode='login',onComplete,initialError=''}:AuthP
         mode,
         email:email.trim().toLowerCase(),
         password,
-        ...(mode==='signup'?{nickname:name.trim()}:{}),
+        ...(mode==='signup'?{nickname:name.trim(),analyticsConsent}:{}),
       });
     }catch(submitError){
       // 이미 있는 계정으로 가입을 시도한 경우, 입력값을 그대로 둔 채 로그인 탭으로 넘겨준다.
@@ -117,6 +120,11 @@ export function AuthPanel({initialMode='login',onComplete,initialError=''}:AuthP
         <input type="checkbox" checked={termsAccepted} onChange={event=>{setTermsAccepted(event.target.checked);setError('')}}/>
         <span className={styles.checkbox} aria-hidden>{termsAccepted&&<Check size={13} strokeWidth={3}/>}</span>
         <span><b>[필수]</b> 서비스 이용약관 및 개인정보 처리방침에 동의합니다.</span>
+      </label>}
+      {mode==='signup'&&<label className={styles.terms}>
+        <input type="checkbox" checked={analyticsConsent} onChange={event=>setAnalyticsConsent(event.target.checked)}/>
+        <span className={styles.checkbox} aria-hidden>{analyticsConsent&&<Check size={13} strokeWidth={3}/>}</span>
+        <span><b>[선택]</b> 내 기록을 개인 정보 없이 집계 통계로 사용하는 데 동의합니다. 나중에 마이 화면에서 끌 수 있어요.</span>
       </label>}
       {error&&<div className={styles.error} role="alert"><span>입력 내용을 확인해 주세요.</span><p>{error}</p></div>}
       <button type="submit" className={styles.submit} disabled={isSubmitting} aria-busy={isSubmitting}>

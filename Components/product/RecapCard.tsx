@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { RefreshCw, Sparkles } from "lucide-react";
-import { apiFetch } from "@/lib/api-client";
+import { RefreshCw, Share2, Sparkles } from "lucide-react";
+import { apiFetch, trackEvent } from "@/lib/api-client";
 
 interface RecapData {
   content: string;
@@ -20,6 +20,27 @@ export function RecapCard({ productId }: { productId: string }) {
   const [recap, setRecap] = useState<RecapData | null>(null);
   const [error, setError] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [shareNote, setShareNote] = useState("");
+
+  /**
+   * Web Share API로 공유한다. 지원하지 않는 브라우저(대부분의 데스크톱)는
+   * 클립보드로 폴백한다. SNS SDK를 붙이지 않는다.
+   */
+  async function share() {
+    if (!recap) return;
+    const text = recap.content;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "MCM Storybook", text });
+      } else {
+        await navigator.clipboard.writeText(text);
+        setShareNote("클립보드에 복사했어요.");
+      }
+      trackEvent("share", productId, { surface: "recap" });
+    } catch {
+      // 사용자가 공유를 취소한 경우도 여기로 온다. 조용히 넘긴다.
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -45,14 +66,24 @@ export function RecapCard({ productId }: { productId: string }) {
       <div className="flex items-center justify-between gap-3">
         <p className="type-kicker text-gold-soft">STORY RECAP</p>
         {recap && (
-          <button
-            type="button"
-            onClick={() => setRefreshKey((value) => value + 1)}
-            className="inline-flex items-center gap-1 text-[11px] text-gold-soft/70"
-            aria-label="Recap 다시 만들기"
-          >
-            <RefreshCw size={11} /> 다시 만들기
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={share}
+              className="inline-flex items-center gap-1 text-[11px] text-gold-soft/70"
+              aria-label="Recap 공유하기"
+            >
+              <Share2 size={11} /> 공유
+            </button>
+            <button
+              type="button"
+              onClick={() => setRefreshKey((value) => value + 1)}
+              className="inline-flex items-center gap-1 text-[11px] text-gold-soft/70"
+              aria-label="Recap 다시 만들기"
+            >
+              <RefreshCw size={11} /> 다시 만들기
+            </button>
+          </div>
         )}
       </div>
 
@@ -73,6 +104,9 @@ export function RecapCard({ productId }: { productId: string }) {
       {recap && (
         <>
           <p className="mt-2 whitespace-pre-line text-[13px] leading-6">{recap.content}</p>
+          {shareNote && (
+            <p className="mt-2 text-[10px] text-gold-soft/80" role="status">{shareNote}</p>
+          )}
           <p className="mt-3 inline-flex items-center gap-1 text-[10px] tracking-wide text-gold-soft/70">
             <Sparkles size={11} />
             {recap.is_ai

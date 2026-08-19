@@ -26,7 +26,17 @@
 | A7 | 전성기 | 1993년 전 세계 250개 지점, 매출 2.5억 달러 | 2차 | [Wikipedia](https://en.wikipedia.org/wiki/MCM_Worldwide) |
 | A8 | 소유 | 2005년 성주그룹 인수 | 2차 | [Wikipedia](https://en.wikipedia.org/wiki/MCM_Worldwide) |
 
+| A9 | **힙합 서브컬처 진입** | **1988년** MCM이 힙합 서브컬처의 고정 요소가 됨 | 2차 | [Highsnobiety](https://www.highsnobiety.com/p/around-world-45-years-brief-history-mcm/) |
+| A10 | **Dapper Dan** | 코냑 비세토스를 **해체·재조합**해 무대의상·스트리트웨어로. 자동차까지 커스텀 | 2차 | [Highsnobiety 부틀렉](https://www.highsnobiety.com/p/mcm-backpack-bootleg/) · [Dance Policy](https://www.dancepolicy.com/stream/how-dapper-dan-brought-luxury-streetwear-to-hip-hop) |
+| A11 | 착용 아티스트 | Eric B. & Rakim, Salt-N-Pepa, LL Cool J, Big Daddy Kane, Jay-Z | 2차 | [Highsnobiety](https://www.highsnobiety.com/p/around-world-45-years-brief-history-mcm/) |
+| A12 | **Misa Hylton** | 부틀렉 디자인 출신 스타일리스트, **2020년 MCM 글로벌 크리에이티브 파트너 선임** | 2차 | [Highsnobiety 부틀렉](https://www.highsnobiety.com/p/mcm-backpack-bootleg/) |
+
 > **슬라이드 8(자산 활용) 근거는 A4~A6.** 특히 A5는 아트디렉션 전체를 지탱한다.
+>
+> **A9~A12는 Archive Style 기능의 근거다.** MCM의 헤리티지는 "뮌헨 럭셔리"가 아니라
+> **재해석의 역사**다. Dapper Dan이 원본을 뜯어 다시 만든 것이 이 브랜드를 아이콘으로 만들었고,
+> 2020년 Misa Hylton 선임으로 브랜드가 그 유산을 공식 인정했다.
+> → **"MCM은 원래 사람들이 뜯어고치면서 커진 브랜드다."**
 
 ---
 

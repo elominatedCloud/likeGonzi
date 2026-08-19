@@ -8,6 +8,7 @@ export async function POST(request: Request) {
     password?: string;
     nickname?: string;
     display_name?: string; // 구버전 FE 호환
+    analytics_consent?: boolean;
   }>(request);
 
   const nickname = body?.nickname ?? body?.display_name;
@@ -45,6 +46,21 @@ export async function POST(request: Request) {
       },
       201,
     );
+  }
+
+  // 선택 동의. handle_new_user 트리거가 만든 프로필에 이어서 반영한다.
+  // 실패해도 가입 자체는 성공으로 둔다(동의는 마이 화면에서 다시 켤 수 있다).
+  if (body.analytics_consent) {
+    const { error: consentError } = await supabase
+      .from("profiles")
+      .update({
+        analytics_consent: true,
+        analytics_consent_at: new Date().toISOString(),
+      })
+      .eq("id", data.user!.id);
+    if (consentError) {
+      console.warn("[signup] consent update failed", consentError.message);
+    }
   }
 
   return ok(

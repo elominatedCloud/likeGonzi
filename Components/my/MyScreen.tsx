@@ -18,6 +18,7 @@ import { AmbientPattern } from "@/Components/ui/AmbientPattern";
 import { BottomNav } from "@/Components/ui/BottomNav";
 import { PageHeader } from "@/Components/ui/PageHeader";
 import { supabase } from "@/lib/supabase";
+import { AnalyticsConsentCard } from "@/Components/my/AnalyticsConsentCard";
 
 const DEMO_AUTH_KEYS = [
   "likegonzi-demo-login",
@@ -133,6 +134,8 @@ export function MyScreen() {
             );
           })}
         </section>
+
+        <AnalyticsConsentCard />
 
         <button
           type="button"

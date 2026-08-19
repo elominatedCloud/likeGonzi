@@ -615,6 +615,26 @@ begin
 end;
 $$;
 
+-- 동의 참여 현황(집계 수치만).
+-- profiles는 RLS가 "본인 행만"이라 운영자도 자기 것 하나만 센다.
+-- 프로필 전체 조회 권한을 여는 대신 집계만 돌려준다.
+create or replace function public.analytics_consent_stats()
+returns table(total integer, opted_in integer)
+language sql
+stable
+security definer
+set search_path to 'public'
+as $$
+  select
+    case when public.is_admin() then (select count(*)::int from public.profiles) else 0 end,
+    case when public.is_admin()
+         then (select count(*)::int from public.profiles where analytics_consent)
+         else 0 end;
+$$;
+
+revoke all on function public.analytics_consent_stats() from public;
+grant execute on function public.analytics_consent_stats() to authenticated;
+
 revoke all on function public.issue_product_units(text, text, int, int) from public;
 grant execute on function public.issue_product_units(text, text, int, int) to authenticated;
 
