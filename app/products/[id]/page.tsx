@@ -1,26 +1,26 @@
+"use client";
+
+import { useParams } from "next/navigation";
 import { ProductDetailScreen } from "@/Components/product/ProductDetailScreen";
 import {
-  getProduct,
-  getRepairsByProduct,
-} from "@/lib/data";
-import { normalizeProductId } from "@/lib/mock-db";
-import { listStories } from "@/lib/story-store";
+  ProductLoadError,
+  ProductLoading,
+} from "@/Components/product/ProductLoadState";
+import { toRepairView } from "@/lib/api-view";
+import { useProductDetail } from "@/lib/use-product-detail";
 
-export default async function ProductPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const product = getProduct(id);
-  const stories = listStories(normalizeProductId(product.id));
-  const repairs = getRepairsByProduct(product.id);
+export default function ProductPage() {
+  const { id } = useParams<{ id: string }>();
+  const { data, product, error, retry } = useProductDetail(id);
+
+  if (error) return <ProductLoadError message={error} onRetry={retry} />;
+  if (!data || !product) return <ProductLoading />;
 
   return (
     <ProductDetailScreen
       product={product}
-      stories={stories}
-      repairs={repairs}
+      stories={data.recent_activity.stories}
+      repairs={data.recent_activity.repairs.map(toRepairView)}
     />
   );
 }

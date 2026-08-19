@@ -23,6 +23,8 @@
 .status{font-family:var(--font-noto-sans-kr),sans-serif;font-size:13px}
 .productTitle{font-family:var(--font-cormorant),"Times New Roman",serif;font-weight:500}
 .eyebrow{font-family:var(--font-noto-sans-kr),sans-serif;font-size:12px;line-height:18px;letter-spacing:0;font-weight:600}
+.conditionNote{margin:-4px 0 15px;color:#81776d;font-size:10px;line-height:16px}.demoLabel{display:block;margin-top:1px;color:#9f7c57;font-family:var(--font-noto-sans-kr),sans-serif;font-size:8px;line-height:11px}
+.disabledFeature{cursor:not-allowed!important;opacity:.58}.featurePlaceholder{margin-top:22px;padding:34px 22px;border-radius:22px;background:#fff;box-shadow:1px 2px 10px #9f7c5738;text-align:center}.featurePlaceholder h2{margin:10px 0 12px;font-size:20px;line-height:1.4}.featurePlaceholder>p:not(.eyebrow){color:#76695d;font-size:12px;line-height:1.7}.featurePlaceholder .primary{display:grid;place-items:center;text-decoration:none}
 .timelineText small{font-size:12px;line-height:18px}
 .timelineText h2{font-size:16px;line-height:24px;font-weight:600;margin:4px 0}
 .timelineText p{font-family:inherit;font-size:13px;line-height:20px;margin:7px 0}

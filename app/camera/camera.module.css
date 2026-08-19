@@ -9,7 +9,7 @@
 
 .phone {
   position: relative;
-  width: min(100%, 393px);
+  width: min(100%, var(--app-frame));
   height: 852px;
   max-height: 100dvh;
   overflow: hidden;
@@ -189,6 +189,99 @@
   font-size: 10px;
   font-weight: 800;
 }
+
+.permissionLayer {
+  position: absolute;
+  z-index: 14;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #20140da3;
+  backdrop-filter: blur(4px);
+}
+
+.permissionCard {
+  width: 100%;
+  max-width: 315px;
+  padding: 24px 20px 16px;
+  border: 1px solid #fff5;
+  border-radius: 22px;
+  background: #fffdf8f2;
+  color: #2d1f11;
+  text-align: center;
+  box-shadow: 0 18px 45px #0005;
+}
+
+.permissionCard>span {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 13px;
+  place-items: center;
+  border-radius: 50%;
+  background: #ede3d6;
+  color: #6e432c;
+}
+
+.permissionCard strong {
+  display: block;
+  font-size: 16px;
+  line-height: 23px;
+}
+
+.permissionCard p {
+  margin: 8px 0 18px;
+  color: #76695d;
+  font-size: 11px;
+  line-height: 17px;
+}
+
+.permissionPrimary,
+.permissionSecondary {
+  width: 100%;
+  min-height: 46px;
+  border: 0;
+  border-radius: 13px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.permissionPrimary {
+  background: #2d1f11;
+  color: white;
+}
+
+.permissionSecondary {
+  margin-top: 6px;
+  background: transparent;
+  color: #6e432c;
+}
+
+.connecting {
+  position: absolute;
+  z-index: 14;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  background: #20140d99;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.connecting span {
+  width: 17px;
+  height: 17px;
+  border: 2px solid #fff5;
+  border-top-color: white;
+  border-radius: 50%;
+  animation: cameraSpin .8s linear infinite;
+}
+
+@keyframes cameraSpin { to { transform: rotate(360deg); } }
 
 .captureControls {
   position: absolute;
@@ -452,4 +545,80 @@
   .cameraVideo {
     transition: none;
   }
+}
+
+/* ---------- QR 등록 모드 ---------- */
+
+.qrFrame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(62%, 240px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -58%);
+  border: 2px solid #fffaf3cc;
+  border-radius: 24px;
+  box-shadow: 0 0 0 100vmax #0000004d;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.qrPanel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--nav-height) + env(safe-area-inset-bottom) + 12px);
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 18px;
+}
+
+.qrError,
+.qrHint {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: #211f1ecc;
+  color: #fffaf3;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.qrError {
+  background: #8a3a3ae6;
+}
+
+.qrManual {
+  display: flex;
+  gap: 8px;
+}
+
+.qrManual input {
+  flex: 1;
+  min-width: 0;
+  height: 46px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 14px;
+  background: #fffaf3f2;
+  font-size: 13px;
+  color: #2d1f11;
+}
+
+.qrManual input:focus {
+  outline: 2px solid #b89463;
+}
+
+.qrManual button {
+  height: 46px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 14px;
+  background: #6e432c;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
 }

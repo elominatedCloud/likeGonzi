@@ -87,6 +87,7 @@ export interface RepairRow {
   title: string | null;
   location: string | null;
   thumbnail_url: string | null;
+  thumbnail_path: string | null;
   source: string;
   ai_image_url: string | null;
   created_at: string;
@@ -102,21 +103,41 @@ export interface RepairDTO {
   source: string;
   status: string;
   condition_tags: string[];
+  receipt_no: string;
   ai_image_url: string | null;
   created_at: string;
   updated_at: string;
 }
 
-export function toRepairDTO(row: RepairRow): RepairDTO {
+/**
+ * 접수번호는 DB 컬럼이 아니라 (접수일 + repair id) 조합으로 만든다.
+ * ponytail: 별도 시퀀스 컬럼 없이 안정적으로 재현 가능. 사람이 부르는 번호가
+ * 필요해지면 repairs에 receipt_no 컬럼을 추가하고 여기만 바꾸면 된다.
+ */
+export function repairReceiptNo(row: Pick<RepairRow, "id" | "created_at">) {
+  const ymd = row.created_at.slice(0, 10).replaceAll("-", "");
+  return `R-${ymd}-${row.id.slice(0, 4).toUpperCase()}`;
+}
+
+/**
+ * productId를 넘기면 FE가 라우팅에 쓰는 제품 slug(stark 등)로 바꿔서 내려준다.
+ * 넘기지 않으면 DB의 product_unit_id(UUID) 그대로.
+ */
+export function toRepairDTO(
+  row: RepairRow,
+  productId = row.product_unit_id,
+  thumbnailUrl = row.thumbnail_url,
+): RepairDTO {
   return {
     id: row.id,
-    product_id: row.product_unit_id,
+    product_id: productId,
     title: row.title,
     location: row.location,
-    thumbnail_url: row.thumbnail_url,
+    thumbnail_url: thumbnailUrl,
     source: row.source,
     status: row.status,
     condition_tags: row.condition_tags ?? [],
+    receipt_no: repairReceiptNo(row),
     ai_image_url: row.ai_image_url,
     created_at: row.created_at,
     updated_at: row.updated_at,

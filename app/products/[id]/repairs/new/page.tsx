@@ -1,29 +1,27 @@
-import { Suspense } from "react";
-import { RepairApplyScreen } from "@/Components/care/RepairApplyScreen";
-import { getProduct } from "@/lib/data";
+"use client";
 
-export default async function RepairApplyPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const product = getProduct(id);
+import { useParams } from "next/navigation";
+import { RepairApplyScreen } from "@/Components/care/RepairApplyScreen";
+import {
+  ProductLoadError,
+  ProductLoading,
+} from "@/Components/product/ProductLoadState";
+import { useProductDetail } from "@/lib/use-product-detail";
+
+export default function RepairApplyPage() {
+  const { id } = useParams<{ id: string }>();
+  const { product, error, retry } = useProductDetail(id);
+
+  if (error)
+    return <ProductLoadError message={error} onRetry={retry} title="수선 신청" />;
+  if (!product) return <ProductLoading title="수선 신청" />;
 
   return (
-    <Suspense
-      fallback={
-        <div className="visetos-bg flex min-h-dvh items-center justify-center text-muted">
-          수선 접수 불러오는 중…
-        </div>
-      }
-    >
-      <RepairApplyScreen
-        productId={product.id}
-        productName={product.name}
-        productColor={product.color}
-        productImage={product.cutoutImage}
-      />
-    </Suspense>
+    <RepairApplyScreen
+      productId={id}
+      productName={product.name}
+      productColor={product.color}
+      productImage={product.cutoutImage}
+    />
   );
 }

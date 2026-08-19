@@ -1,19 +1,237 @@
--- =============================================================================
--- MCM Storybook / likeGonzi — Supabase schema (예서 방향 + 리뷰 반영본)
--- =============================================================================
--- 모델(products) · 실물(product_units) · 소유(user_products) 분리
--- 미등록 제품 = product_units 존재 + user_products 없음 (owner_id nullable 불필요)
--- QR 전체 공개 SELECT 금지 → scan/claim 은 SECURITY DEFINER RPC 로만
--- =============================================================================
+-- ============================================================
+-- MCM Storybook — public 스키마
+--
+-- 이 파일은 실제 Supabase 프로젝트(kwstxcaggtxnntwwpxto)의 상태를 그대로 옮긴
+-- 스냅샷입니다. 손으로 관리하던 이전 버전이 실제 DB와 어긋나 있어서
+-- (my_products_view 누락, 존재하지 않는 함수 선언 등) 카탈로그에서 다시 뽑았습니다.
+--
+-- 스키마를 바꿀 때는 이 파일을 고치는 대신 마이그레이션을 적용한 뒤
+-- 이 파일을 다시 뽑아 주세요. 그래야 파일과 DB가 갈라지지 않습니다.
+-- 새 환경 세팅: 이 파일 → seed.sql 순서로 실행.
+-- ============================================================
 
-create extension if not exists "pgcrypto";
+create extension if not exists pgcrypto;
 
--- -----------------------------------------------------------------------------
--- Helpers: updated_at
--- -----------------------------------------------------------------------------
+-- ------------------------------------------------------------
+-- 테이블
+-- ------------------------------------------------------------
+
+-- 사용자 프로필. auth.users와 1:1이며 handle_new_user 트리거가 자동 생성한다.
+create table if not exists public.profiles (
+  id uuid not null,
+  nickname text,
+  birthday date,
+  travel_style text[] default '{}'::text[],
+  onboarding_completed boolean default false,
+  membership text default 'SILVER'::text not null,
+  cleaning_coupons integer default 0 not null,
+  repair_vouchers integer default 0 not null,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  -- 운영 도구(/admin) 접근 권한. is_admin() 함수와 RLS 정책이 이 값을 본다.
+  is_admin boolean default false not null,
+  constraint profiles_pkey primary key (id),
+  constraint profiles_id_fkey foreign key (id) references auth.users (id) on delete cascade,
+  constraint profiles_membership_check check (membership = any (array['SILVER'::text, 'GOLD'::text, 'PLATINUM'::text])),
+  constraint profiles_cleaning_coupons_check check (cleaning_coupons >= 0),
+  constraint profiles_repair_vouchers_check check (repair_vouchers >= 0)
+);
+
+-- 제품 모델(Stark Backpack 등). 개체가 아니라 카탈로그.
+create table if not exists public.products (
+  id uuid default gen_random_uuid() not null,
+  product_name text not null,
+  model_no text,
+  material text,
+  manufacturer text,
+  description text,
+  slug text,
+  created_at timestamptz default now(),
+  constraint products_pkey primary key (id)
+);
+
+-- slug는 제품 조회 키(resolveOwnedProductRef, create_story_with_products,
+-- issue_product_units)로 쓰이므로 중복을 막는다.
+create unique index if not exists products_slug_key on public.products (slug) where slug is not null;
+
+-- 실제 물리 제품 한 개(개체). QR/NFC 태그의 tag_code가 여기에 붙는다.
+create table if not exists public.product_units (
+  id uuid default gen_random_uuid() not null,
+  product_id uuid not null,
+  tag_code text not null,
+  serial_no text not null,
+  store text,
+  color text,
+  year integer,
+  cutout_image text,
+  lifestyle_images text[] default '{}'::text[],
+  care_score integer default 90,
+  repair_vouchers integer default 0 not null,
+  cleaning_vouchers integer default 0 not null,
+  created_at timestamptz default now(),
+  constraint product_units_pkey primary key (id),
+  constraint product_units_product_id_fkey foreign key (product_id) references public.products (id) on delete restrict,
+  constraint product_units_tag_code_key unique (tag_code),
+  constraint product_units_serial_no_key unique (serial_no),
+  constraint product_units_care_score_check check (care_score >= 0 and care_score <= 100),
+  constraint product_units_repair_vouchers_check check (repair_vouchers >= 0),
+  constraint product_units_cleaning_vouchers_check check (cleaning_vouchers >= 0)
+);
+
+-- 개체 소유권. unique(product_unit_id)로 한 개체는 한 사람만 등록할 수 있다.
+create table if not exists public.user_products (
+  id uuid default gen_random_uuid() not null,
+  user_id uuid not null,
+  product_unit_id uuid not null,
+  is_favorite boolean default false not null,
+  registered_at timestamptz default now(),
+  constraint user_products_pkey primary key (id),
+  constraint user_products_user_id_fkey foreign key (user_id) references auth.users (id) on delete cascade,
+  constraint user_products_product_unit_id_fkey foreign key (product_unit_id) references public.product_units (id) on delete cascade,
+  constraint user_products_product_unit_id_key unique (product_unit_id)
+);
+
+-- 사진 기록. photo_url(외부/로컬 경로) 또는 photo_path(private Storage) 중 하나는 필수.
+create table if not exists public.stories (
+  id uuid default gen_random_uuid() not null,
+  user_id uuid not null,
+  tag text,
+  photo_url text,
+  photo_path text,
+  location text,
+  memo text,
+  story text,
+  trip_label text,
+  story_date date default current_date,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  constraint stories_pkey primary key (id),
+  constraint stories_user_id_fkey foreign key (user_id) references auth.users (id) on delete cascade,
+  constraint stories_photo_reference_required check (
+    nullif(btrim(photo_url), ''::text) is not null
+    or nullif(btrim(photo_path), ''::text) is not null
+  )
+);
+
+-- 기록 ↔ 개체 다대다. 한 사진에 여러 제품을 태그할 수 있다.
+create table if not exists public.story_products (
+  story_id uuid not null,
+  product_unit_id uuid not null,
+  constraint story_products_pkey primary key (story_id, product_unit_id),
+  constraint story_products_story_id_fkey foreign key (story_id) references public.stories (id) on delete cascade,
+  constraint story_products_product_unit_id_fkey foreign key (product_unit_id) references public.product_units (id) on delete cascade
+);
+
+-- 수선 접수. thumbnail_path는 private Storage 경로, thumbnail_url은 데모 폴백(data URL).
+create table if not exists public.repairs (
+  id uuid default gen_random_uuid() not null,
+  product_unit_id uuid not null,
+  user_id uuid not null,
+  title text,
+  condition_tags text[] default '{}'::text[],
+  status text default 'submitted'::text not null,
+  location text,
+  thumbnail_url text,
+  thumbnail_path text,
+  ai_image_url text,
+  source text default 'store'::text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now() not null,
+  constraint repairs_pkey primary key (id),
+  constraint repairs_product_unit_id_fkey foreign key (product_unit_id) references public.product_units (id) on delete cascade,
+  constraint repairs_user_id_fkey foreign key (user_id) references auth.users (id) on delete cascade,
+  constraint repairs_status_check check (status = any (array['submitted'::text, 'in_progress'::text, 'completed'::text, 'cancelled'::text])),
+  constraint repairs_source_check check (source = any (array['store'::text, 'ai_custom'::text, 'user'::text]))
+);
+
+-- 소유권 이전 신청. 현재 FE는 '연동 해제'(user_products 삭제) 방식을 쓰고 이 API는 미사용.
+create table if not exists public.ownership_transfers (
+  id uuid default gen_random_uuid() not null,
+  product_unit_id uuid not null,
+  from_user_id uuid not null,
+  to_email text not null,
+  status text default 'pending'::text not null,
+  created_at timestamptz default now(),
+  completed_at timestamptz,
+  constraint ownership_transfers_pkey primary key (id),
+  constraint ownership_transfers_product_unit_id_fkey foreign key (product_unit_id) references public.product_units (id) on delete cascade,
+  constraint ownership_transfers_from_user_id_fkey foreign key (from_user_id) references auth.users (id),
+  constraint ownership_transfers_status_check check (status = any (array['pending'::text, 'completed'::text, 'cancelled'::text]))
+);
+
+-- AI Recap 캐시. 생성 시점의 기록 수를 같이 저장해 건수가 바뀔 때만 재생성한다.
+create table if not exists public.product_recaps (
+  id uuid default gen_random_uuid() not null,
+  product_unit_id uuid not null,
+  user_id uuid not null,
+  content text not null,
+  story_count integer default 0 not null,
+  repair_count integer default 0 not null,
+  is_ai boolean default true not null,
+  created_at timestamptz default now() not null,
+  updated_at timestamptz default now() not null,
+  constraint product_recaps_pkey primary key (id),
+  constraint product_recaps_product_unit_id_fkey foreign key (product_unit_id) references public.product_units (id) on delete cascade,
+  constraint product_recaps_user_id_fkey foreign key (user_id) references public.profiles (id) on delete cascade,
+  constraint product_recaps_product_unit_id_user_id_key unique (product_unit_id, user_id)
+);
+
+-- ------------------------------------------------------------
+-- 인덱스
+-- ------------------------------------------------------------
+
+create index if not exists idx_product_units_product_id on public.product_units (product_id);
+create index if not exists idx_product_units_tag_code on public.product_units (tag_code);
+create index if not exists idx_user_products_user_id on public.user_products (user_id);
+create index if not exists idx_stories_user_id on public.stories (user_id);
+create index if not exists idx_stories_user_id_date on public.stories (user_id, story_date);
+create index if not exists idx_stories_tag on public.stories (tag);
+create index if not exists idx_stories_trip_label on public.stories (trip_label);
+create index if not exists stories_photo_path_idx on public.stories (photo_path) where photo_path is not null;
+create index if not exists idx_story_products_product_unit_id on public.story_products (product_unit_id);
+create index if not exists idx_repairs_product_unit_id on public.repairs (product_unit_id);
+create index if not exists idx_repairs_product_unit_id_status on public.repairs (product_unit_id, status);
+create index if not exists idx_ownership_transfers_product_unit_id on public.ownership_transfers (product_unit_id);
+create index if not exists idx_ownership_transfers_to_email on public.ownership_transfers (to_email);
+create index if not exists product_recaps_user_idx on public.product_recaps (user_id);
+
+-- ------------------------------------------------------------
+-- 뷰
+-- ------------------------------------------------------------
+
+-- 내 제품 목록. API(/api/products/my, /api/home, 제품 상세)가 이 뷰를 읽는다.
+create or replace view public.my_products_view as
+  select pu.id,
+         up.registered_at,
+         up.is_favorite,
+         pu.tag_code,
+         pu.serial_no,
+         pu.store,
+         pu.color,
+         pu.year,
+         pu.cutout_image,
+         pu.lifestyle_images,
+         pu.care_score,
+         pu.repair_vouchers,
+         pu.cleaning_vouchers,
+         up.user_id,
+         p.id as model_id,
+         p.product_name,
+         p.model_no,
+         p.material,
+         p.manufacturer
+    from public.user_products up
+    join public.product_units pu on pu.id = up.product_unit_id
+    join public.products p on p.id = pu.product_id;
+
+-- ------------------------------------------------------------
+-- 함수
+-- ------------------------------------------------------------
+
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
+set search_path to ''
 as $$
 begin
   new.updated_at = now();
@@ -21,40 +239,16 @@ begin
 end;
 $$;
 
--- -----------------------------------------------------------------------------
--- profiles (auth.users 1:1)
--- -----------------------------------------------------------------------------
-create table if not exists public.profiles (
-  id uuid primary key references auth.users (id) on delete cascade,
-  nickname text not null,
-  birthday date,
-  travel_style text[] not null default '{}',
-  onboarding_completed boolean not null default false,
-  membership text not null default 'SILVER'
-    check (membership in ('SILVER', 'GOLD', 'PLATINUM')),
-  cleaning_coupons int not null default 0 check (cleaning_coupons >= 0),
-  repair_vouchers int not null default 0 check (repair_vouchers >= 0),
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
-create trigger profiles_set_updated_at
-  before update on public.profiles
-  for each row execute function public.set_updated_at();
-
--- 신규 유저 → profile 자동 생성
+-- auth.users에 새 계정이 생기면 profiles를 자동 생성한다.
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
 security definer
-set search_path = public
+set search_path to ''
 as $$
 begin
   insert into public.profiles (id, nickname)
-  values (
-    new.id,
-    coalesce(new.raw_user_meta_data->>'nickname', split_part(new.email, '@', 1), 'member')
-  );
+  values (new.id, new.raw_user_meta_data->>'nickname');
   return new;
 end;
 $$;
@@ -64,370 +258,118 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
--- -----------------------------------------------------------------------------
--- products — 제품 모델(카탈로그)
--- -----------------------------------------------------------------------------
-create table if not exists public.products (
-  id uuid primary key default gen_random_uuid(),
-  product_name text not null,
-  model_no text not null,
-  slug text unique,
-  material text,
-  manufacturer text default 'MCM',
-  color text,
-  cutout_image text,
-  care_score int not null default 90 check (care_score between 0 and 100),
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
-create trigger products_set_updated_at
-  before update on public.products
-  for each row execute function public.set_updated_at();
-
-create index if not exists products_model_no_idx on public.products (model_no);
-create index if not exists products_slug_idx on public.products (slug);
-
--- -----------------------------------------------------------------------------
--- product_units — 실물 QR 태그 유닛 (미등록 포함)
--- -----------------------------------------------------------------------------
-create table if not exists public.product_units (
-  id uuid primary key default gen_random_uuid(),
-  product_id uuid not null references public.products (id) on delete restrict,
-  tag_code text not null unique,
-  serial_no text not null unique,
-  year int,
-  store text,
-  repair_vouchers int not null default 0 check (repair_vouchers >= 0),
-  cleaning_vouchers int not null default 0 check (cleaning_vouchers >= 0),
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
-create trigger product_units_set_updated_at
-  before update on public.product_units
-  for each row execute function public.set_updated_at();
-
-create index if not exists product_units_product_id_idx
-  on public.product_units (product_id);
-
--- -----------------------------------------------------------------------------
--- user_products — 현재 소유 관계 (unit 당 1명)
--- -----------------------------------------------------------------------------
-create table if not exists public.user_products (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.profiles (id) on delete cascade,
-  product_unit_id uuid not null references public.product_units (id) on delete cascade,
-  registered_at timestamptz not null default now(),
-  is_favorite boolean not null default false,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  unique (product_unit_id)
-);
-
-create trigger user_products_set_updated_at
-  before update on public.user_products
-  for each row execute function public.set_updated_at();
-
-create index if not exists user_products_user_id_idx
-  on public.user_products (user_id);
-
--- -----------------------------------------------------------------------------
--- stories + story_products (한 기록에 여러 제품)
--- -----------------------------------------------------------------------------
-create table if not exists public.stories (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.profiles (id) on delete cascade,
-  -- photo_path: private Storage object path (preferred)
-  -- photo_url: legacy/external URL or local demo compatibility
-  photo_url text,
-  photo_path text,
-  location text,
-  memo text,
-  trip_label text,
-  tag text,
-  story_date date not null default (timezone('utc', now()))::date,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
-alter table public.stories add column if not exists photo_path text;
-alter table public.stories alter column photo_url drop not null;
-
-do $$
-begin
-  alter table public.stories
-    add constraint stories_photo_reference_required
-    check (
-      nullif(btrim(photo_url), '') is not null
-      or nullif(btrim(photo_path), '') is not null
-    );
-exception
-  when duplicate_object then null;
-end;
-$$;
-
-create trigger stories_set_updated_at
-  before update on public.stories
-  for each row execute function public.set_updated_at();
-
-create table if not exists public.story_products (
-  story_id uuid not null references public.stories (id) on delete cascade,
-  product_unit_id uuid not null references public.product_units (id) on delete cascade,
-  primary key (story_id, product_unit_id)
-);
-
-create index if not exists story_products_unit_idx
-  on public.story_products (product_unit_id);
-
-create index if not exists stories_user_id_idx on public.stories (user_id);
-create index if not exists stories_story_date_idx on public.stories (story_date desc);
-create index if not exists stories_photo_path_idx
-  on public.stories (photo_path)
-  where photo_path is not null;
-
--- -----------------------------------------------------------------------------
--- repairs — 상태 DB 수동 관리 (유저는 status UPDATE 불가)
--- -----------------------------------------------------------------------------
-create table if not exists public.repairs (
-  id uuid primary key default gen_random_uuid(),
-  product_unit_id uuid not null references public.product_units (id) on delete cascade,
-  user_id uuid not null references public.profiles (id) on delete cascade,
-  title text not null default '수선 접수',
-  condition_tags text[] not null default '{}',
-  status text not null default 'submitted'
-    check (status in ('submitted', 'in_progress', 'completed', 'cancelled')),
-  location text,
-  thumbnail_url text,
-  ai_image_url text,
-  source text not null default 'user'
-    check (source in ('store', 'ai_custom', 'user')),
-  requested_at timestamptz not null default now(),
-  completed_at timestamptz,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  constraint repairs_completed_at_consistency check (
-    (status = 'completed' and completed_at is not null)
-    or (status <> 'completed' and completed_at is null)
-  )
-);
-
-create trigger repairs_set_updated_at
-  before update on public.repairs
-  for each row execute function public.set_updated_at();
-
-create index if not exists repairs_unit_idx on public.repairs (product_unit_id);
-create index if not exists repairs_user_idx on public.repairs (user_id);
-create index if not exists repairs_status_idx on public.repairs (status);
-
--- -----------------------------------------------------------------------------
--- ownership_transfers — row 생성은 서비스/관리 경로 (MVP 수동 가능)
--- -----------------------------------------------------------------------------
-create table if not exists public.ownership_transfers (
-  id uuid primary key default gen_random_uuid(),
-  product_unit_id uuid not null references public.product_units (id) on delete cascade,
-  from_user_id uuid not null references public.profiles (id) on delete cascade,
-  to_email text not null,
-  status text not null default 'pending'
-    check (status in ('pending', 'completed', 'cancelled')),
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
-create trigger ownership_transfers_set_updated_at
-  before update on public.ownership_transfers
-  for each row execute function public.set_updated_at();
-
-create index if not exists ownership_transfers_from_user_idx
-  on public.ownership_transfers (from_user_id);
-create index if not exists ownership_transfers_unit_idx
-  on public.ownership_transfers (product_unit_id);
-
--- -----------------------------------------------------------------------------
--- leather_checks (선택)
--- -----------------------------------------------------------------------------
-create table if not exists public.leather_checks (
-  id uuid primary key default gen_random_uuid(),
-  product_unit_id uuid not null references public.product_units (id) on delete cascade,
-  user_id uuid not null references public.profiles (id) on delete cascade,
-  photo_url text not null,
-  ai_summary text,
-  created_at timestamptz not null default now()
-);
-
--- =============================================================================
--- Ownership helpers (RLS / RPC 공용)
--- =============================================================================
-create or replace function public.is_unit_owner(p_unit_id uuid, p_user_id uuid default auth.uid())
+-- 운영자 판정. RLS 정책 안에서 profiles를 직접 조회하면 정책이 재귀하므로
+-- security definer로 감싼다.
+create or replace function public.is_admin(p_user_id uuid default auth.uid())
 returns boolean
 language sql
 stable
 security definer
-set search_path = public
+set search_path to 'public'
 as $$
-  select exists (
-    select 1
-    from public.user_products up
-    where up.product_unit_id = p_unit_id
-      and up.user_id = p_user_id
-  );
+  select coalesce((select p.is_admin from public.profiles p where p.id = p_user_id), false);
 $$;
 
-create or replace function public.current_owner_id(p_unit_id uuid)
-returns uuid
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select up.user_id
-  from public.user_products up
-  where up.product_unit_id = p_unit_id
-  limit 1;
-$$;
+revoke all on function public.is_admin(uuid) from public;
+grant execute on function public.is_admin(uuid) to authenticated;
 
--- =============================================================================
--- QR scan RPC — tag 1건만 반환, 전체 목록 공개 금지
--- ownership_status: unregistered | owned_by_me | owned_by_other
--- =============================================================================
-create or replace function public.scan_product_unit(p_tag_code text)
-returns jsonb
+-- QR/NFC 스캔. 로그인 없이도 호출 가능하며 auth.uid() 기준으로 소유 상태를 판별한다.
+create or replace function public.scan_product(p_tag_code text)
+returns table(status text, product_unit_id uuid, product_name text, model_no text,
+              material text, manufacturer text, serial_no text)
 language plpgsql
 security definer
-set search_path = public
-as $$
-declare
-  v_unit public.product_units%rowtype;
-  v_product public.products%rowtype;
-  v_owner uuid;
-  v_status text;
-begin
-  select * into v_unit
-  from public.product_units
-  where tag_code = p_tag_code;
-
-  if not found then
-    return jsonb_build_object(
-      'ok', false,
-      'error', jsonb_build_object('code', 'TAG_NOT_FOUND', 'message', 'Unknown tag')
-    );
-  end if;
-
-  select * into v_product from public.products where id = v_unit.product_id;
-  v_owner := public.current_owner_id(v_unit.id);
-
-  if v_owner is null then
-    v_status := 'unregistered';
-  elsif auth.uid() is not null and v_owner = auth.uid() then
-    v_status := 'owned_by_me';
-  else
-    v_status := 'owned_by_other';
-  end if;
-
-  return jsonb_build_object(
-    'ok', true,
-    'data', jsonb_build_object(
-      'tag_code', v_unit.tag_code,
-      'product_unit_id', v_unit.id,
-      'product_id', v_product.id,
-      'product_name', v_product.product_name,
-      'model_no', v_product.model_no,
-      'slug', v_product.slug,
-      'serial_no', v_unit.serial_no,
-      'material', v_product.material,
-      'color', v_product.color,
-      'cutout_image', v_product.cutout_image,
-      'ownership_status', v_status,
-      'is_registered_to_user', (v_status = 'owned_by_me'),
-      'route', case
-        when v_status = 'owned_by_me' then 'product_detail'
-        when v_status = 'unregistered' then 'register_confirm'
-        else 'owned_by_other'
-      end
-    )
-  );
-end;
-$$;
-
--- =============================================================================
--- Claim / register RPC — 트랜잭션으로 소유권 획득
--- =============================================================================
-create or replace function public.claim_product_unit(p_tag_code text)
-returns jsonb
-language plpgsql
-security definer
-set search_path = public
+set search_path to ''
 as $$
 declare
   v_unit_id uuid;
+  v_serial_no text;
+  v_product_name text;
+  v_model_no text;
+  v_material text;
+  v_manufacturer text;
   v_owner uuid;
-  v_row public.user_products%rowtype;
 begin
-  if auth.uid() is null then
-    return jsonb_build_object(
-      'ok', false,
-      'error', jsonb_build_object('code', 'UNAUTHORIZED', 'message', 'Login required')
-    );
+  select pu.id, pu.serial_no, p.product_name, p.model_no, p.material, p.manufacturer
+    into v_unit_id, v_serial_no, v_product_name, v_model_no, v_material, v_manufacturer
+  from public.product_units pu
+  join public.products p on p.id = pu.product_id
+  where pu.tag_code = p_tag_code;
+
+  if not found then
+    raise exception 'invalid tag code';
   end if;
 
-  select id into v_unit_id
-  from public.product_units
-  where tag_code = p_tag_code
-  for update;
+  select up.user_id into v_owner
+  from public.user_products up
+  where up.product_unit_id = v_unit_id;
 
-  if v_unit_id is null then
-    return jsonb_build_object(
-      'ok', false,
-      'error', jsonb_build_object('code', 'TAG_NOT_FOUND', 'message', 'Unknown tag')
-    );
+  if v_owner is null then
+    status := 'unregistered';
+  elsif v_owner = auth.uid() then
+    status := 'owned_by_me';
+  else
+    status := 'owned_by_other';
   end if;
 
-  v_owner := public.current_owner_id(v_unit_id);
-
-  if v_owner = auth.uid() then
-    return jsonb_build_object(
-      'ok', false,
-      'error', jsonb_build_object('code', 'ALREADY_REGISTERED', 'message', 'Already owned by you')
-    );
-  end if;
-
-  if v_owner is not null then
-    return jsonb_build_object(
-      'ok', false,
-      'error', jsonb_build_object('code', 'OWNED_BY_OTHER', 'message', 'Already registered to another user')
-    );
-  end if;
-
-  insert into public.user_products (user_id, product_unit_id)
-  values (auth.uid(), v_unit_id)
-  returning * into v_row;
-
-  return jsonb_build_object(
-    'ok', true,
-    'data', jsonb_build_object(
-      'user_product_id', v_row.id,
-      'product_unit_id', v_row.product_unit_id,
-      'registered_at', v_row.registered_at
-    )
-  );
+  product_unit_id := v_unit_id;
+  product_name := v_product_name;
+  model_no := v_model_no;
+  material := v_material;
+  manufacturer := v_manufacturer;
+  serial_no := v_serial_no;
+  return next;
 end;
 $$;
 
--- =============================================================================
--- Story 생성 RPC — 사진 경로 + 선택 제품 소유권을 한 트랜잭션에서 검증
--- =============================================================================
+-- 제품 등록. for update로 동시 등록 경쟁을 막는다.
+create or replace function public.claim_product(p_tag_code text)
+returns table(product_unit_id uuid)
+language plpgsql
+security definer
+set search_path to ''
+as $$
+declare
+  v_unit_id uuid;
+begin
+  if auth.uid() is null then
+    raise exception 'login required';
+  end if;
+
+  select pu.id into v_unit_id
+  from public.product_units pu
+  where pu.tag_code = p_tag_code
+  for update;
+
+  if not found then
+    raise exception 'invalid tag code';
+  end if;
+
+  if exists (select 1 from public.user_products up where up.product_unit_id = v_unit_id) then
+    raise exception 'already registered';
+  end if;
+
+  insert into public.user_products (user_id, product_unit_id)
+  values (auth.uid(), v_unit_id);
+
+  product_unit_id := v_unit_id;
+  return next;
+end;
+$$;
+
+-- 기록 저장 + 제품 연결을 한 트랜잭션으로 처리한다(소유권 검증 포함).
 create or replace function public.create_story_with_products(
   p_tag text,
   p_photo_path text,
   p_location text default null,
   p_memo text default null,
   p_story_date date default current_date,
-  p_product_slugs text[] default '{}'
+  p_product_slugs text[] default '{}'::text[]
 )
 returns jsonb
 language plpgsql
 security definer
-set search_path = ''
+set search_path to ''
 as $$
 declare
   v_user_id uuid := auth.uid();
@@ -443,6 +385,7 @@ begin
     raise exception 'TAG_REQUIRED' using errcode = '22023';
   end if;
 
+  -- 남의 폴더 경로를 밀어 넣지 못하게 첫 폴더가 본인 uid인지 검사한다.
   if nullif(btrim(p_photo_path), '') is null
      or split_part(p_photo_path, '/', 1) <> v_user_id::text then
     raise exception 'INVALID_PHOTO_PATH' using errcode = '42501';
@@ -472,14 +415,7 @@ begin
     raise exception 'PRODUCT_NOT_OWNED' using errcode = '42501';
   end if;
 
-  insert into public.stories (
-    user_id,
-    tag,
-    photo_path,
-    location,
-    memo,
-    story_date
-  )
+  insert into public.stories (user_id, tag, photo_path, location, memo, story_date)
   values (
     v_user_id,
     btrim(p_tag),
@@ -499,17 +435,108 @@ begin
     and p.slug = any(p_product_slugs)
   on conflict do nothing;
 
-  return jsonb_build_object(
-    'id', v_story_id,
-    'photo_path', p_photo_path,
-    'product_slugs', p_product_slugs
-  );
+  return jsonb_build_object('id', v_story_id, 'photo_path', p_photo_path, 'product_slugs', p_product_slugs);
 end;
 $$;
 
--- =============================================================================
+-- 개체 대량 발급(운영자 전용).
+-- tag_code/serial_no 채번을 라우트에서 max+1로 하면 동시 발급 시 겹치므로
+-- products 행을 for update로 잠그고 DB 안에서 처리한다.
+create or replace function public.issue_product_units(
+  p_product_slug text,
+  p_store text,
+  p_year integer,
+  p_quantity integer
+)
+returns setof public.product_units
+language plpgsql
+security definer
+set search_path to 'public'
+as $$
+declare
+  v_product public.products%rowtype;
+  v_sample public.product_units%rowtype;
+  v_prefix text;
+  v_next int;
+  v_index int;
+begin
+  if not public.is_admin() then
+    raise exception 'admin only';
+  end if;
+  if p_quantity is null or p_quantity < 1 or p_quantity > 200 then
+    raise exception 'quantity must be between 1 and 200';
+  end if;
+
+  select * into v_product from public.products where slug = p_product_slug for update;
+  if not found then
+    raise exception 'invalid product slug';
+  end if;
+
+  -- 새 개체는 같은 제품의 기존 개체에서 외형 정보를 물려받는다
+  -- (color/cutout_image는 products가 아니라 product_units에 있다).
+  select * into v_sample
+    from public.product_units pu
+   where pu.product_id = v_product.id
+   order by pu.created_at desc
+   limit 1;
+
+  v_prefix := 'UNIT-' || upper(v_product.slug) || '-';
+
+  select coalesce(max((regexp_replace(pu.tag_code, '^' || v_prefix, ''))::int), 0) + 1
+    into v_next
+    from public.product_units pu
+   where pu.product_id = v_product.id
+     and pu.tag_code ~ ('^' || v_prefix || '[0-9]+$');
+
+  for v_index in 0 .. p_quantity - 1 loop
+    return query
+    insert into public.product_units
+      (product_id, tag_code, serial_no, store, color, year, cutout_image, lifestyle_images)
+    values (
+      v_product.id,
+      v_prefix || lpad((v_next + v_index)::text, 4, '0'),
+      v_product.model_no || lpad((v_next + v_index)::text, 4, '0'),
+      p_store,
+      v_sample.color,
+      coalesce(p_year, extract(year from now())::int),
+      v_sample.cutout_image,
+      '{}'::text[]
+    )
+    returning *;
+  end loop;
+end;
+$$;
+
+revoke all on function public.issue_product_units(text, text, int, int) from public;
+grant execute on function public.issue_product_units(text, text, int, int) to authenticated;
+
+-- ------------------------------------------------------------
+-- 트리거
+-- ------------------------------------------------------------
+
+drop trigger if exists set_profiles_updated_at on public.profiles;
+create trigger set_profiles_updated_at before update on public.profiles
+  for each row execute function public.set_updated_at();
+
+drop trigger if exists set_stories_updated_at on public.stories;
+create trigger set_stories_updated_at before update on public.stories
+  for each row execute function public.set_updated_at();
+
+drop trigger if exists set_repairs_updated_at on public.repairs;
+create trigger set_repairs_updated_at before update on public.repairs
+  for each row execute function public.set_updated_at();
+
+drop trigger if exists product_recaps_set_updated_at on public.product_recaps;
+create trigger product_recaps_set_updated_at before update on public.product_recaps
+  for each row execute function public.set_updated_at();
+
+-- ------------------------------------------------------------
 -- RLS
--- =============================================================================
+--
+-- product_units는 "본인이 등록한 개체"만 조회된다. 미등록/타인 제품 확인은
+-- scan_product RPC(security definer)를 통해서만 가능하다.
+-- ------------------------------------------------------------
+
 alter table public.profiles enable row level security;
 alter table public.products enable row level security;
 alter table public.product_units enable row level security;
@@ -518,168 +545,168 @@ alter table public.stories enable row level security;
 alter table public.story_products enable row level security;
 alter table public.repairs enable row level security;
 alter table public.ownership_transfers enable row level security;
-alter table public.leather_checks enable row level security;
+alter table public.product_recaps enable row level security;
 
 -- profiles
+drop policy if exists profiles_select_own on public.profiles;
 create policy profiles_select_own on public.profiles
-  for select using (id = auth.uid());
+  for select using (auth.uid() = id);
+
+drop policy if exists profiles_update_own on public.profiles;
 create policy profiles_update_own on public.profiles
-  for update using (id = auth.uid()) with check (id = auth.uid());
+  for update using (auth.uid() = id);
 
--- products (카탈로그): 로그인 사용자 읽기 허용 (태그/시리얼 없음)
+-- products: 카탈로그는 로그인 사용자에게 공개
+drop policy if exists products_select_authenticated on public.products;
 create policy products_select_authenticated on public.products
-  for select to authenticated using (true);
+  for select using (auth.role() = 'authenticated');
 
--- product_units: 직접 SELECT 전면 공개 금지
--- 본인 소유 unit 만 조회 가능 (스캔은 scan_product_unit RPC)
+-- product_units
+drop policy if exists product_units_select_owned on public.product_units;
 create policy product_units_select_owned on public.product_units
-  for select to authenticated
-  using (public.is_unit_owner(id));
+  for select using (
+    exists (
+      select 1 from public.user_products up
+       where up.product_unit_id = product_units.id and up.user_id = auth.uid()
+    )
+  );
 
--- user_products
+drop policy if exists product_units_select_admin on public.product_units;
+create policy product_units_select_admin on public.product_units
+  for select to authenticated using (public.is_admin());
+
+-- user_products (INSERT는 claim_product RPC만 사용 — 직접 insert 정책 없음)
+drop policy if exists user_products_select_own on public.user_products;
 create policy user_products_select_own on public.user_products
-  for select to authenticated using (user_id = auth.uid());
--- INSERT는 claim_product_unit RPC 만 사용 (직접 insert 정책 없음)
-create policy user_products_update_own on public.user_products
-  for update to authenticated
-  using (user_id = auth.uid()) with check (user_id = auth.uid());
-create policy user_products_delete_own on public.user_products
-  for delete to authenticated using (user_id = auth.uid());
+  for select using (auth.uid() = user_id);
 
--- stories: 본인 + 소유 제품 검증
+drop policy if exists user_products_select_admin on public.user_products;
+create policy user_products_select_admin on public.user_products
+  for select to authenticated using (public.is_admin());
+
+drop policy if exists user_products_update_own on public.user_products;
+create policy user_products_update_own on public.user_products
+  for update using (auth.uid() = user_id);
+
+-- 연동 해제(DELETE /api/products/my/{id})가 이 정책으로 보호된다.
+drop policy if exists user_products_delete_own on public.user_products;
+create policy user_products_delete_own on public.user_products
+  for delete using (auth.uid() = user_id);
+
+-- stories
+drop policy if exists stories_select_own on public.stories;
 create policy stories_select_own on public.stories
   for select to authenticated using (user_id = (select auth.uid()));
+
+drop policy if exists stories_insert_own on public.stories;
 create policy stories_insert_own on public.stories
   for insert to authenticated
   with check (
     user_id = (select auth.uid())
-    and (
-      photo_path is null
-      or (storage.foldername(photo_path))[1] = (select auth.uid()::text)
-    )
+    and (photo_path is null or (storage.foldername(photo_path))[1] = (select auth.uid()::text))
   );
+
+drop policy if exists stories_update_own on public.stories;
 create policy stories_update_own on public.stories
   for update to authenticated
   using (user_id = (select auth.uid()))
   with check (
     user_id = (select auth.uid())
-    and (
-      photo_path is null
-      or (storage.foldername(photo_path))[1] = (select auth.uid()::text)
-    )
+    and (photo_path is null or (storage.foldername(photo_path))[1] = (select auth.uid()::text))
   );
+
+drop policy if exists stories_delete_own on public.stories;
 create policy stories_delete_own on public.stories
   for delete to authenticated using (user_id = (select auth.uid()));
 
-create policy story_products_select on public.story_products
-  for select to authenticated
-  using (
-    exists (
-      select 1 from public.stories s
-      where s.id = story_id and s.user_id = auth.uid()
-    )
-  );
-create policy story_products_insert on public.story_products
-  for insert to authenticated
-  with check (
-    exists (
-      select 1 from public.stories s
-      where s.id = story_id and s.user_id = auth.uid()
-    )
-    and public.is_unit_owner(product_unit_id)
-  );
-create policy story_products_delete on public.story_products
-  for delete to authenticated
-  using (
-    exists (
-      select 1 from public.stories s
-      where s.id = story_id and s.user_id = auth.uid()
-    )
+-- story_products
+drop policy if exists story_products_select_own on public.story_products;
+create policy story_products_select_own on public.story_products
+  for select using (
+    exists (select 1 from public.stories s where s.id = story_products.story_id and s.user_id = auth.uid())
   );
 
--- repairs: 조회/생성만, status 변경은 유저 정책에 없음 (서비스롤/수동)
+drop policy if exists story_products_insert_own on public.story_products;
+create policy story_products_insert_own on public.story_products
+  for insert with check (
+    exists (select 1 from public.stories s where s.id = story_products.story_id and s.user_id = auth.uid())
+    and exists (select 1 from public.user_products up where up.product_unit_id = story_products.product_unit_id and up.user_id = auth.uid())
+  );
+
+drop policy if exists story_products_delete_own on public.story_products;
+create policy story_products_delete_own on public.story_products
+  for delete using (
+    exists (select 1 from public.stories s where s.id = story_products.story_id and s.user_id = auth.uid())
+  );
+
+-- repairs: 본인 소유 개체에만 접수할 수 있다.
+drop policy if exists repairs_select_own on public.repairs;
 create policy repairs_select_own on public.repairs
-  for select to authenticated
-  using (user_id = auth.uid() or public.is_unit_owner(product_unit_id));
-create policy repairs_insert_owner on public.repairs
-  for insert to authenticated
-  with check (
-    user_id = auth.uid()
-    and public.is_unit_owner(product_unit_id)
-    and status = 'submitted'
-  );
--- UPDATE/DELETE 정책 없음 → 클라이언트에서 status 변경 불가
+  for select using (auth.uid() = user_id);
 
--- ownership_transfers
-create policy ownership_transfers_select_own on public.ownership_transfers
-  for select to authenticated using (from_user_id = auth.uid());
-create policy ownership_transfers_insert_owner on public.ownership_transfers
-  for insert to authenticated
-  with check (
-    from_user_id = auth.uid()
-    and public.is_unit_owner(product_unit_id)
-    and status = 'pending'
+drop policy if exists repairs_insert_own on public.repairs;
+create policy repairs_insert_own on public.repairs
+  for insert with check (
+    auth.uid() = user_id
+    and exists (
+      select 1 from public.user_products up
+       where up.product_unit_id = repairs.product_unit_id and up.user_id = auth.uid()
+    )
   );
 
--- leather_checks
-create policy leather_checks_select_own on public.leather_checks
-  for select to authenticated using (user_id = auth.uid());
-create policy leather_checks_insert_owner on public.leather_checks
-  for insert to authenticated
-  with check (
-    user_id = auth.uid()
-    and public.is_unit_owner(product_unit_id)
+-- ownership_transfers: 보낸 사람과 받는 이메일 당사자만 조회
+drop policy if exists transfers_select_involved on public.ownership_transfers;
+create policy transfers_select_involved on public.ownership_transfers
+  for select using (
+    auth.uid() = from_user_id or to_email = (auth.jwt() ->> 'email')
   );
 
--- =============================================================================
--- GRANTs (최신 Supabase는 RLS와 별도 GRANT 필요)
--- =============================================================================
-grant usage on schema public to anon, authenticated;
+drop policy if exists transfers_insert_own on public.ownership_transfers;
+create policy transfers_insert_own on public.ownership_transfers
+  for insert with check (
+    auth.uid() = from_user_id
+    and exists (
+      select 1 from public.user_products up
+       where up.product_unit_id = ownership_transfers.product_unit_id and up.user_id = auth.uid()
+    )
+  );
 
-grant select on public.products to authenticated;
-grant select, update, delete on public.user_products to authenticated;
--- Route Handler가 RLS 검증 아래에서 legacy photo_url 기록도 생성할 수 있게 한다.
--- private Storage 기록은 create_story_with_products RPC를 우선 사용한다.
-grant select, insert, update, delete on public.stories to authenticated;
-grant select, insert, delete on public.story_products to authenticated;
-grant select, insert on public.repairs to authenticated;
-grant select, insert on public.ownership_transfers to authenticated;
-grant select, insert on public.leather_checks to authenticated;
-grant select on public.profiles to authenticated;
-grant update on public.profiles to authenticated;
+-- product_recaps
+drop policy if exists product_recaps_select_own on public.product_recaps;
+create policy product_recaps_select_own on public.product_recaps
+  for select to authenticated using (auth.uid() = user_id);
 
--- product_units: SELECT only via policy (owned) — still need grant
-grant select on public.product_units to authenticated;
+drop policy if exists product_recaps_insert_own on public.product_recaps;
+create policy product_recaps_insert_own on public.product_recaps
+  for insert to authenticated
+  with check (
+    auth.uid() = user_id
+    and exists (
+      select 1 from public.user_products up
+       where up.product_unit_id = product_recaps.product_unit_id and up.user_id = auth.uid()
+    )
+  );
 
-grant execute on function public.scan_product_unit(text) to anon, authenticated;
-grant execute on function public.claim_product_unit(text) to authenticated;
-revoke all on function public.create_story_with_products(text, text, text, text, date, text[]) from public, anon;
-grant execute on function public.create_story_with_products(text, text, text, text, date, text[]) to authenticated;
-grant execute on function public.is_unit_owner(uuid, uuid) to authenticated;
-grant execute on function public.current_owner_id(uuid) to authenticated;
+drop policy if exists product_recaps_update_own on public.product_recaps;
+create policy product_recaps_update_own on public.product_recaps
+  for update to authenticated using (auth.uid() = user_id);
 
--- =============================================================================
--- Storage — Story 사진은 private, 사용자 UUID가 첫 번째 폴더
--- =============================================================================
-insert into storage.buckets (
-  id,
-  name,
-  public,
-  file_size_limit,
-  allowed_mime_types
-)
+-- ------------------------------------------------------------
+-- Storage
+-- ------------------------------------------------------------
+
+-- story-photos: private. 경로 첫 폴더가 auth.uid()여야 하며 읽을 때 서명 URL이 필요하다.
+-- 수선 사진도 같은 버킷의 {uid}/repairs-{productId}/ 아래에 저장한다.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (
-  'story-photos',
-  'story-photos',
-  false,
-  8388608,
+  'story-photos', 'story-photos', false, 8388608,
   array['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
 )
-on conflict (id) do update
-set
-  public = excluded.public,
-  file_size_limit = excluded.file_size_limit,
-  allowed_mime_types = excluded.allowed_mime_types;
+on conflict (id) do nothing;
+
+insert into storage.buckets (id, name, public)
+values ('product-photos', 'product-photos', true)
+on conflict (id) do nothing;
 
 drop policy if exists story_photos_insert_own on storage.objects;
 create policy story_photos_insert_own on storage.objects
@@ -705,12 +732,24 @@ create policy story_photos_delete_own on storage.objects
     and (storage.foldername(name))[1] = (select auth.uid()::text)
   );
 
--- =============================================================================
--- Seed (개발용 — 운영에서는 제거)
--- =============================================================================
--- insert into public.products (id, product_name, model_no, slug, material, color)
--- values
---   ('11111111-1111-1111-1111-111111111111', 'Stark Backpack', 'MWKCSVE01C', 'stark', 'Visetos', 'Cognac');
--- insert into public.product_units (product_id, tag_code, serial_no)
--- values
---   ('11111111-1111-1111-1111-111111111111', 'UNIT-STARK-0001', 'MWKCSVE01C0001');
+drop policy if exists storage_product_photos_select_all on storage.objects;
+create policy storage_product_photos_select_all on storage.objects
+  for select using (bucket_id = 'product-photos');
+
+drop policy if exists storage_product_photos_insert_authenticated on storage.objects;
+create policy storage_product_photos_insert_authenticated on storage.objects
+  for insert with check (bucket_id = 'product-photos' and auth.role() = 'authenticated');
+
+drop policy if exists storage_product_photos_delete_own on storage.objects;
+create policy storage_product_photos_delete_own on storage.objects
+  for delete using (bucket_id = 'product-photos' and owner = auth.uid());
+
+-- ------------------------------------------------------------
+-- 운영자 지정
+--
+-- 새 환경에서는 아래를 직접 실행하세요. 계정을 지웠다 다시 만들면 uuid가 바뀌므로
+-- 이메일 기준으로 부여합니다.
+--
+--   update public.profiles set is_admin = true
+--    where id in (select id from auth.users where email = '운영자_이메일');
+-- ------------------------------------------------------------

@@ -1,16 +1,26 @@
-import { RepairListScreen } from "@/Components/care/RepairListScreen";
-import { getProduct } from "@/lib/data";
+"use client";
 
-export default async function RepairListPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const product = getProduct(id);
+import { useParams } from "next/navigation";
+import { RepairListScreen } from "@/Components/care/RepairListScreen";
+import {
+  ProductLoadError,
+  ProductLoading,
+} from "@/Components/product/ProductLoadState";
+import { useProductDetail } from "@/lib/use-product-detail";
+
+export default function RepairListPage() {
+  const { id } = useParams<{ id: string }>();
+  const { product, error, retry } = useProductDetail(id);
+
+  if (error)
+    return (
+      <ProductLoadError message={error} onRetry={retry} title="수선 접수 내역" />
+    );
+  if (!product) return <ProductLoading title="수선 접수 내역" />;
+
   return (
     <RepairListScreen
-      productId={product.id}
+      productId={id}
       productName={product.name}
       productImage={product.cutoutImage}
     />

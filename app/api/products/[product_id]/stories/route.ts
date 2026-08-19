@@ -1,3 +1,4 @@
+import { generateStory } from "@/lib/ai-prompts";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { fail, ok, readJson } from "@/lib/api-response";
 import { requireSupabaseUser } from "@/lib/auth-guard";
@@ -8,7 +9,10 @@ import {
   resolveOwnedProductRefs,
 } from "@/lib/supabase-product-refs";
 import { getBearerToken } from "@/lib/supabase-server";
-import { toSupabaseStoryDTOs } from "@/lib/supabase-story-mapper";
+import {
+  buildStoryProductIdsMap,
+  toSupabaseStoryDTOs,
+} from "@/lib/supabase-story-mapper";
 import {
   createStory,
   isKnownProduct,
@@ -21,21 +25,17 @@ import type {
 
 type RouteContext = { params: Promise<{ product_id: string }> };
 
-async function buildProductIdsMap(
+/** AI 문장에 slug("ella")가 아니라 제품명("Ella Boston Bag")이 들어가도록 조회한다. */
+async function productNameForUnit(
   supabase: SupabaseClient,
-  storyIds: string[],
-): Promise<Record<string, string[]>> {
-  if (storyIds.length === 0) return {};
+  unitId: string,
+): Promise<string> {
   const { data } = await supabase
-    .from("story_products")
-    .select("story_id, product_unit_id")
-    .in("story_id", storyIds);
-
-  const map: Record<string, string[]> = {};
-  for (const row of data ?? []) {
-    (map[row.story_id] ??= []).push(row.product_unit_id);
-  }
-  return map;
+    .from("my_products_view")
+    .select("product_name")
+    .eq("id", unitId)
+    .maybeSingle();
+  return (data?.product_name as string | undefined) ?? "제품";
 }
 
 function storyListResponse(request: Request, stories: StoryRecord[]) {
@@ -106,7 +106,7 @@ export async function GET(request: Request, context: RouteContext) {
     return fail("QUERY_FAILED", "기록을 불러오지 못했습니다", 500);
   }
 
-  const productIdsMap = await buildProductIdsMap(supabase, storyIds);
+  const productIdsMap = await buildStoryProductIdsMap(supabase, storyIds);
   const stories = await toSupabaseStoryDTOs(
     supabase,
     storyRows as StoryRow[],
@@ -161,6 +161,8 @@ export async function POST(request: Request, context: RouteContext) {
     );
   }
 
+  const productName = await productNameForUnit(supabase, resolved.refs[0].unitId);
+
   const requestedDate = body.date ? new Date(body.date) : new Date();
   if (Number.isNaN(requestedDate.getTime())) {
     return fail("VALIDATION_ERROR", "date must be a valid date");
@@ -185,11 +187,18 @@ export async function POST(request: Request, context: RouteContext) {
       return fail("STORY_CREATE_FAILED", "기록 저장에 실패했습니다", 400);
     }
 
-    if (body.story?.trim()) {
-      await supabase
-        .from("stories")
-        .update({ story: body.story.trim() })
-        .eq("id", storyId);
+    // 사용자가 직접 쓴 글이 있으면 그대로 두고, 없으면 AI가 한 문단으로 정리한다.
+    const story =
+      body.story?.trim() ||
+      (await generateStory({
+        productName,
+        tag: body.tag.trim(),
+        place: body.place?.trim(),
+        memo: body.memo?.trim(),
+        date: storyDate,
+      }));
+    if (story) {
+      await supabase.from("stories").update({ story }).eq("id", storyId);
     }
     const { data: storyRow } = await supabase
       .from("stories")
@@ -214,7 +223,15 @@ export async function POST(request: Request, context: RouteContext) {
     tag: body.tag.trim(),
     location: body.place?.trim() ?? "",
     memo: body.memo?.trim() ?? "",
-    story: body.story?.trim() ?? null,
+    story:
+      body.story?.trim() ||
+      (await generateStory({
+        productName,
+        tag: body.tag.trim(),
+        place: body.place?.trim(),
+        memo: body.memo?.trim(),
+        date: storyDate,
+      })),
     story_date: storyDate,
   };
   const { data: storyRow, error: insertError } = await supabase

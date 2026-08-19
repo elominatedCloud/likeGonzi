@@ -23,6 +23,25 @@ export type OwnedProductRef = {
  * FE slug(stark)와 DB product_units UUID를 모두 받아 현재 사용자가 소유한 unit으로 해석한다.
  * product_units RLS가 소유권 필터를 담당하므로 타인의 unit은 null로 처리된다.
  */
+/** 현재 요청의 로그인 사용자 id. 소유권을 명시적으로 거르는 데 쓴다. */
+async function currentUserId(supabase: SupabaseClient): Promise<string | null> {
+  const { data } = await supabase.auth.getUser();
+  return data.user?.id ?? null;
+}
+
+async function slugForProductId(
+  supabase: SupabaseClient,
+  productId: string,
+  fallback: string,
+): Promise<string> {
+  const { data } = await supabase
+    .from("products")
+    .select("slug")
+    .eq("id", productId)
+    .maybeSingle();
+  return (data as ProductRow | null)?.slug ?? fallback;
+}
+
 export async function resolveOwnedProductRef(
   supabase: SupabaseClient,
   input: string,
@@ -30,24 +49,24 @@ export async function resolveOwnedProductRef(
   const ref = normalizeProductId(input.trim());
   if (!ref) return null;
 
-  if (UUID_PATTERN.test(ref)) {
-    const { data: unit } = await supabase
-      .from("product_units")
-      .select("id, product_id")
-      .eq("id", ref)
-      .maybeSingle();
-    if (!unit) return null;
+  const userId = await currentUserId(supabase);
+  if (!userId) return null;
 
-    const { data: product } = await supabase
-      .from("products")
-      .select("id, slug")
-      .eq("id", (unit as ProductUnitRow).product_id)
+  // 소유 여부는 RLS에 맡기지 않고 user_id로 직접 거른다.
+  // 운영자(is_admin)는 product_units 전체가 보이기 때문에, RLS만 믿으면
+  // 소유하지도 않은 개체가 잡힌다.
+  if (UUID_PATTERN.test(ref)) {
+    const { data: owned } = await supabase
+      .from("my_products_view")
+      .select("id, model_id")
+      .eq("id", ref)
+      .eq("user_id", userId)
       .maybeSingle();
-    if (!product) return null;
+    if (!owned) return null;
 
     return {
-      unitId: (unit as ProductUnitRow).id,
-      slug: (product as ProductRow).slug ?? (unit as ProductUnitRow).id,
+      unitId: owned.id as string,
+      slug: await slugForProductId(supabase, owned.model_id as string, owned.id as string),
     };
   }
 
@@ -58,16 +77,17 @@ export async function resolveOwnedProductRef(
     .maybeSingle();
   if (!product) return null;
 
-  const { data: units } = await supabase
-    .from("product_units")
-    .select("id, product_id")
-    .eq("product_id", (product as ProductRow).id)
+  const { data: owned } = await supabase
+    .from("my_products_view")
+    .select("id")
+    .eq("model_id", (product as ProductRow).id)
+    .eq("user_id", userId)
     .limit(1);
-  const unit = (units?.[0] as ProductUnitRow | undefined) ?? null;
+  const unit = owned?.[0];
   if (!unit) return null;
 
   return {
-    unitId: unit.id,
+    unitId: unit.id as string,
     slug: (product as ProductRow).slug ?? ref,
   };
 }

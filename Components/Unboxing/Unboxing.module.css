@@ -107,6 +107,11 @@
 .product {
   margin-top: 22px;
 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+
   text-align: center;
 
   font-family: var(--font-noto-sans-kr);
@@ -114,6 +119,24 @@
   font-weight: 500;
 
   color: #2D1F11;
+}
+
+.scanBadge {
+  width: fit-content;
+  margin: 8px auto 0;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  color: #6e432c;
+  font-family: var(--font-noto-sans-kr);
+  font-size: 11px;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(45, 31, 17, 0.08);
+}
+
+.owned,
+.error {
+  color: #8a3a3a;
 }
 
 
@@ -144,13 +167,6 @@
 
   z-index: 10;
 }
-
-.authBackdrop{position:fixed;inset:0;z-index:18;border:0;background:rgba(25,18,13,.42);backdrop-filter:blur(2px)}
-.authSheet{z-index:20;height:min(590px,calc(100dvh - 28px));padding:10px 16px 22px;overflow-y:auto;border-radius:30px 30px 0 0;box-shadow:0 -18px 45px rgba(45,31,17,.18)}
-.authSheetTop{position:relative;display:flex;min-height:28px;align-items:flex-start;justify-content:center}
-.authSheetTop .handle{margin-top:0}
-.authSheetTop button{position:absolute;right:1px;top:-3px;border:0;background:transparent;color:#76695d;font-size:12px;cursor:pointer}
-
 
 /* 사용자가 직접 드래그 중일 때는
    transition을 꺼서 손가락을 바로 따라오게 */
@@ -257,7 +273,88 @@
   color: #FFFFFF;
 }
 
+.loginButton:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+
 .skipButton {
   background: #F7F3EE;
   color: #2D1F11;
+}
+
+.dialogLayer {
+  position: fixed;
+  z-index: 40;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.dialogBackdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(25, 18, 13, 0.46);
+  backdrop-filter: blur(3px);
+}
+
+.dialog {
+  position: relative;
+  width: calc(100% - 28px);
+  max-width: 402px;
+  margin-bottom: 18px;
+  padding: 24px 20px 14px;
+  border-radius: 24px;
+  background: #fffdf9;
+  color: #2d1f11;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(28, 18, 11, 0.24);
+}
+
+.dialogIcon {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  margin: 0 auto 12px;
+  place-items: center;
+  border-radius: 50%;
+  background: #efe8de;
+  color: #6e432c;
+}
+
+.dialog h2 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 26px;
+}
+
+.dialog p {
+  margin: 8px auto 20px;
+  max-width: 330px;
+  color: #76695d;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.dialogPrimary,
+.dialogSecondary {
+  width: 100%;
+  min-height: 48px;
+  border: 0;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.dialogPrimary {
+  background: #2d1f11;
+  color: white;
+}
+
+.dialogSecondary {
+  margin-top: 6px;
+  background: transparent;
+  color: #76695d;
 }

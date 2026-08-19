@@ -9,8 +9,8 @@
 | `products.owner_id NOT NULL` ↔ 미등록 스캔 충돌 | **(B가 아님)** 모델/실물/소유를 `products` → `product_units` → `user_products`로 분리 |
 | 미등록 상태 표현 | unit은 있고 `user_products` row가 없음 |
 | 수선 상태 | `repairs.status` + `requested_at` + `completed_at` (+ 일관성 CHECK) |
-| QR 전체 공개 | `product_units` 전체 SELECT 금지. `scan_product_unit(tag)` RPC만 |
-| 제품 등록 경쟁 | `claim_product_unit(tag)` RPC에서 `FOR UPDATE` + 소유자 검증 |
+| QR 전체 공개 | `product_units` 전체 SELECT 금지. `scan_product(tag)` RPC만 |
+| 제품 등록 경쟁 | `claim_product(tag)` RPC에서 `FOR UPDATE` + 소유자 검증 |
 | 다중 제품 Story | `stories` + `story_products` |
 | RLS | enable만 하지 않고 테이블별 policy + GRANT |
 | 카메라 사진 | private `story-photos` 버킷 + `{auth.uid()}/{productId}/{uuid}` 경로 |

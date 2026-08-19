@@ -8,9 +8,19 @@
 .form input{width:100%;height:50px;border:1px solid #3e3b39;border-radius:16px;outline:0;background:#181716;padding:0 16px;color:#fff;font-size:14px;caret-color:#d1aa78;transition:border-color .2s,box-shadow .2s}
 .form input::placeholder{color:#9c9894}
 .form input:focus{border-color:#bd9464;box-shadow:0 0 0 3px rgba(189,148,100,.16)}
+.hint{margin:-3px 2px 0;color:#8d857e;font-size:10px;line-height:15px}
 .submit{height:52px;margin-top:5px;border:0;border-radius:16px;background:#2d1f11;color:#fff;font-size:15px;font-weight:700;cursor:pointer}
 .submit:active{transform:scale(.99)}
+.submit:disabled{cursor:wait;opacity:.68;transform:none}
 .support{display:block;margin:17px auto 0;border:0;background:transparent;color:#8d5a3b;font-size:13px;font-weight:650;text-decoration:underline;text-underline-offset:4px;cursor:pointer}
+.support:disabled{cursor:wait;opacity:.5}
 .demoNote{margin:14px 4px 0;color:#81776d;font-size:11px;line-height:17px;text-align:center}
-.error{margin:0;color:#a23b34;font-size:12px;line-height:18px;text-align:left}
+.error{margin:0;padding:10px 12px;border-radius:12px;background:#f9eeee;color:#8f3933;font-size:12px;line-height:18px;text-align:left}
+.error span{font-weight:700}.error p{margin:1px 0 0}
+.form .terms{position:relative;display:grid;grid-template-columns:20px 1fr;align-items:start;gap:8px;margin-top:2px;cursor:pointer}
+.terms>input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.form .terms>span:last-child{display:block;padding:0;color:#6f655d;font-size:11px;font-weight:450;line-height:17px}
+.terms b{color:#8d5a3b}
+.form .terms .checkbox{display:grid;width:19px;height:19px;padding:0;place-items:center;border:1px solid #b7a99b;border-radius:5px;background:#fff;color:#6e432c}
+.terms input:focus-visible+.checkbox{outline:3px solid rgba(189,148,100,.22);outline-offset:2px}
 @media(max-height:730px){.tabs button{height:46px}.form{gap:9px;margin-top:15px}.form input{height:45px}.submit{height:48px}.support{margin-top:12px}}

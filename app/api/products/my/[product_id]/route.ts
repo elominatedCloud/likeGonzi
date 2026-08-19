@@ -1,6 +1,6 @@
 import { fail, ok } from "@/lib/api-response";
 import { requireSupabaseUser } from "@/lib/auth-guard";
-import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { resolveOwnedProductRef } from "@/lib/supabase-product-refs";
 
 type Ctx = { params: Promise<{ product_id: string }> };
 
@@ -42,14 +42,22 @@ export async function POST(request: Request, context: Ctx) {
 }
 
 /**
- * DELETE /api/products/my/{product_id} — 등록 해제
- * 여기서는 product_units.id(uuid)를 받습니다 (claim 이후 응답으로 받은 product_id).
+ * DELETE /api/products/my/{product_id} — 내 계정에서 제품 연동 해제
+ *
+ * slug(stark)와 product_units.id(uuid)를 모두 받습니다.
+ * 해제하면 태그가 다시 미등록 상태가 되어, 다음 소유자가 스캔해서 등록할 수 있습니다.
  * user_products RLS(user_products_delete_own)가 본인 소유 row만 지우도록 이미 보장합니다.
  */
 export async function DELETE(request: Request, context: Ctx) {
-  const { product_id: productUnitId } = await context.params;
+  const { product_id } = await context.params;
   const { user, supabase, error } = await requireSupabaseUser(request);
   if (error) return error;
+
+  const productRef = await resolveOwnedProductRef(supabase, product_id);
+  if (!productRef) {
+    return fail("NOT_REGISTERED", "등록되지 않은 제품입니다", 404);
+  }
+  const productUnitId = productRef.unitId;
 
   const { error: delError, count } = await supabase
     .from("user_products")

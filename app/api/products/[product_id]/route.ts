@@ -1,6 +1,9 @@
 import { fail, ok } from "@/lib/api-response";
 import { requireSupabaseUser } from "@/lib/auth-guard";
-import { toProductDTO, toRepairDTO, type MyProductRow, type RepairRow } from "@/lib/mappers";
+import { toProductDTO, type MyProductRow, type RepairRow } from "@/lib/mappers";
+import { toSupabaseRepairDTOs } from "@/lib/supabase-repair-mapper";
+import { listProductStoryDTOs } from "@/lib/supabase-story-mapper";
+import { resolveOwnedProductRef } from "@/lib/supabase-product-refs";
 
 type Ctx = { params: Promise<{ product_id: string }> };
 
@@ -9,18 +12,22 @@ type Ctx = { params: Promise<{ product_id: string }> };
  * product_id = product_units.id (uuid). RLS(product_units_select_owned)상
  * 본인이 등록한 제품만 조회 가능 — 미등록/타인 제품은 scan_product RPC로 확인.
  *
- * TODO(story 연동): stories는 story_products 다대다 조인이 필요해서
- * 이번 배치에서는 비워뒀습니다. 다음 작업으로 story_products 붙이면 됩니다.
  */
 export async function GET(request: Request, context: Ctx) {
   const { product_id } = await context.params;
   const { supabase, error } = await requireSupabaseUser(request);
   if (error) return error;
 
+  // FE는 slug(stark-backpack)도 넘기므로 소유 중인 product_unit UUID로 먼저 해석한다.
+  const productRef = await resolveOwnedProductRef(supabase, product_id);
+  if (!productRef) {
+    return fail("PRODUCT_NOT_FOUND", `product_id '${product_id}' not found`, 404);
+  }
+
   const { data: productRow, error: qError } = await supabase
     .from("my_products_view")
     .select("*")
-    .eq("id", product_id)
+    .eq("id", productRef.unitId)
     .maybeSingle();
 
   if (qError) {
@@ -36,7 +43,7 @@ export async function GET(request: Request, context: Ctx) {
   const { data: repairRows, error: repairError } = await supabase
     .from("repairs")
     .select("*")
-    .eq("product_unit_id", product_id)
+    .eq("product_unit_id", productRef.unitId)
     .order("created_at", { ascending: false })
     .limit(2);
 
@@ -44,13 +51,21 @@ export async function GET(request: Request, context: Ctx) {
     console.error("[products/:id] repairs query error", repairError);
   }
 
+  const stories = await listProductStoryDTOs(supabase, productRef.unitId);
+
   return ok({
     ...product,
+    // FE 라우팅(/products/{slug}, /log/{slug})이 쓰는 값. id는 unit UUID.
+    slug: productRef.slug,
     is_registered_to_user: true,
     authenticity: "verified",
     recent_activity: {
-      stories: [], // TODO: story_products 연동 후 채우기
-      repairs: ((repairRows as RepairRow[] | null) ?? []).map(toRepairDTO),
+      stories,
+      repairs: await toSupabaseRepairDTOs(
+        supabase,
+        (repairRows as RepairRow[] | null) ?? [],
+        { [productRef.unitId]: productRef.slug },
+      ),
     },
     care: {
       score: product.care_score,

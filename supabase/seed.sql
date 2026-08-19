@@ -20,22 +20,22 @@ values
     'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
     '11111111-1111-1111-1111-111111111111',
     'UNIT-STARK-0001', 'MWKCSVE01C0001', 'MCM Seoul', 'Cognac', 2024,
-    'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=80',
-    '{}', 92, 1, 1
+    '/camera/stark-product.png',
+    array['/FE-namjun/assets/로그_타임라인-1.png','/FE-namjun/assets/로그_타임라인-2.png','/FE-namjun/assets/로그_타임라인-3.png'], 92, 1, 1
   ),
   (
     'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
     '22222222-2222-2222-2222-222222222222',
     'UNIT-ELLA-0002', 'MWEBSVE01B0002', 'MCM Gangnam', 'Black', 2023,
-    'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80',
-    '{}', 88, 0, 1
+    '/FE-namjun/assets/로그_스토리북-3.png',
+    array['/FE-namjun/assets/ella-jazz-memory.png'], 88, 0, 1
   ),
   (
     'cccccccc-cccc-cccc-cccc-cccccccccccc',
     '33333333-3333-3333-3333-333333333333',
     'UNIT-PINA-0003', 'MWPINA01C0003', 'MCM Seoul', 'Black', 2025,
     '/FE-namjun/assets/로그_스토리북-4.png',
-    '{}', 90, 1, 0
+    array['/FE-namjun/assets/pina-bookstore-memory.png'], 90, 1, 0
   )
 on conflict (tag_code) do nothing;
 

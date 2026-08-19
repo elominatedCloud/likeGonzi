@@ -95,12 +95,13 @@ export function ProductStoryTimeline({
         </div>
       ) : (
         <div className="mt-6 rounded-[18px] border border-dashed border-cognac/25 bg-cream/70 px-5 py-10 text-center">
-          <p className="text-[14px] font-semibold text-ink">아직 남긴 이야기가 없어요.</p>
+          <p className="text-[14px] font-semibold text-ink">아직 등록된 스토리가 없어요</p>
+          <p className="mt-1 text-[11px] leading-4 text-muted">사진과 함께 제품의 첫 추억을 남겨보세요.</p>
           <Link
             href={`/log/${productLogId}/record/new`}
-            className="mt-2 inline-block text-[12px] text-cognac"
+            className="mt-4 inline-flex rounded-full bg-cognac-deep px-4 py-2.5 text-[12px] font-semibold text-white"
           >
-            첫 기록 남기기 →
+            첫 기록 작성하기
           </Link>
         </div>
       )}

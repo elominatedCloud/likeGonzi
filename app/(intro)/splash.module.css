@@ -62,8 +62,36 @@
 }
 
 /* 화면 터치 안내 */
-.touchGuide {
+.loadingFeedback {
   margin-top: 40px;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  font-family: var(--font-noto-sans-kr);
+  font-size: 12px;
+  color: #8f7c68;
+
+  opacity: 0;
+  transform: translateY(8px);
+  animation: fadeUp 0.8s ease-out 1s forwards;
+}
+
+.spinner {
+  width: 13px;
+  height: 13px;
+  border: 1.5px solid rgba(141, 90, 59, 0.25);
+  border-top-color: #8d5a3b;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+.touchGuide {
+  margin-top: 18px;
+  padding: 8px 12px;
+  border: 0;
+  background: transparent;
 
   font-family: var(--font-noto-sans-kr);
   font-size: 12px;
@@ -77,6 +105,34 @@
   animation:
     fadeUp 0.8s ease-out 1s forwards,
     touchBlink 1.8s ease-in-out 1.8s infinite;
+}
+
+.slowFallback {
+  margin-top: 18px;
+  color: #76695d;
+  font-family: var(--font-noto-sans-kr);
+  font-size: 12px;
+}
+
+.slowFallback p {
+  margin: 0 0 8px;
+}
+
+.slowFallback button {
+  min-width: 92px;
+  min-height: 36px;
+  border: 1px solid rgba(45, 31, 17, 0.18);
+  border-radius: 999px;
+  background: #fff;
+  color: #2d1f11;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* 아래에서 위로 부드럽게 등장 */
@@ -117,5 +173,21 @@
 
   50% {
     opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo,
+  .title,
+  .description,
+  .loadingFeedback,
+  .touchGuide {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+
+  .spinner {
+    animation-duration: 1.8s;
   }
 }

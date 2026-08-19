@@ -1,20 +1,13 @@
 import { fail, ok, readJson } from "@/lib/api-response";
-import { requireSupabaseUser, requireUserOrDemo } from "@/lib/auth-guard";
+import { requireSupabaseUser } from "@/lib/auth-guard";
 import { toTransferDTO, type TransferRow } from "@/lib/mappers";
-import { createTransfer, listTransfers } from "@/lib/mock-db";
 import {
   productSlugsForUnitIds,
   resolveOwnedProductRef,
 } from "@/lib/supabase-product-refs";
-import { getBearerToken } from "@/lib/supabase-server";
 
 /** GET /api/transfers — 보낸/받은 소유권 이전 목록 (RLS로 본인 관련 것만 조회됨) */
 export async function GET(request: Request) {
-  if (!getBearerToken(request)) {
-    const { user } = requireUserOrDemo(request);
-    return ok(listTransfers(user.id));
-  }
-
   const { user, supabase, error } = await requireSupabaseUser(request);
   if (error) return error;
 
@@ -49,22 +42,6 @@ export async function POST(request: Request) {
   const body = await readJson<{ product_id?: string; to_email?: string }>(request);
   if (!body?.product_id || !body?.to_email) {
     return fail("VALIDATION_ERROR", "product_id and to_email are required", 400);
-  }
-
-  if (!getBearerToken(request)) {
-    const { user } = requireUserOrDemo(request);
-    const transfer = createTransfer({
-      userId: user.id,
-      product_id: body.product_id,
-      to_email: body.to_email,
-    });
-    return transfer
-      ? ok(transfer, 201)
-      : fail(
-          "TRANSFER_FAILED",
-          "제품을 찾을 수 없거나 소유 제품이 아닙니다",
-          400,
-        );
   }
 
   const { user, supabase, error } = await requireSupabaseUser(request);

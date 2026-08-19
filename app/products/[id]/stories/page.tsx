@@ -1,16 +1,25 @@
+"use client";
+
+import { useParams } from "next/navigation";
 import { ProductStoriesScreen } from "@/Components/product/ProductStoriesScreen";
-import { getProduct } from "@/lib/data";
-import { normalizeProductId } from "@/lib/mock-db";
-import { listStories } from "@/lib/story-store";
+import {
+  ProductLoadError,
+  ProductLoading,
+} from "@/Components/product/ProductLoadState";
+import { useProductDetail } from "@/lib/use-product-detail";
 
-export default async function ProductStoriesPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const product = getProduct(id);
-  const stories = listStories(normalizeProductId(product.id));
+export default function ProductStoriesPage() {
+  const { id } = useParams<{ id: string }>();
+  const { data, product, error, retry } = useProductDetail(id);
 
-  return <ProductStoriesScreen product={product} stories={stories} />;
+  if (error)
+    return <ProductLoadError message={error} onRetry={retry} title="기록" />;
+  if (!data || !product) return <ProductLoading title="기록" />;
+
+  return (
+    <ProductStoriesScreen
+      product={product}
+      stories={data.recent_activity.stories}
+    />
+  );
 }

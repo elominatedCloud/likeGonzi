@@ -41,3 +41,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# 작업 산출물 / 로컬 도구 설정
+graphify-out/
+app/api/graphify-out/
+.claude/

@@ -16,6 +16,7 @@ const items = [
   { href: "/home", label: "홈", icon: Home },
   { href: "/log/timeline", label: "로그", icon: FileText },
   { href: "/camera", label: "카메라", icon: Camera, fab: true },
+  // 쇼핑은 앱 내부 기능이 아니라 MCM 공식몰로 바로 나간다.
   { href: MCM_OFFICIAL_SHOP_URL, label: "쇼핑", icon: ShoppingBag, external: true },
   { href: "/my", label: "마이", icon: UserRound },
 ];
@@ -24,16 +25,24 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-1/2 z-40 w-full max-w-[430px] -translate-x-1/2 border-t border-black/5 bg-paper/95 backdrop-blur-md">
-      <ul className="grid h-[72px] grid-cols-5 items-end px-2 pb-2 pt-1">
+    <nav
+      className="fixed bottom-0 left-1/2 z-40 w-full -translate-x-1/2 border-t border-black/5 bg-paper/95 backdrop-blur-md"
+      style={{
+        maxWidth: "var(--app-frame)",
+        // iOS 홈 인디케이터에 가리지 않도록
+        paddingBottom: "env(safe-area-inset-bottom)",
+      }}
+    >
+      <ul className="grid min-h-[var(--nav-height)] grid-cols-5 items-end px-2 pb-2 pt-1">
         {items.map((item) => {
           const active =
-            item.href === "/home"
-              ? pathname === "/home"
-              : !item.external &&
-                (item.href === "/log/timeline"
+            item.external
+              ? false
+              : item.href === "/home"
+                ? pathname === "/home"
+                : item.href === "/log/timeline"
                   ? pathname.startsWith("/log")
-                  : pathname.startsWith(item.href));
+                  : pathname.startsWith(item.href);
           const Icon = item.icon;
 
           if (item.fab) {
@@ -56,14 +65,23 @@ export function BottomNav() {
             active ? "text-ink" : "text-muted",
           );
 
-          return item.external ? (
-            <li key={item.href}>
-              <a href={item.href} className={className}>
-                <Icon size={20} strokeWidth={1.5} />
-                <span>{item.label}</span>
-              </a>
-            </li>
-          ) : (
+          if (item.external) {
+            return (
+              <li key={item.href}>
+                <a
+                  href={item.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={className}
+                >
+                  <Icon size={20} strokeWidth={1.5} />
+                  <span>{item.label}</span>
+                </a>
+              </li>
+            );
+          }
+
+          return (
             <li key={item.href}>
               <Link
                 href={item.href}

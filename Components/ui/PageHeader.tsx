@@ -17,7 +17,7 @@ export function PageHeader({
   serif = true,
 }: PageHeaderProps) {
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between bg-cream/90 px-4 py-3 backdrop-blur-md">
+    <header className="sticky top-0 z-30 grid min-h-[60px] grid-cols-[72px_minmax(0,1fr)_72px] items-center bg-cream/90 px-4 py-2 backdrop-blur-md">
       <Link
         href={backHref}
         className="flex h-9 w-9 items-center justify-center rounded-full text-ink"
@@ -26,11 +26,11 @@ export function PageHeader({
         <ArrowLeft size={20} strokeWidth={1.6} />
       </Link>
       <h1
-        className={`text-[18px] leading-7 tracking-[0.01em] text-ink ${serif ? "font-serif font-medium" : "font-semibold"}`}
+        className={`min-w-0 break-keep text-center text-[18px] leading-[23px] tracking-[0.01em] text-ink [overflow-wrap:anywhere] ${serif ? "font-serif font-medium" : "font-semibold"}`}
       >
         {title}
       </h1>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center justify-end gap-1">
         {rightSlot}
         {onMore ? (
           <button

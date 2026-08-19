@@ -19,7 +19,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className="h-full">
-      <body className="min-h-full antialiased">{children}</body>
+      <body className="min-h-full antialiased">
+        <div className="app-shell">{children}</div>
+      </body>
     </html>
   );
 }

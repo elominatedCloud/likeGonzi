@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { SafeImage } from "@/Components/ui/SafeImage";
 import Link from "next/link";
 import {
@@ -17,7 +18,8 @@ import {
 import { PageHeader } from "@/Components/ui/PageHeader";
 import { BottomNav } from "@/Components/ui/BottomNav";
 import { AmbientPattern } from "@/Components/ui/AmbientPattern";
-import { showFeatureNotice } from "@/lib/feature-notice";
+import { apiFetch } from "@/lib/api-client";
+import { RecapCard } from "@/Components/product/RecapCard";
 import { getLogProductId } from "@/lib/product-routes";
 import type { Product, RepairRecord } from "@/types";
 import type { StoryRecord } from "@/types/story-api";
@@ -38,7 +40,11 @@ export function ProductDetailScreen({
   stories,
   repairs,
 }: ProductDetailScreenProps) {
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [unlinkOpen, setUnlinkOpen] = useState(false);
+  const [unlinking, setUnlinking] = useState(false);
+  const [unlinkError, setUnlinkError] = useState("");
   const [name, setName] = useState(product.name);
   const [editingName, setEditingName] = useState(false);
   const [slide, setSlide] = useState(0);
@@ -56,8 +62,33 @@ export function ProductDetailScreen({
     return () => clearInterval(timer);
   }, [heroImages.length]);
 
-  const latestAiRepair =
+  const latestRepair =
     repairs.find((r) => r.source === "ai_custom") ?? repairs[0];
+
+  /**
+   * 내 계정에서 제품 연동을 해제한다.
+   * 해제하면 태그가 미등록 상태로 돌아가, 다음 소유자가 스캔해서 등록할 수 있다.
+   * 기록·수선 이력은 지워지지 않고 제품에 남는다.
+   */
+  async function unlinkProduct() {
+    setUnlinking(true);
+    setUnlinkError("");
+    try {
+      const json = await apiFetch<{ deleted: boolean }>(
+        `/api/products/my/${encodeURIComponent(product.id)}`,
+        { method: "DELETE" },
+      );
+      if (!json.ok) {
+        setUnlinkError(json.error.message);
+        return;
+      }
+      router.replace("/home");
+    } catch {
+      setUnlinkError("네트워크 연결을 확인한 뒤 다시 시도해주세요.");
+    } finally {
+      setUnlinking(false);
+    }
+  }
 
   return (
     <main className="visetos-bg relative min-h-dvh pb-28">
@@ -170,12 +201,12 @@ export function ProductDetailScreen({
       </section>
 
       <section className="soft-card mx-4 mt-4 p-3">
-        {latestAiRepair ? (
+        {latestRepair ? (
           <div className="flex gap-3">
             <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-cream-deep">
               <SafeImage
-                src={latestAiRepair.thumbnail}
-                alt={latestAiRepair.title}
+                src={latestRepair.thumbnail}
+                alt={latestRepair.title}
                 fill
                 className="object-cover"
                 sizes="64px"
@@ -186,10 +217,10 @@ export function ProductDetailScreen({
                 수선 이력 · {repairs.length}
               </p>
               <p className="mt-1 text-[15px] font-semibold leading-[22px] text-ink">
-                {latestAiRepair.title}
+                {latestRepair.title}
               </p>
               <p className="type-meta mt-0.5 text-muted">
-                {latestAiRepair.foundAt ?? latestAiRepair.date} 발견 / AI 커스텀
+                {latestRepair.foundAt ?? latestRepair.date} 등록 · 사진 기반 점검 메모
               </p>
               <div className="mt-2 flex items-center justify-between">
                 <Link
@@ -231,6 +262,10 @@ export function ProductDetailScreen({
           제품 사진과 상태 메모를 등록하면 수선 접수 후 진행 단계를 확인할 수
           있어요.
         </p>
+      </section>
+
+      <section className="soft-card mx-4 mt-4 px-4 py-4">
+        <RecapCard productId={product.id} />
       </section>
 
       <section className="soft-card mx-4 mt-4 overflow-hidden pb-4 pt-4">
@@ -279,12 +314,13 @@ export function ProductDetailScreen({
           </div>
         ) : (
           <div className="mx-4 mt-3 rounded-[16px] border border-dashed border-cognac/25 bg-cream/70 px-5 py-8 text-center">
-            <p className="text-[13px] font-semibold text-ink">아직 남긴 사진 기록이 없어요.</p>
+            <p className="text-[13px] font-semibold text-ink">아직 등록된 스토리가 없어요</p>
+            <p className="mt-1 text-[11px] leading-4 text-muted">첫 기록 작성하기 버튼을 눌러 사진과 추억을 남겨보세요.</p>
             <Link
               href={`/log/${getLogProductId(product.id)}/record/new`}
-              className="mt-2 inline-block text-[12px] text-cognac"
+              className="mt-3 inline-flex rounded-full bg-cognac-deep px-4 py-2.5 text-[12px] font-semibold text-white"
             >
-              첫 기록 남기기 →
+              첫 기록 작성하기
             </Link>
           </div>
         )}
@@ -301,7 +337,7 @@ export function ProductDetailScreen({
             </h3>
           </div>
           <Link
-            href="/camera"
+            href={`/camera?product=${getLogProductId(product.id)}`}
             className="inline-flex items-center gap-1 rounded-full bg-cognac px-3 py-1.5 text-[13px] leading-5 text-white"
           >
             <Camera size={14} />
@@ -322,23 +358,20 @@ export function ProductDetailScreen({
         </div>
       </section>
 
-      <Link
-        href={`/products/${product.id}?action=transfer`}
-        className="soft-card mx-4 mt-4 mb-2 flex items-center gap-3 px-4 py-4"
-        onClick={(e) => {
-          e.preventDefault();
-          setMenuOpen(true);
-        }}
+      <button
+        type="button"
+        onClick={() => setMenuOpen(true)}
+        className="soft-card mx-4 mt-4 mb-2 flex w-[calc(100%-2rem)] items-center gap-3 px-4 py-4 text-left"
       >
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cream-deep text-cognac">
           <FileText size={18} />
         </div>
         <div className="flex-1">
-          <p className="text-[15px] font-semibold leading-[22px] text-ink">제품 소유권 이전</p>
-          <p className="text-[13px] leading-5 text-muted">소유권 이전 및 양도 신청</p>
+          <p className="text-[15px] font-semibold leading-[22px] text-ink">제품 관리</p>
+          <p className="text-[13px] leading-5 text-muted">제품명 수정 · 연동 해제</p>
         </div>
         <span className="text-muted">›</span>
-      </Link>
+      </button>
 
       {menuOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/35">
@@ -351,7 +384,10 @@ export function ProductDetailScreen({
               setEditingName(false);
             }}
           />
-          <div className="relative w-full max-w-[430px] rounded-t-3xl bg-paper px-5 pb-8 pt-4">
+          <div
+            className="relative w-full rounded-t-3xl bg-paper px-5 pb-8 pt-4"
+            style={{ maxWidth: "var(--app-frame)" }}
+          >
             <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-black/10" />
             <div className="mb-3 flex items-center justify-between">
               <h4 className="font-serif text-[18px] text-ink">제품 관리</h4>
@@ -397,25 +433,68 @@ export function ProductDetailScreen({
                 <li>
                   <button
                     type="button"
-                    onClick={() => showFeatureNotice("productTransfer")}
-                    className="flex w-full items-center gap-3 rounded-xl bg-cream px-3 py-3 text-left text-[14px]"
-                  >
-                    <FileText size={16} className="text-cognac" />
-                    제품 소유권 이전
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    onClick={() => showFeatureNotice("productRemoval")}
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setUnlinkError("");
+                      setUnlinkOpen(true);
+                    }}
                     className="flex w-full items-center gap-3 rounded-xl bg-[#f8ecec] px-3 py-3 text-left text-[14px] text-[#8a3a3a]"
                   >
                     <Trash2 size={16} />
-                    제품 삭제
+                    내 계정에서 연동 해제
                   </button>
                 </li>
               </ul>
             )}
+          </div>
+        </div>
+      )}
+
+      {unlinkOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 px-6">
+          <button
+            type="button"
+            className="absolute inset-0"
+            aria-label="닫기"
+            onClick={() => setUnlinkOpen(false)}
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="unlink-title"
+            className="relative w-full max-w-[340px] rounded-2xl bg-paper px-5 py-6 text-center"
+          >
+            <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[#f8ecec] text-[#8a3a3a]">
+              <Trash2 size={20} />
+            </span>
+            <h4 id="unlink-title" className="mt-4 text-[17px] font-semibold text-ink">
+              {name} 연동을 해제할까요?
+            </h4>
+            <p className="mt-2 text-[13px] leading-5 text-muted">
+              내 제품 목록에서 사라지고, 제품 태그는 다시 등록 가능한 상태가 됩니다.
+              사진 기록과 수선 이력은 제품에 그대로 남아요.
+            </p>
+            {unlinkError && (
+              <p className="mt-3 text-[12px] text-[#8a3a3a]" role="alert">
+                {unlinkError}
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={unlinkProduct}
+              disabled={unlinking}
+              className="mt-5 w-full rounded-xl bg-[#8a3a3a] py-3 text-[14px] font-semibold text-white disabled:opacity-60"
+            >
+              {unlinking ? "해제 중…" : "연동 해제"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setUnlinkOpen(false)}
+              disabled={unlinking}
+              className="mt-2 w-full rounded-xl py-3 text-[14px] text-muted"
+            >
+              취소
+            </button>
           </div>
         </div>
       )}

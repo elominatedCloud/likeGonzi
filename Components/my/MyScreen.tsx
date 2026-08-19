@@ -80,7 +80,7 @@ export function MyScreen() {
   };
 
   return (
-    <main className="visetos-bg mx-auto min-h-dvh w-full max-w-[430px] overflow-hidden pb-28">
+    <main className="visetos-bg min-h-dvh w-full overflow-hidden pb-28">
       <AmbientPattern />
       <PageHeader title="마이" backHref="/home" serif={false} />
 

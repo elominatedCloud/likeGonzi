@@ -5,6 +5,8 @@ import { SafeImage } from "@/Components/ui/SafeImage";
 import Link from "next/link";
 import { PageHeader } from "@/Components/ui/PageHeader";
 import { BottomNav } from "@/Components/ui/BottomNav";
+import { RefreshCw, Wrench } from "lucide-react";
+import { apiFetch } from "@/lib/api-client";
 import type { DbRepair } from "@/lib/mock-db";
 import {
   areaFromTags,
@@ -71,15 +73,18 @@ export function RepairListScreen({
 }: RepairListScreenProps) {
   const [repairs, setRepairs] = useState<DbRepair[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
-    fetch(`/api/products/${productId}/repairs`)
-      .then((res) => res.json())
+    apiFetch<DbRepair[]>(`/api/products/${productId}/repairs`)
       .then((json) => {
         if (json.ok) setRepairs(json.data);
+        else setError(json.error?.message ?? "수선 내역을 불러오지 못했어요.");
       })
+      .catch(() => setError("네트워크 연결을 확인한 뒤 다시 시도해주세요."))
       .finally(() => setLoading(false));
-  }, [productId]);
+  }, [productId, retryKey]);
 
   const inProgress = repairs.filter((r) => r.status !== "completed" && r.status !== "cancelled");
   const completed = repairs.filter((r) => r.status === "completed");
@@ -89,10 +94,18 @@ export function RepairListScreen({
       <PageHeader title="수선 접수 내역" backHref={`/products/${productId}/care?tab=repairs`} />
 
       {loading && (
-        <p className="py-10 text-center text-[13px] text-muted">불러오는 중…</p>
+        <div className="mx-4 mt-5 space-y-3" aria-busy="true"><div className="h-24 animate-pulse rounded-2xl bg-black/5"/><div className="h-24 animate-pulse rounded-2xl bg-black/5"/><p className="text-center text-[12px] text-muted">수선 내역을 불러오고 있어요.</p></div>
       )}
 
-      {!loading && (
+      {!loading && error && (
+        <div className="mx-4 mt-6 rounded-2xl bg-paper px-5 py-8 text-center" role="alert"><p className="text-[13px] text-[#8a3a3a]">{error}</p><button type="button" onClick={() => {setLoading(true);setError("");setRetryKey((value) => value + 1)}} className="mt-4 inline-flex items-center gap-2 rounded-full border border-cognac/25 px-4 py-2.5 text-[12px] font-semibold text-cognac-deep"><RefreshCw size={14}/> 다시 시도</button></div>
+      )}
+
+      {!loading && !error && repairs.length === 0 && (
+        <div className="soft-card mx-4 mt-5 px-6 py-12 text-center"><span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-cream-deep text-cognac"><Wrench size={23}/></span><h2 className="mt-4 text-[15px] font-semibold text-ink">수선 기록이 없습니다</h2><p className="mt-2 text-[12px] leading-5 text-muted">제품 상태가 달라졌다면 사진과 메모로<br/>첫 수선 접수를 시작해보세요.</p><Link href={`/products/${productId}/repairs/new`} className="mt-5 inline-flex rounded-full bg-cognac-deep px-5 py-3 text-[13px] font-semibold text-white">첫 수선 접수하기</Link></div>
+      )}
+
+      {!loading && !error && repairs.length > 0 && (
         <div className="mx-4 mt-3 space-y-6">
           <section>
             <h2 className="text-[11px] font-semibold tracking-[0.16em] text-muted">
@@ -150,15 +163,18 @@ export function RepairListScreen({
 export function MyRepairsList() {
   const [repairs, setRepairs] = useState<DbRepair[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
-    fetch("/api/repairs")
-      .then((res) => res.json())
+    apiFetch<DbRepair[]>("/api/repairs")
       .then((json) => {
         if (json.ok) setRepairs(json.data);
+        else setError(json.error?.message ?? "수선 내역을 불러오지 못했어요.");
       })
+      .catch(() => setError("네트워크 연결을 확인한 뒤 다시 시도해주세요."))
       .finally(() => setLoading(false));
-  }, []);
+  }, [retryKey]);
 
   const inProgress = repairs.filter((r) => r.status !== "completed" && r.status !== "cancelled");
   const completed = repairs.filter((r) => r.status === "completed");
@@ -168,10 +184,18 @@ export function MyRepairsList() {
       <PageHeader title="수선 접수 내역" backHref="/home" />
 
       {loading && (
-        <p className="py-10 text-center text-[13px] text-muted">불러오는 중…</p>
+        <div className="mx-4 mt-5 space-y-3" aria-busy="true"><div className="h-24 animate-pulse rounded-2xl bg-black/5"/><div className="h-24 animate-pulse rounded-2xl bg-black/5"/><p className="text-center text-[12px] text-muted">수선 내역을 불러오고 있어요.</p></div>
       )}
 
-      {!loading && (
+      {!loading && error && (
+        <div className="mx-4 mt-6 rounded-2xl bg-paper px-5 py-8 text-center" role="alert"><p className="text-[13px] text-[#8a3a3a]">{error}</p><button type="button" onClick={() => {setLoading(true);setError("");setRetryKey((value) => value + 1)}} className="mt-4 inline-flex items-center gap-2 rounded-full border border-cognac/25 px-4 py-2.5 text-[12px] font-semibold text-cognac-deep"><RefreshCw size={14}/> 다시 시도</button></div>
+      )}
+
+      {!loading && !error && repairs.length === 0 && (
+        <div className="soft-card mx-4 mt-5 px-6 py-12 text-center"><span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-cream-deep text-cognac"><Wrench size={23}/></span><h2 className="mt-4 text-[15px] font-semibold text-ink">수선 기록이 없습니다</h2><p className="mt-2 text-[12px] leading-5 text-muted">제품 상세에서 수선이 필요한 제품을 선택해<br/>새 접수를 시작할 수 있어요.</p><Link href="/home" className="mt-5 inline-flex rounded-full bg-cognac-deep px-5 py-3 text-[13px] font-semibold text-white">내 제품 보기</Link></div>
+      )}
+
+      {!loading && !error && repairs.length > 0 && (
         <div className="mx-4 mt-3 space-y-6">
           <section>
             <h2 className="text-[11px] font-semibold tracking-[0.16em] text-muted">

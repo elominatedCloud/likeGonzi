@@ -51,7 +51,7 @@ function Pattern(){return <div className={styles.pattern} aria-hidden="true"/>}
 function Header({title,back=false,action}:{title:string;back?:boolean;action?:React.ReactNode}){const router=useRouter();return <header className={styles.header}><span>{back&&<button className={styles.back} onClick={()=>router.back()} aria-label="뒤로 가기">←</button>}</span><h1>{title}</h1><span className={styles.headerAction}>{action}</span></header>}
 function Shell({children,height='auto'}:{children:React.ReactNode;height?:number|'auto'}){return <main className={styles.stage}><section className={styles.phone} style={{minHeight:height==='auto'?undefined:height}}><Pattern/><AmbientPattern variant="log"/><StatusBar/>{children}<BottomNav/></section></main>}
 
-export function StorybookPage(){return <Shell><Header title="스토리북"/><div className={styles.storyContent}><p className={styles.eyebrow}>MY STORYBOOK</p>{Object.values(products).map(p=><article className={styles.storyCard} key={p.id}><img loading="lazy" src={p.image} alt={p.name} className={styles.productImage}/><div className={styles.productInfo}><h2>{p.name}</h2><dl><div><dt>구매</dt><dd>{p.bought}</dd></div><div><dt>상태</dt><dd>{p.condition}</dd></div><div><dt>추억</dt><dd>{p.entries.filter(e=>e.kind==='memory').length} 개</dd></div><div><dt>최근 기록</dt><dd>{p.latest}</dd></div></dl></div><Link className={styles.storyLink} href={`/log/${p.id}/timeline`}>Storybook 보기 →</Link></article>)}</div></Shell>}
+export function StorybookPage(){return <Shell><Header title="스토리북"/><div className={styles.storyContent}><p className={styles.eyebrow}>MY STORYBOOK</p><p className={styles.conditionNote}>제품 상태는 최근 등록된 관리·수선 기록을 기준으로 한 데모 표기입니다.</p>{Object.values(products).map(p=>{const memoryCount=p.entries.filter(e=>e.kind==='memory').length;return <article className={styles.storyCard} key={p.id}><img loading="lazy" src={p.image} alt={p.name} className={styles.productImage}/><div className={styles.productInfo}><h2>{p.name}</h2><dl><div><dt>구매</dt><dd>{p.bought}</dd></div><div><dt>상태</dt><dd>{p.condition}<small className={styles.demoLabel}>데모 기준</small></dd></div><div><dt>추억</dt><dd>{memoryCount} 개</dd></div><div><dt>최근 기록</dt><dd>{p.latest}</dd></div></dl></div><Link className={styles.storyLink} href={memoryCount?`/log/${p.id}/timeline`:`/log/${p.id}/record/new`}>{memoryCount?'Storybook 보기 →':'첫 기록 작성하기 →'}</Link></article>})}</div></Shell>}
 
 type Tab='all'|'mine'|'product';
 type UnifiedTimelineEntry=Entry&{productIds:ProductId[]};
@@ -224,7 +224,7 @@ export function RecordDetailPage({productId,recordId}:{productId:ProductId;recor
         const content=<><img loading="lazy" src={item.image} alt=""/><span><b>{item.short}</b><small>{item.material}</small></span><strong>›</strong></>;
         return detailPath?<Link className={styles.withCard} href={detailPath} key={id}>{content}</Link>:<button className={styles.withCard} key={id} disabled>{content}</button>;
       })}
-      <p className={styles.eyebrow}>{isMemory?'AI STORY':'DETAIL'}</p>
+      <p className={styles.eyebrow}>{isMemory?'STORY NOTE':'DETAIL'}</p>
       <div className={styles.aiStory}>{memory.story??memory.note}</div>
       {isMemory&&<>
         <button className={`${styles.primary} ${styles.comingSoon}`} type="button" disabled>인스타 스토리 만들기 · 준비 중</button>
@@ -280,11 +280,6 @@ export function RecordWritePage({productId,initialAiImage}:{productId:ProductId;
     reader.readAsDataURL(f);
   };
   const maps=`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.place)}`;
-
-  const openAiRecommendation=()=>{
-    sessionStorage.setItem(STORY_DRAFT_KEY,JSON.stringify({photo,memo,selectedIds}));
-    router.push(`/log/${p.id}/ai-recommendation`);
-  };
 
   const save=async()=>{
     if(saving)return;
@@ -352,28 +347,23 @@ export function RecordWritePage({productId,initialAiImage}:{productId:ProductId;
       <div className={styles.field}>⌖　{p.place}<a href={maps} target="_blank" rel="noreferrer">장소 변경　›</a></div>
       <label htmlFor="memo">MEMO</label>
       <div className={styles.memo}><textarea id="memo" maxLength={100} value={memo} onChange={e=>setMemo(e.target.value)}/><small>{memo.length} / 100</small></div>
-      <label>AI IMAGE SUGGESTION <small>(선택)</small></label>
-      <button className={styles.field} onClick={openAiRecommendation}>이 기록과 어울리는 이미지를 추천해 드려요. <small>추천 보기　›</small></button>
+      <label>AI IMAGE SUGGESTION <small>(MVP 제외)</small></label>
+      <button className={`${styles.field} ${styles.disabledFeature}`} type="button" disabled>추천 이미지 기능은 다음 버전에서 제공됩니다. <small>준비 중</small></button>
     </div>
   </Shell>
 }
 
 export function AiRecommendationPage({productId}:{productId:ProductId}){
-  const p=products[productId],router=useRouter();
-  const [selected,setSelected]=useState(0);
-  const useImage=()=>{
-    sessionStorage.setItem(AI_IMAGE_KEY,p.aiImages[selected]);
-    router.push(`/log/${productId}/record/new?aiImage=${encodeURIComponent(p.aiImages[selected])}`);
-  };
+  const p=products[productId];
   return <Shell height={930}>
     <Header title="AI 추천 이미지" back/>
     <div className={styles.aiContent}>
-      <h2>기록을 분석해<br/>이 순간과 어울리는 이미지를<br/>제안했어요.</h2>
-      <img loading="lazy" className={styles.aiHero} src={p.aiImages[selected]} alt={`${p.short} AI 추천 이미지`}/>
-      <p className={styles.eyebrow}>추천 이유</p><p className={styles.reason}>{p.aiReason}</p>
-      <p className={styles.eyebrow}>다른 이미지 후보</p>
-      <div className={styles.candidates}>{p.aiImages.map((img,i)=>i!==selected&&<button key={img} onClick={()=>setSelected(i)}><img loading="lazy" src={img} alt={`후보 ${i+1}`}/></button>)}</div>
-      <button className={styles.primary} onClick={useImage}>이 이미지 사용</button>
+      <div className={styles.featurePlaceholder}>
+        <p className={styles.eyebrow}>NEXT VERSION</p>
+        <h2>{p.short}의 기록을 위한<br/>AI 추천 이미지를 준비 중이에요.</h2>
+        <p>이번 MVP에서는 사용자가 직접 촬영하거나 앨범에서 고른 실제 사진만 기록에 사용합니다.</p>
+        <Link className={styles.primary} href={`/log/${productId}/record/new`}>직접 사진으로 기록하기</Link>
+      </div>
     </div>
   </Shell>;
 }

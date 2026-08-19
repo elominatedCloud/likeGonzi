@@ -18,6 +18,14 @@
   --gold-soft: #d4b88a;
   --card-shadow: 0 10px 30px rgba(43, 33, 28, 0.08);
   --nav-height: 72px;
+  /*
+   * 모바일 앱 프레임 폭 — 바텀바와 카메라 프레임이 같은 값을 쓴다.
+   * 폰에서는 항상 화면을 꽉 채워야 한다. 큰 폰(갤럭시 480px, 아이폰 Pro Max 440px)까지
+   * 430px로 묶으면 양옆에 죽은 여백이 생긴다. 프레임은 태블릿 이상에서만 잡는다.
+   */
+  --app-frame: 100%;
+  /* 데스크톱에서 앱 프레임 바깥 여백 */
+  --app-surround: #e4ded4;
 }
 
 @theme inline {
@@ -51,10 +59,8 @@ body {
 
 body {
   min-height: 100dvh;
-  background-color: var(--background);
-  background-image: url("/images/pattern/mcm_pattern.svg"), url("/images/pattern/mcm_pattern.svg");
-  background-repeat: repeat, repeat;
-  background-size: 393px auto, 393px auto;
+  background-color: var(--app-surround);
+  background-image: none;
   color: var(--foreground);
   font-family:
     var(--font-noto-sans-kr),
@@ -111,6 +117,40 @@ a {
   font-size: 12px;
   font-weight: 400;
   line-height: 18px;
+}
+
+/*
+ * 폰에서는 화면을 꽉 채우고, 태블릿 이상에서만 폰 프레임처럼 가운데로 모은다.
+ * (--app-frame이 640px 미만에서 100%라 max-width가 사실상 걸리지 않는다)
+ */
+.app-shell {
+  position: relative;
+  width: 100%;
+  max-width: var(--app-frame);
+  min-height: 100dvh;
+  margin-inline: auto;
+  background-color: var(--background);
+  background-image: url("/images/pattern/mcm_pattern.svg"), url("/images/pattern/mcm_pattern.svg");
+  background-repeat: repeat, repeat;
+  background-size: 393px auto, 393px auto;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --app-frame: 430px;
+  }
+
+  .app-shell {
+    box-shadow: 0 0 48px #2b211c1f;
+  }
+}
+
+/* 운영 도구는 앱 프레임 폭을 벗어나 전체 화면을 쓴다. */
+.admin-shell {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  min-height: 100dvh;
+  background-color: var(--cream);
 }
 
 .visetos-bg {
