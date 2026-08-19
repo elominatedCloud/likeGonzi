@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { ChunkReloadGuard } from "@/Components/ui/ChunkReloadGuard";
 
 export const metadata: Metadata = {
   title: "MCM · STORYBOOK",
@@ -20,6 +21,7 @@ export default function RootLayout({
   return (
     <html lang="ko" className="h-full">
       <body className="min-h-full antialiased">
+        <ChunkReloadGuard />
         <div className="app-shell">{children}</div>
       </body>
     </html>
