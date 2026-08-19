@@ -30,11 +30,11 @@ const AREA_BOX_SETS: Record<string, AreaBox[]> = {
 
   // Stark Backpack 정면 (public/camera/stark-product.png) 실측
   default: [
-    { id: "handle", x: 41, y: 14, w: 15, h: 12 },  // 상단 손잡이 루프
-    { id: "strap", x: 25, y: 59, w: 6, h: 8 },     // 측면 스트랩 연결부(스터드)
-    { id: "zipper", x: 32, y: 59, w: 36, h: 5 },   // 앞주머니 지퍼
-    { id: "leather", x: 35, y: 35, w: 30, h: 20 }, // 본체 가죽면
-    { id: "corner", x: 25, y: 76, w: 17, h: 11 },  // 좌하단 모서리
+    { id: "handle", x: 43, y: 18, w: 15, h: 9 },   // 상단 손잡이 루프
+    { id: "strap", x: 24, y: 62, w: 6, h: 7 },     // 측면 스트랩 연결부(스터드)
+    { id: "zipper", x: 31, y: 63, w: 38, h: 5 },   // 앞주머니 지퍼
+    { id: "leather", x: 34, y: 38, w: 31, h: 20 }, // 본체 가죽면
+    { id: "corner", x: 25, y: 80, w: 12, h: 9 },   // 좌하단 모서리
   ],
 
   // 지갑·소품 — 스트랩과 손잡이가 없다.

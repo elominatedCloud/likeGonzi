@@ -1,5 +1,16 @@
 # 코드 수정 프롬프트 — IR "데이터 플랫폼" 주장을 데모 가능하게
 
+> **2026-08-10 현재 상태 — P0·P1·P2·P3 전부 반영 완료.**
+> `stories.occasion/companion/city/country`(GIN·CHECK 포함), 집계 뷰 3종,
+> `profiles.analytics_consent`(+ CHECK, 집계 뷰가 동의자만 조인, `having count(*) >= 5`),
+> `product_events` 모두 스키마에 실재한다.
+> **P4도 절반 끝났다** — `compute_care_score(uuid)` 함수가 생겼고 `my_products_view`가 그걸 쓴다
+> (기본 70 + 기록당 3/최대 12 + 수선당 6/최대 12 + 최근 90일 활동 6, 상한 100).
+> **규칙 기반 계산이지 AI가 아니다.** 발표에서 "AI 상태 분석"이라 말하면 안 된다.
+> **진짜 남은 것은 `ownership_transfers` FE 미연결뿐이다.**
+>
+> 추가로 **수선 부위 박스 오버레이가 구현됐다**(아래 P5).
+
 새 세션에 아래 블록을 그대로 붙여넣으면 된다. 자체 완결형이다.
 
 ---
@@ -107,8 +118,8 @@ product_events 테이블을 만든다.
 
 ## P4 — 과장 제거
 
-- product_units.care_score: 계산 로직을 넣든지, 아니면 UI 문구에서
-  "AI 분석"이라는 표현을 빼고 "데모 기준"으로 명시한다. 지금은 상수 90이다.
+- product_units.care_score: ✅ 완료. compute_care_score() 규칙 기반 계산.
+  단 "AI 분석"이 아니라 "기록 기반 산출"로 표기할 것.
 - ownership_transfers: FE 연결을 하든지, 못 하면 IR 수익모델에서 리셀 항목을
   "로드맵"으로 내린다. 코드에는 손대지 않아도 되지만 팀에 알릴 것.
 
@@ -151,3 +162,31 @@ P3·P4는 발표 후로 미뤄도 된다.
 | "리셀·소유권 이전 연계" | FE 미구현 | 로드맵으로 이동 |
 | "재방문·리텐션 데이터" | 이벤트 테이블 없음 | P3 완료 후 |
 | "2027년 DPP 의무화" | 위임법이 2027, 시행은 2028~29 | "위임법 2027, 시행 2028~29 전망" |
+
+
+---
+
+## P5 — 수선 부위 박스 오버레이 ✅ 완료 (2026-08-10)
+
+제품 실사 위에 수선 부위를 박스로 얹어 탭으로 고른다.
+
+| 파일 | 변경 |
+|---|---|
+| `lib/repair.ts` | `AreaBox` 타입, `AREA_BOX_SETS`(제품군별 % 좌표), `getAreaBoxes()`, `isPlacedArea()`, `UNPLACED_AREA_IDS` 추가 |
+| `Components/care/AreaBoxPicker.tsx` | 신규. 실사 + 박스 오버레이 + 미배치 부위 칩 |
+| `Components/care/RepairApplyScreen.tsx` | AREA_TAGS 칩 행 → `<AreaBoxPicker>` 로 교체 |
+
+**설계 결정**
+- 좌표는 **이미지 기준 %**. 이미지와 박스를 같은 정사각 래퍼(`inset-[5%]`)에 넣어
+  `object-contain`으로 어긋나지 않게 했다. 컨테이너에 패딩을 주면 좌표계가 깨진다.
+- 좌표는 **모델 단위**. 같은 모델은 같은 좌표라 `product_units`가 아니라 제품군별로 둔다.
+- **스키마·API 변경 없음.** `condition_tags: [area, condition]` 저장 형식 그대로.
+- `other`(기타)는 좌표가 없으므로 그림 아래 칩으로 남긴다.
+
+**좌표 검증 방법** — `public/camera/stark-product.png` 위에 박스를 얹은 임시 페이지로
+브라우저에서 눈으로 맞췄다. 좌표를 바꾸면 같은 방법으로 다시 확인할 것.
+
+**남은 튜닝** — `wallet` 세트는 실사 확보 전 추정치다. Pina 이미지가 나오면 실측으로 교체.
+
+**다음 단계 (미구현)** — 사용자가 올린 손상 사진에서 Vision이 부위·증상을 자동 감지해
+박스를 그리는 것. 린 캔버스 Key Resources의 "AI(Vision + LLM)" 중 Vision 쪽 빈칸이다.
