@@ -226,7 +226,7 @@ export default function Unboxing({
   const loginHref=()=>{
     const returnTo=tagCode
       ? `/start?tag=${encodeURIComponent(tagCode)}&claim=1`
-      : '/products/stark-backpack';
+      : '/home';
     return `/login?intent=claim&returnTo=${encodeURIComponent(returnTo)}`;
   };
 
@@ -235,7 +235,8 @@ export default function Unboxing({
     trackEvent('unbox_complete', scan?.product_id ?? null, { tag_code: tagCode ?? null });
 
     if(scanState==='mine'){
-      router.push(`/products/${scan?.product_id ?? 'stark-backpack'}`);
+      // 스캔 결과가 없으면(디자인 QA 모드) 특정 제품으로 보낼 근거가 없다.
+      router.push(scan ? `/products/${scan.product_id}` : '/home');
       return;
     }
 

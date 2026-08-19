@@ -12,9 +12,10 @@ export default async function CameraPage({
   searchParams: Promise<{ product?: string; mode?: string }>;
 }) {
   const { product, mode } = await searchParams;
+  // 기본값을 고정하지 않는다. 지정이 없으면 화면이 내 소유 제품에서 고른다.
   const productId = productIds.includes(product as (typeof productIds)[number])
     ? (product as (typeof productIds)[number])
-    : 'stark';
+    : undefined;
 
   return (
     <CameraExperience

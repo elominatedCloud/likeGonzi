@@ -12,7 +12,7 @@ import {
 } from '@phosphor-icons/react';
 import { ChangeEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { BottomNav } from '@/Components/ui/BottomNav';
-import { hasSupabaseSession } from '@/lib/api-client';
+import { apiFetch, hasSupabaseSession } from '@/lib/api-client';
 import { showFeatureNotice } from '@/lib/feature-notice';
 import { tagCodeFromScan } from '@/lib/qr-tag';
 import styles from './camera.module.css';
@@ -40,7 +40,7 @@ function getBarcodeDetector(): BarcodeDetectorLike | null {
 }
 
 export default function CameraExperience({
-  productId='stark',
+  productId,
   mode='photo',
 }:{
   productId?:'stark'|'ella'|'pina';
@@ -48,6 +48,10 @@ export default function CameraExperience({
 }) {
   const router = useRouter();
   const isQrMode = mode === 'qr';
+  // ?product= 가 없으면 내가 가진 제품 중 첫 번째에 기록한다.
+  // 예전에는 'stark' 고정이라 Stark를 소유하지 않은 계정은 촬영 후 저장이
+  // PRODUCT_NOT_OWNED로 실패했다.
+  const [ownedProductId, setOwnedProductId] = useState<string | null>(productId ?? null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -107,6 +111,18 @@ export default function CameraExperience({
   useEffect(() => {
     return () => stopCamera();
   }, [stopCamera]);
+
+  useEffect(() => {
+    if (isQrMode || productId) return;
+    let cancelled = false;
+    apiFetch<{ slug?: string }[]>('/api/products/my')
+      .then((json) => {
+        if (cancelled || !json.ok) return;
+        setOwnedProductId(json.data[0]?.slug ?? null);
+      })
+      .catch(() => {});
+    return () => { cancelled = true };
+  }, [isQrMode, productId]);
 
   /** 태그를 확인하면 스캔 결과 화면으로 넘긴다(로그인 상태라 등록까지 이어짐). */
   const goToTag = useCallback((tagCode: string) => {
@@ -208,7 +224,11 @@ export default function CameraExperience({
     try {
       sessionStorage.setItem(CAMERA_DRAFT_KEY, capturedPhoto);
       stopCamera();
-      router.push(`/log/${productId}/record/new?source=camera`);
+      if (!ownedProductId) {
+        setNotice('기록할 제품이 없어요. 먼저 제품을 등록해주세요.');
+        return;
+      }
+      router.push(`/log/${ownedProductId}/record/new?source=camera`);
     } catch {
       setNotice('사진이 커서 저장하지 못했어요. 다른 사진을 선택해주세요.');
       setCapturedPhoto(null);
