@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   BookOpenText,
   ChevronRight,
@@ -18,6 +18,7 @@ import { AmbientPattern } from "@/Components/ui/AmbientPattern";
 import { BottomNav } from "@/Components/ui/BottomNav";
 import { PageHeader } from "@/Components/ui/PageHeader";
 import { supabase } from "@/lib/supabase";
+import { apiFetch } from "@/lib/api-client";
 import { AnalyticsConsentCard } from "@/Components/my/AnalyticsConsentCard";
 
 const DEMO_AUTH_KEYS = [
@@ -25,37 +26,62 @@ const DEMO_AUTH_KEYS = [
   "likegonzi-demo-signup",
 ] as const;
 
-const menuItems = [
-  {
-    href: "/products/stark-backpack",
-    label: "내 제품",
-    description: "등록된 제품과 디지털 여권",
-    icon: Package,
-  },
-  {
-    href: "/log/storybook",
-    label: "나의 스토리북",
-    description: "제품과 함께한 기록 모아보기",
-    icon: BookOpenText,
-  },
-  {
-    href: "/products/stark-backpack/care",
-    label: "케어 & 리페어",
-    description: "관리 가이드와 수선 여정",
-    icon: Wrench,
-  },
-  {
-    href: "/my/repairs",
-    label: "수선 접수 내역",
-    description: "접수 상태와 진행 단계 확인",
-    icon: ClipboardList,
-  },
-] as const;
+/**
+ * 제품에 딸린 메뉴는 사용자가 실제로 가진 제품을 가리켜야 한다.
+ * 예전에는 stark-backpack으로 하드코딩돼 있어서, Stark를 소유하지 않은 계정은
+ * "내 제품"과 "케어 & 리페어"가 404였다.
+ */
+function buildMenuItems(productId: string | null) {
+  return [
+    {
+      href: productId ? `/products/${productId}` : "/camera?mode=qr",
+      label: "내 제품",
+      description: productId
+        ? "등록된 제품과 디지털 여권"
+        : "아직 등록된 제품이 없어요 · 등록하기",
+      icon: Package,
+    },
+    {
+      href: "/log/timeline",
+      label: "나의 스토리북",
+      description: "제품과 함께한 기록 모아보기",
+      icon: BookOpenText,
+    },
+    {
+      href: productId ? `/products/${productId}/care` : "/camera?mode=qr",
+      label: "케어 & 리페어",
+      description: productId
+        ? "관리 가이드와 수선 여정"
+        : "아직 등록된 제품이 없어요 · 등록하기",
+      icon: Wrench,
+    },
+    {
+      href: "/my/repairs",
+      label: "수선 접수 내역",
+      description: "접수 상태와 진행 단계 확인",
+      icon: ClipboardList,
+    },
+  ];
+}
 
 export function MyScreen() {
   const router = useRouter();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [error, setError] = useState("");
+  const [firstProductId, setFirstProductId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    apiFetch<{ id: string }[]>("/api/products/my")
+      .then((json) => {
+        if (cancelled || !json.ok) return;
+        setFirstProductId(json.data[0]?.id ?? null);
+      })
+      .catch(() => {});
+    return () => { cancelled = true };
+  }, []);
+
+  const menuItems = buildMenuItems(firstProductId);
 
   const handleSignOut = async () => {
     if (isSigningOut) return;
