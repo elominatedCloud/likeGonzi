@@ -31,6 +31,47 @@ interface DetectedBarcode { rawValue: string }
 interface BarcodeDetectorLike { detect(source: CanvasImageSource): Promise<DetectedBarcode[]> }
 type BarcodeDetectorCtor = new (options?: { formats?: string[] }) => BarcodeDetectorLike;
 
+/**
+ * Web NFC (Chrome for Android 전용). 실물 태그가 NDEF에 담은 URL 또는
+ * 코드 문자열을 QR과 똑같은 파서로 넘긴다.
+ * 지원하지 않는 브라우저에서는 조용히 건너뛰고 QR만 쓴다.
+ */
+interface NdefRecordLike {
+  recordType: string;
+  encoding?: string;
+  data?: BufferSource;
+}
+interface NdefReadingEventLike extends Event {
+  message: { records: readonly NdefRecordLike[] };
+}
+interface NdefReaderLike extends EventTarget {
+  scan(options?: { signal?: AbortSignal }): Promise<void>;
+}
+type NdefReaderCtor = new () => NdefReaderLike;
+
+function getNdefReader(): NdefReaderLike | null {
+  const ctor = (window as unknown as { NDEFReader?: NdefReaderCtor }).NDEFReader;
+  if (!ctor) return null;
+  try {
+    return new ctor();
+  } catch {
+    return null;
+  }
+}
+
+/** NDEF 레코드에서 읽을 수 있는 문자열을 꺼낸다. 못 읽으면 null. */
+function textFromNdefRecord(record: NdefRecordLike): string | null {
+  if (!record.data) return null;
+  // url/absolute-url은 항상 UTF-8, text는 레코드가 인코딩을 들고 온다.
+  const encoding =
+    record.recordType === "text" ? (record.encoding ?? "utf-8") : "utf-8";
+  try {
+    return new TextDecoder(encoding).decode(record.data);
+  } catch {
+    return null;
+  }
+}
+
 function getBarcodeDetector(): BarcodeDetectorLike | null {
   const ctor = (window as unknown as { BarcodeDetector?: BarcodeDetectorCtor }).BarcodeDetector;
   if (!ctor) return null;
@@ -69,6 +110,7 @@ export default function CameraExperience({
   const [notice, setNotice] = useState('');
   const [manualTag, setManualTag] = useState('');
   const [qrError, setQrError] = useState('');
+  const [nfcActive, setNfcActive] = useState(false);
   const [qrSupported, setQrSupported] = useState(true);
   const scannedRef = useRef(false);
 
@@ -180,6 +222,42 @@ export default function CameraExperience({
       window.clearInterval(timer);
     };
   }, [isQrMode, cameraStatus, goToTag]);
+
+  // QR과 나란히 NFC도 듣는다. 먼저 잡히는 쪽이 이긴다(goToTag가 중복을 막는다).
+  // NFC 태그는 카메라를 켤 필요가 없어서 cameraStatus와 무관하게 돈다.
+  useEffect(() => {
+    if (!isQrMode) return;
+    const reader = getNdefReader();
+    if (!reader) return;
+
+    const controller = new AbortController();
+    const onReading = (event: Event) => {
+      const { message } = event as NdefReadingEventLike;
+      for (const record of message.records) {
+        const text = textFromNdefRecord(record);
+        const tagCode = text ? tagCodeFromScan(text) : null;
+        if (tagCode) {
+          goToTag(tagCode);
+          return;
+        }
+      }
+      setQrError('MCM 제품 태그가 아니에요.');
+    };
+
+    reader.addEventListener('reading', onReading);
+    // scan()은 실제로 듣기 시작했을 때 resolve한다. 그때만 안내 문구를 바꾼다.
+    // 권한 거부나 미지원 기기는 실패로 두고 QR만 쓴다.
+    reader
+      .scan({ signal: controller.signal })
+      .then(() => setNfcActive(true))
+      .catch(() => setNfcActive(false));
+
+    return () => {
+      reader.removeEventListener('reading', onReading);
+      controller.abort();
+      setNfcActive(false);
+    };
+  }, [isQrMode, goToTag]);
 
   const submitManualTag = () => {
     const tagCode = tagCodeFromScan(manualTag);
@@ -300,7 +378,9 @@ export default function CameraExperience({
           <div className={styles.instructions}>
             <strong>
               {isQrMode
-                ? '제품 태그의 QR을 사각형 안에 맞춰주세요.'
+                ? nfcActive
+                  ? '태그를 폰 뒤에 대거나, QR을 사각형 안에 맞춰주세요.'
+                  : '제품 태그의 QR을 사각형 안에 맞춰주세요.'
                 : isRepairMode
                   ? '가방 전체와 수선 부위가 보이게 찍어주세요.'
                   : '오늘의 순간을 사진으로 남겨보세요.'}

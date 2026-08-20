@@ -121,14 +121,23 @@ export async function GET(request: Request) {
 
   for (const row of (repairResult.data ?? []) as RepairRow[]) {
     if (row.created_at.slice(0, 10) < unitById[row.product_unit_id].registered_at.slice(0, 10)) continue;
+
+    // REMADE는 손상을 지운 게 아니라 그 자리에 무늬를 새긴 기록이다.
+    // 타임라인에는 손상 사진이 아니라 채택한 시안이 남아야 한다.
+    const isRemade = row.source === "remade" && Boolean(row.ai_image_url);
+
     entries.push({
       id: row.id,
       kind: "repair",
       date: row.created_at.slice(0, 10),
-      title: row.title ?? "수선 접수",
+      title: isRemade
+        ? `REMADE · ${row.title ?? "리폼"}`
+        : (row.title ?? "수선 접수"),
       place: row.location,
       note: (row.condition_tags ?? []).join(" · ") || null,
-      image: row.thumbnail_url ?? ((await signPhotoPath(supabase, row.thumbnail_path)) || null),
+      image: isRemade
+        ? row.ai_image_url
+        : (row.thumbnail_url ?? ((await signPhotoPath(supabase, row.thumbnail_path)) || null)),
       ...describe(row.product_unit_id),
     });
   }
