@@ -138,22 +138,15 @@ function chapter(n, title, subtitle) {
   const s = p.addSlide(); dark(s);
   s.addText([
     { text: "MCM", options: { color: C.white, breakLine: true } },
-    { text: "STORYBOOK", options: { color: C.cognac } },
-  ], { x: 0.95, y: 0.66, w: 6, h: 0.9, fontFace: F, fontSize: 14, bold: true,
-    charSpacing: 3.4, lineSpacing: 24, margin: 0 });
-  s.addText("MCM과 함께하는", {
-    x: 0.95, y: 2.42, w: 11.6, h: 0.6, fontFace: F, fontSize: 26,
-    color: C.white, margin: 0 });
-  s.addText([
-    { text: "hi", options: { color: C.white } },
-    { text: "_story", options: { color: C.cognac } },
-  ], { x: 0.9, y: 3.02, w: 11.6, h: 1.5, fontFace: F, fontSize: 76, bold: true,
-    charSpacing: -1, margin: 0 });
+    { text: "Storybook", options: { color: C.cognac } },
+  ], { x: 0.9, y: 2.42, w: 11.6, h: 2.5, fontFace: F, fontSize: 72, bold: true,
+    lineSpacing: 96, charSpacing: -1, margin: 0 });
   s.addText("흠을 지우지 않습니다. 나의 것으로 만듭니다", {
-    x: 0.98, y: 4.86, w: 11, h: 0.42, fontFace: F, fontSize: 17,
+    x: 0.98, y: 5.28, w: 11, h: 0.42, fontFace: F, fontSize: 18,
     color: C.muted, margin: 0 });
   s.addText("Challenge 03 · 360° 고객 경험        2026.08", {
-    x: 0.98, y: 5.44, w: 11, h: 0.34, fontFace: F, fontSize: 13, color: C.dim, margin: 0 });
+    x: 0.98, y: 5.86, w: 11, h: 0.34, fontFace: F, fontSize: 13, color: C.dim, margin: 0 });
+  s.addNotes("MCM 스토리북입니다. 제품과 함께한 시간을 한 줄로 남기고, 흠이 생기면 그 자리를 나만의 것으로 만드는 서비스입니다.");
 }
 
 /* ═══ 01b 질문 ═══ */
