@@ -164,6 +164,8 @@ create table if not exists public.repairs (
   --    실결제에는 PG 계약·웹훅·환불 처리가 별도로 필요하다.
   paid_at timestamptz,
   is_demo_payment boolean not null default true,
+  started_at timestamptz,
+  completed_at timestamptz,
   source text default 'store'::text,
   created_at timestamptz default now(),
   updated_at timestamptz default now() not null,
@@ -840,6 +842,16 @@ create policy repairs_insert_own on public.repairs
        where up.product_unit_id = repairs.product_unit_id and up.user_id = auth.uid()
     )
   );
+
+-- 운영자는 접수 전체를 보고 진행 상태를 바꿀 수 있다.
+drop policy if exists repairs_select_admin on public.repairs;
+create policy repairs_select_admin on public.repairs
+  for select to authenticated using (public.is_admin());
+
+drop policy if exists repairs_update_admin on public.repairs;
+create policy repairs_update_admin on public.repairs
+  for update to authenticated
+  using (public.is_admin()) with check (public.is_admin());
 
 -- 본인 접수만 수정할 수 있다(견적 수락·진행 확정).
 drop policy if exists repairs_update_own on public.repairs;

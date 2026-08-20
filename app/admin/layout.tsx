@@ -20,6 +20,9 @@ export default function AdminLayout({
             <Link href="/admin/insights" className="text-cognac-deep underline-offset-4 hover:underline">
               브랜드 인사이트
             </Link>
+            <Link href="/admin/repairs" className="text-cognac-deep underline-offset-4 hover:underline">
+              수선 접수 관리
+            </Link>
             <Link href="/admin/units" className="text-cognac-deep underline-offset-4 hover:underline">
               개체 발급 · QR 시트
             </Link>
