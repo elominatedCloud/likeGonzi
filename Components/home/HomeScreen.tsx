@@ -129,8 +129,19 @@ export function HomeScreen({ viewState }: { viewState?: HomeViewState }) {
             <p className="type-eyebrow text-gold">
               MCM · STORYBOOK
             </p>
+            {/* 이름이 오기 전에 "나님"으로 단정하지 않는다. 화면의 다른 요소와
+                같이 스켈레톤으로 기다리고, 못 불러오면 이름 없이 적는다. */}
             <h1 className="mt-1 text-[24px] font-bold leading-8 tracking-[-0.02em] text-ink">
-              {home?.user.display_name ?? "나"}님의 아카이브
+              {state === "loading" ? (
+                <span
+                  className="inline-block h-7 w-40 animate-pulse rounded bg-ink/10 align-middle"
+                  aria-label="이름 불러오는 중"
+                />
+              ) : home?.user.display_name ? (
+                `${home.user.display_name}님의 아카이브`
+              ) : (
+                "내 아카이브"
+              )}
             </h1>
           </div>
           <button

@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthError, AuthPanel, type AuthSubmission, type OAuthProvider } from '@/Components/auth/AuthPanel';
 import { supabase } from '@/lib/supabase';
+import { apiFetch } from '@/lib/api-client';
 import styles from './login.module.css';
 
 interface LoginExperienceProps {
@@ -48,9 +49,19 @@ export function LoginExperience({
   useEffect(() => {
     if (!supabase) return;
     let cancelled = false;
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
       if (cancelled || !data.session) return;
-      window.location.replace(intent === 'claim' ? returnTo : '/home');
+      if (intent === 'claim') {
+        window.location.replace(returnTo);
+        return;
+      }
+      // 소셜 로그인은 가입과 로그인이 같은 버튼이라 mode로 구분할 수 없다.
+      // 온보딩을 아직 안 지난 계정만 그쪽으로 보낸다. 조회에 실패하면
+      // 로그인 자체를 막지 않고 홈으로 넘긴다.
+      const me = await apiFetch<{ onboarding_completed: boolean }>('/api/me').catch(() => null);
+      if (cancelled) return;
+      const needsOnboarding = me?.ok === true && me.data.onboarding_completed === false;
+      window.location.replace(needsOnboarding ? '/onboarding' : '/home');
     });
     return () => { cancelled = true };
   }, [returnTo, intent]);
@@ -110,7 +121,7 @@ export function LoginExperience({
     // router.replace 직후 router.refresh를 부르면 진행 중인 이동이 취소돼
     // 로그인 화면에 그대로 남는 경우가 있었다.
     // 세션이 막 바뀐 시점이라 문서를 새로 띄워 확실하게 넘긴다.
-    window.location.replace(mode==='signup' ? '/home' : returnTo);
+    window.location.replace(mode==='signup' ? '/onboarding' : returnTo);
   };
 
   const startOAuth = async (provider: OAuthProvider) => {

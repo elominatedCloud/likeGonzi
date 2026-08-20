@@ -46,6 +46,7 @@ export async function PATCH(request: Request) {
     birthday?: string | null;
     lifestyle_chips?: string[];
     analytics_consent?: boolean;
+    onboarding_completed?: boolean;
   }>(request);
   if (!body) return fail("INVALID_JSON", "Request body must be valid JSON");
 
@@ -57,6 +58,9 @@ export async function PATCH(request: Request) {
   }
   if (body.birthday !== undefined) patch.birthday = body.birthday || null;
   if (Array.isArray(body.lifestyle_chips)) patch.travel_style = body.lifestyle_chips;
+  if (typeof body.onboarding_completed === "boolean") {
+    patch.onboarding_completed = body.onboarding_completed;
+  }
   if (typeof body.analytics_consent === "boolean") {
     patch.analytics_consent = body.analytics_consent;
     patch.analytics_consent_at = body.analytics_consent ? new Date().toISOString() : null;
