@@ -105,6 +105,8 @@ export interface RemadeSeed {
   areaLabel: string;
   /** 사람이 읽는 증상명 — 마모 / 오염 / 스크래치 / 찢어짐 */
   conditionLabel: string;
+  /** 접수할 때 사용자가 직접 적은 상태 설명. 없을 수 있다. */
+  memo?: string | null;
 }
 
 /**
@@ -115,6 +117,7 @@ export interface RemadeSeed {
  * 출발하도록 유도한다.
  */
 export function remadePrompt(seed: RemadeSeed) {
+  const memo = seed.memo?.trim().slice(0, 200);
   return [
     `A close-up product photograph of a decorative repair applied to a luxury`,
     `${seed.color} ${seed.material} bag, on the ${seed.areaLabel} area where`,
@@ -127,6 +130,9 @@ export function remadePrompt(seed: RemadeSeed) {
     `solid tone — absolutely no repeating monogram, no printed pattern, no`,
     `initials, no logos, no text anywhere. Only the patch carries ornament.`,
     `Soft directional studio light, shallow depth of field, neutral background.`,
+    // 사용자가 적은 설명을 그대로 넘긴다. 손상이 어떻게 생겼는지는 본인이 가장
+    // 잘 알고, 그 문장이 시안을 그 사람의 가방에 맞춘다.
+    ...(memo ? [`The owner describes the damage as: "${memo}".`] : []),
   ].join(" ");
 }
 

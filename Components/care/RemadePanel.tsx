@@ -36,8 +36,13 @@ export function RemadePanel({
   const [saving, setSaving] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
   // 복원과 REMADE는 같은 접수에서 갈린다. 고르기 전에는 어느 쪽도 진행하지 않는다.
+  // 이미 고른 접수는 그 상태로 열린다(새로고침해도 선택이 남는다).
   const [mode, setMode] = useState<"restore" | "remade" | null>(
-    initialSource === "remade" ? "remade" : null,
+    initialSource === "remade"
+      ? "remade"
+      : initialSource === "restore"
+        ? "restore"
+        : null,
   );
 
   const base = `/api/products/${productId}/repairs/${repairId}/remade`;
@@ -57,6 +62,21 @@ export function RemadePanel({
       return;
     }
     setOptions(res.data.images);
+  }
+
+  /**
+   * 복원을 고른 것도 접수에 남긴다.
+   * 화면 상태로만 두면 새로고침하면 사라지고, 매장도 이 사람이 복원을 원했는지
+   * 아직 안 골랐는지 구분할 수 없다.
+   */
+  async function chooseRestore() {
+    setMode("restore");
+    setNotice("");
+    const res = await apiFetch(base, {
+      method: "PATCH",
+      body: JSON.stringify({ option: "restore" }),
+    });
+    if (!res.ok) setNotice("복원 선택을 저장하지 못했습니다.");
   }
 
   async function choose(image: string) {
@@ -88,7 +108,7 @@ export function RemadePanel({
         <div className="mt-3 grid grid-cols-2 gap-2">
           <button
             type="button"
-            onClick={() => setMode("restore")}
+            onClick={() => void chooseRestore()}
             className="rounded-2xl border border-black/12 bg-paper px-4 py-4 text-left"
           >
             <b className="block text-[14px] text-ink">복원</b>
@@ -115,7 +135,9 @@ export function RemadePanel({
 
       {mode === "restore" && (
         <div className="mt-3 rounded-2xl bg-cream-deep px-4 py-4">
-          <p className="text-[13px] font-semibold text-ink">복원으로 진행합니다</p>
+          <p className="flex items-center gap-1.5 text-[13px] font-semibold text-ink">
+            <Check size={15} className="text-cognac-deep" /> 복원으로 진행합니다
+          </p>
           <p className="mt-1 text-[11px] leading-4 text-muted">
             원래 상태에 가깝게 되돌립니다. 매장에서 상태를 확인한 뒤 방법을 안내합니다.
           </p>

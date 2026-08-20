@@ -186,6 +186,8 @@ create table if not exists public.repairs (
   location text,
   thumbnail_url text,
   thumbnail_path text,
+  -- 접수할 때 사용자가 적은 상태 설명. REMADE 시안 프롬프트가 읽는다.
+  memo text,
   ai_image_url text,
   -- 견적. 금액은 lib/repair-estimate.ts 기준표에서 계산한다(AI가 만들지 않는다).
   estimate_min integer,
@@ -210,7 +212,7 @@ create table if not exists public.repairs (
   constraint repairs_estimate_range_check check (
     estimate_min is null or estimate_max is null or estimate_min <= estimate_max
   ),
-  constraint repairs_source_check check (source = any (array['store'::text, 'ai_custom'::text, 'user'::text, 'remade'::text]))
+  constraint repairs_source_check check (source = any (array['store'::text, 'ai_custom'::text, 'user'::text, 'remade'::text, 'restore'::text]))
 );
 
 -- 소유권 이전 신청. 현재 FE는 '연동 해제'(user_products 삭제) 방식을 쓰고 이 API는 미사용.

@@ -91,6 +91,7 @@ export interface RepairRow {
   location: string | null;
   thumbnail_url: string | null;
   thumbnail_path: string | null;
+  memo: string | null;
   source: string;
   ai_image_url: string | null;
   estimate_min: number | null;

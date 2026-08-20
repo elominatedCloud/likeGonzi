@@ -39,7 +39,7 @@ async function loadRepair(
 
   const { data, error } = await supabase
     .from("repairs")
-    .select("id, title, condition_tags, ai_image_url, source")
+    .select("id, title, condition_tags, ai_image_url, source, memo")
     .eq("id", repairId)
     .eq("product_unit_id", productRef.unitId)
     .maybeSingle();
@@ -69,7 +69,7 @@ export async function POST(request: Request, context: Ctx) {
   const { supabase, error } = await requireSupabaseUser(request);
   if (error) return error;
 
-  const { repair, error: loadError } = await loadRepair(supabase, product_id, repair_id);
+  const { repair, unitId, error: loadError } = await loadRepair(supabase, product_id, repair_id);
   if (loadError) return loadError;
   if (!repair) return fail("REPAIR_NOT_FOUND", "repair not found", 404);
 
@@ -80,13 +80,22 @@ export async function POST(request: Request, context: Ctx) {
 
   const { area, condition } = splitTags(repair.condition_tags as string[] | null);
 
+  // 색·소재를 상수로 박아두면 어떤 가방을 접수해도 같은 그림이 나온다.
+  // 실제 개체 값을 읽고, 없을 때만 무난한 기본값으로 떨어진다.
+  const { data: unit } = await supabase!
+    .from("my_products_view")
+    .select("product_name, color, material")
+    .eq("id", unitId)
+    .maybeSingle();
+
   const images = await generateImages(
     remadePrompt({
-      productName: repair.title ?? "MCM bag",
-      material: "coated canvas",
-      color: "cognac",
+      productName: (unit?.product_name as string | null) ?? repair.title ?? "MCM bag",
+      material: (unit?.material as string | null) ?? "coated canvas",
+      color: (unit?.color as string | null) ?? "cognac",
       areaLabel: AREA_LABEL.get(area ?? "") ?? "표면",
       conditionLabel: CONDITION_LABEL.get(condition ?? "") ?? "마모",
+      memo: repair.memo as string | null,
     }),
     3,
   );
@@ -96,23 +105,39 @@ export async function POST(request: Request, context: Ctx) {
   return ok({ configured: true, images });
 }
 
-/** PATCH — 고른 시안을 접수에 남긴다. source를 'remade'로 바꾼다. */
+/**
+ * PATCH — 이 접수를 어느 방향으로 고칠지 남긴다.
+ *
+ * 두 방향이 같은 접수에서 갈린다.
+ * - { image_url } → REMADE. 고른 시안을 저장하고 source를 'remade'로.
+ * - { option: "restore" } → 복원. source를 'restore'로 하고 시안을 지운다.
+ *
+ * 복원은 원래 화면 상태로만 존재해서 새로고침하면 사라졌고, DB에는 접수만 하고
+ * 방향을 안 고른 것과 똑같이 남아 매장도 구분할 수 없었다.
+ */
 export async function PATCH(request: Request, context: Ctx) {
   const { product_id, repair_id } = await context.params;
   const { supabase, error } = await requireSupabaseUser(request);
   if (error) return error;
 
-  const body = await readJson<{ image_url?: string }>(request);
+  const body = await readJson<{ image_url?: string; option?: string }>(request);
   const imageUrl = body?.image_url?.trim();
-  if (!imageUrl) return fail("INVALID_BODY", "image_url is required", 400);
+  const restoring = body?.option === "restore";
+  if (!imageUrl && !restoring) {
+    return fail("INVALID_BODY", "image_url or option:'restore' is required", 400);
+  }
 
   const { repair, error: loadError } = await loadRepair(supabase, product_id, repair_id);
   if (loadError) return loadError;
   if (!repair) return fail("REPAIR_NOT_FOUND", "repair not found", 404);
 
+  const patch = restoring
+    ? { ai_image_url: null, source: "restore" }
+    : { ai_image_url: imageUrl, source: "remade" };
+
   const { data, error: updateError } = await supabase!
     .from("repairs")
-    .update({ ai_image_url: imageUrl, source: "remade" })
+    .update(patch)
     .eq("id", repair.id)
     .select("id, ai_image_url, source")
     .maybeSingle();

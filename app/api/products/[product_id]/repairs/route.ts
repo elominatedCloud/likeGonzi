@@ -69,6 +69,8 @@ export async function POST(request: Request, context: Ctx) {
       title: body?.title ?? "수선 접수",
       location: body?.location ?? "접수 대기",
       condition_tags: body?.condition_tags ?? [],
+      // 사용자가 적은 상태 설명. REMADE 시안 프롬프트가 이걸 읽는다.
+      memo: body?.memo?.trim() || null,
       // 사진은 Storage에 올린 뒤 path만 저장한다(thumbnail_path).
       // thumbnail_url은 Supabase 세션이 없는 데모 폴백(data URL)용.
       thumbnail_path: body?.thumbnail_path ?? null,

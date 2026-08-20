@@ -12,6 +12,7 @@ const row: RepairRow = {
   location: "접수 대기",
   thumbnail_url: null,
   thumbnail_path: null,
+  memo: null,
   source: "user",
   ai_image_url: null,
   estimate_min: null,
