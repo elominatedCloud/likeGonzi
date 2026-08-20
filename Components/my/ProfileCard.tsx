@@ -90,7 +90,8 @@ export function ProfileCard() {
                 <p className="text-[11px] font-semibold tracking-[0.14em] text-[#d9c2a2]">
                   {me.membership} MEMBER
                 </p>
-                <h2 className="mt-1 truncate text-[20px] font-semibold">{me.nickname}</h2>
+                {/* nickname은 nullable이다. 비면 이름 자리가 빈칸으로 남는다. */}
+                <h2 className="mt-1 truncate text-[20px] font-semibold">{me.nickname || "이름 없음"}</h2>
                 <p className="mt-1 truncate text-[12px] text-white/65">{me.email}</p>
               </>
             ) : (

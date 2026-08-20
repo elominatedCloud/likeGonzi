@@ -355,6 +355,10 @@ end;
 $$;
 
 -- auth.users에 새 계정이 생기면 profiles를 자동 생성한다.
+--
+-- 소셜 로그인은 raw_user_meta_data에 'nickname'을 넣어주지 않는다.
+-- Google은 full_name/name, Kakao는 name으로 온다. 이메일 가입만 signup API가
+-- nickname을 직접 채운다. 순서대로 훑고, 다 없으면 이메일 아이디 부분을 쓴다.
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -363,7 +367,20 @@ set search_path to ''
 as $$
 begin
   insert into public.profiles (id, nickname)
-  values (new.id, new.raw_user_meta_data->>'nickname');
+  values (
+    new.id,
+    nullif(
+      trim(
+        coalesce(
+          new.raw_user_meta_data->>'nickname',
+          new.raw_user_meta_data->>'full_name',
+          new.raw_user_meta_data->>'name',
+          split_part(coalesce(new.email, ''), '@', 1)
+        )
+      ),
+      ''
+    )
+  );
   return new;
 end;
 $$;
