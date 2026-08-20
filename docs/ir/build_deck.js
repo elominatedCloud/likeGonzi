@@ -4,6 +4,7 @@ const p = new pptxgen();
 p.layout = "LAYOUT_WIDE";                 // 13.3 x 7.5
 const W = 13.3, H = 7.5;
 const BG = path.join(__dirname, "bg-dark.png");
+const IMG = n => path.join(__dirname, n);
 
 const C = {
   dark: "12100E", light: "F4F1EC", line: "3A3025",
@@ -120,26 +121,73 @@ function chapter(n, title, subtitle) {
   s.addNotes("럭셔리는 새것일 때 가장 비쌉니다. 그래서 사람들은 쓰기를 두려워합니다. 저희는 그 방향을 뒤집었습니다.");
 }
 
-/* ═══ 02 챌린지 ═══ */
+/* ═══ 16 타임라인 ═══ */
 {
   const s = p.addSlide();
-  head(s, "WHICH CHALLENGE", ["저희는 03번을 골랐습니다"], { size: 40 });
-  s.addText("360° 고객 경험", { x: 1.0, y: 3.3, w: W - 2, h: 0.6, align: "center",
-    fontFace: F, fontSize: 30, bold: true, color: C.cognac, margin: 0 });
-  s.addText("발견부터 구매 이후까지, 끊김 없이 로열티를 만드는 여정", {
-    x: 1.0, y: 4.0, w: W - 2, h: 0.4, align: "center", fontFace: F,
-    fontSize: 16, color: C.muted, margin: 0 });
-  rule(s, 3.6, 4.94, 6.1);
-  s.addText("01 AI 기반 프로덕트        02 인터랙티브 리테일", {
-    x: 1.0, y: 5.2, w: W - 2, h: 0.34, align: "center", fontFace: F,
-    fontSize: 15, color: C.white, margin: 0 });
-  s.addText("03을 제대로 풀면 두 개가 그 안에 들어옵니다", {
-    x: 1.0, y: 5.64, w: W - 2, h: 0.34, align: "center", fontFace: F,
-    fontSize: 13, color: C.dim, margin: 0 });
-  s.addNotes("세 챌린지 중 3번을 메인으로 골랐습니다. 1번과 2번은 특정 순간을 좋게 만들지만 끊긴 경험은 여전히 끊겨 있습니다. 매장에서 산 박스의 QR을 찍는 순간이 2번이고, 그 뒤 AI가 기록을 만드는 게 1번입니다.");
+  head(s, "SOLUTION", ["하나의 타임라인"], { size: 40 });
+  s.addText("CHALLENGE 03 · 360° 고객 경험", {
+    x: 0, y: 2.06, w: W, h: 0.32, align: "center", fontFace: F,
+    fontSize: 11.5, bold: true, color: C.dim, charSpacing: 2.4, margin: 0 });
+  const steps = ["발견", "구매", "사용", "관리", "수선", "물려주기"];
+  const gap = (W - 2.4) / steps.length;
+  s.addShape(p.ShapeType.line, { x: 1.2 + gap / 2, y: 3.92, w: (W - 2.4) - gap, h: 0,
+    line: { color: C.line, width: 1 } });
+  steps.forEach((t, i) => {
+    const cx = 1.2 + gap * (i + 0.5), on = i >= 3, r = on ? 0.19 : 0.13;
+    s.addShape(p.ShapeType.ellipse, { x: cx - r / 2, y: 3.92 - r / 2, w: r, h: r,
+      fill: { color: on ? C.cognac : C.muted }, line: { type: "none" } });
+    s.addText(t, { x: cx - gap / 2, y: 4.28, w: gap, h: 0.36, align: "center",
+      fontFace: F, fontSize: 17, bold: on, color: on ? C.white : C.muted, margin: 0 });
+  });
+  s.addText("내가 남긴 기록과 브랜드가 남긴 기록이 같은 줄에 흐릅니다", {
+    x: 1.0, y: 5.22, w: W - 2, h: 0.42, align: "center", fontFace: F,
+    fontSize: 22, bold: true, color: C.white, margin: 0 });
+  s.addText("이 둘이 같이 있는 곳은 지금 없습니다", {
+    x: 1.0, y: 5.76, w: W - 2, h: 0.34, align: "center", fontFace: F,
+    fontSize: 14, color: C.muted, margin: 0 });
+  s.addNotes("별도 앱 설치가 없습니다. 제품의 QR·NFC가 진입점입니다. 등록하면 구매 기록이 첫 줄로 자동 생성돼 빈 화면을 보여주지 않습니다.");
 }
 
-chapter(1, "MCM은 어디에 서 있나", "사용 빈도라는 축을 하나 더 두면 자리가 달라진다");
+/* ═══ 14 제품 개요 ═══ */
+{
+  const s = p.addSlide();
+  head(s, "WHAT WE BUILT", ["타임라인 위에 세 가지가 얹힙니다"], { size: 34 });
+  columns(s, [
+    ["기록", "쌓인다", "사진 한 장을 올리면\nAI가 문장으로 남긴다.", false],
+    ["케어 · 수선", "이어진다", "제품 실사 위에서 부위를 눌러 접수하면\n이력이 그대로 남는다.", false],
+    ["REMADE", "값이 된다", "긁힌 자리를 나만의 무늬로.\nAI 시안, 장인 제작.", true],
+  ], 3.42);
+  s.addNotes("타임라인 하나 위에 세 가지가 얹힙니다. 기록, 케어와 수선, 그리고 REMADE입니다. 이 뒤로는 왜 이렇게 만들었는지와 어떻게 동작하는지를 말씀드립니다.");
+}
+
+/* ═══ 04 REMADE 실물 ═══ */
+{
+  const s = p.addSlide();
+  head(s, "REMADE", ["긁힌 자리에 무늬를 새깁니다"], { size: 36 });
+  const shots = [
+    [IMG("damage.jpg"),   "긁혔다",  false],
+    [IMG("remade-1.jpg"), "시안 A", true],
+    [IMG("remade-2.jpg"), "시안 B", true],
+    [IMG("remade-3.jpg"), "시안 C", true],
+  ];
+  const iw = 2.62, gapx = 0.3, total = shots.length * iw + (shots.length - 1) * gapx;
+  shots.forEach((sh, i) => {
+    const x = (W - total) / 2 + i * (iw + gapx);
+    s.addImage({ path: sh[0], x, y: 2.42, w: iw, h: iw });
+    if (sh[2]) s.addShape(p.ShapeType.rect, { x, y: 2.42, w: iw, h: iw,
+      fill: { type: "none" }, line: { color: C.cognac, width: 1.25 } });
+    s.addText(sh[1], { x, y: 2.42 + iw + 0.14, w: iw, h: 0.32, align: "center",
+      fontFace: F, fontSize: 13, bold: sh[2],
+      color: sh[2] ? C.cognac : C.muted, margin: 0 });
+  });
+  s.addText("실제 생성 결과입니다. 사용자는 셋 중 하나를 고르고, 제작은 MCM 매장이 합니다.", {
+    x: 1.0, y: 6.06, w: W - 2, h: 0.4, align: "center", fontFace: F,
+    fontSize: 16, bold: true, color: C.white, margin: 0 });
+  mark(s);
+  s.addNotes("이건 목업이 아니라 실제로 생성된 결과입니다. 손상 사진과 부위를 넣으면 AI가 그 자리에 어울리는 시안을 세 개 만듭니다. 사용자는 고르기만 하고 실물 제작은 MCM 매장이 합니다. 수선이 서비스가 아니라 상품이 됩니다.");
+}
+
+chapter(1, "왜 이걸 만들었나", "사용 빈도라는 축을 하나 더 두면 자리가 달라진다");
 
 /* ═══ 03 진술 ═══ */
 {
@@ -199,8 +247,15 @@ chapter(1, "MCM은 어디에 서 있나", "사용 빈도라는 축을 하나 더
 /* ═══ 06 진술 ═══ */
 {
   const s = p.addSlide();
-  statement(s, [{ t: "MCM은 매일 듭니다" }],
-    { note: "이 브랜드의 가장 큰 자산입니다" });
+  dark(s);
+  s.addImage({ path: IMG("product.png"), x: 0.9, y: 1.5, w: 4.5, h: 4.5 });
+  s.addText("MCM은\n매일 드는 가방입니다", {
+    x: 6.1, y: 2.3, w: 6.3, h: 1.9, fontFace: F, fontSize: 40, bold: true,
+    color: C.white, lineSpacing: 58, margin: 0 });
+  s.addText("그래서 언제든 고칠 수 있어야 합니다", {
+    x: 6.15, y: 4.42, w: 6.3, h: 0.42, fontFace: F, fontSize: 18,
+    color: C.cognac, margin: 0 });
+  mark(s);
   s.addNotes("가격대가 그걸 허락합니다. 3대장은 못 하는 일입니다.");
 }
 
@@ -258,53 +313,7 @@ chapter(1, "MCM은 어디에 서 있나", "사용 빈도라는 축을 하나 더
   s.addNotes("수선은 있지만 원래대로 되돌려주는 것뿐입니다.");
 }
 
-chapter(2, "그래서 만들었습니다", "하나의 타임라인, 그리고 흠을 다루는 방식");
-
-/* ═══ 16 타임라인 ═══ */
-{
-  const s = p.addSlide();
-  head(s, "SOLUTION", ["하나의 타임라인"], { size: 40 });
-  const steps = ["발견", "구매", "사용", "관리", "수선", "물려주기"];
-  const gap = (W - 2.4) / steps.length;
-  s.addShape(p.ShapeType.line, { x: 1.2 + gap / 2, y: 3.92, w: (W - 2.4) - gap, h: 0,
-    line: { color: C.line, width: 1 } });
-  steps.forEach((t, i) => {
-    const cx = 1.2 + gap * (i + 0.5), on = i >= 3, r = on ? 0.19 : 0.13;
-    s.addShape(p.ShapeType.ellipse, { x: cx - r / 2, y: 3.92 - r / 2, w: r, h: r,
-      fill: { color: on ? C.cognac : C.muted }, line: { type: "none" } });
-    s.addText(t, { x: cx - gap / 2, y: 4.28, w: gap, h: 0.36, align: "center",
-      fontFace: F, fontSize: 17, bold: on, color: on ? C.white : C.muted, margin: 0 });
-  });
-  s.addText("내가 남긴 기록과 브랜드가 남긴 기록이 같은 줄에 흐릅니다", {
-    x: 1.0, y: 5.22, w: W - 2, h: 0.42, align: "center", fontFace: F,
-    fontSize: 22, bold: true, color: C.white, margin: 0 });
-  s.addText("이 둘이 같이 있는 곳은 지금 없습니다", {
-    x: 1.0, y: 5.76, w: W - 2, h: 0.34, align: "center", fontFace: F,
-    fontSize: 14, color: C.muted, margin: 0 });
-  s.addNotes("별도 앱 설치가 없습니다. 제품의 QR·NFC가 진입점입니다. 등록하면 구매 기록이 첫 줄로 자동 생성돼 빈 화면을 보여주지 않습니다.");
-}
-
-/* ═══ 14 제품 개요 ═══ */
-{
-  const s = p.addSlide();
-  head(s, "WHAT WE BUILT", ["타임라인 위에 세 가지가 얹힙니다"], { size: 34 });
-  columns(s, [
-    ["기록", "쌓인다", "사진 한 장을 올리면\nAI가 문장으로 남긴다.", false],
-    ["케어 · 수선", "이어진다", "제품 실사 위에서 부위를 눌러 접수하면\n이력이 그대로 남는다.", false],
-    ["REMADE", "값이 된다", "긁힌 자리를 나만의 무늬로.\nAI 시안, 장인 제작.", true],
-  ], 3.42);
-  s.addNotes("타임라인 하나 위에 세 가지가 얹힙니다. 기록, 케어와 수선, 그리고 REMADE입니다. 이 뒤로는 왜 이렇게 만들었는지와 어떻게 동작하는지를 말씀드립니다.");
-}
-
-/* ═══ 10 진술 ★ ═══ */
-{
-  const s = p.addSlide();
-  statement(s, [
-    { t: "긁힌 자리에" },
-    { t: "무늬를 새깁니다", c: C.cognac },
-  ], { size: 46 });
-  s.addNotes("수선은 보통 흔적을 없앱니다. 저희는 그 자리에 무늬를 새깁니다. 그러면 세상에 하나뿐인 물건이 됩니다.");
-}
+chapter(2, "흠이 역사가 된다", "고칠수록 나만의 것이 되는 이유");
 
 /* ═══ 11 3열 계보 ═══ */
 {
@@ -325,8 +334,8 @@ chapter(2, "그래서 만들었습니다", "하나의 타임라인, 그리고 �
 {
   const s = p.addSlide();
   statement(s, [
-    { t: "셋째는 MCM이" },
-    { t: "직접 겪은 일입니다", c: C.cognac },
+    { t: "내 가방의 역사이자," },
+    { t: "MCM의 역사입니다", c: C.cognac },
   ], { size: 38, note: "Dapper Dan이 뜯어 만든 옷이 이 브랜드를 아이콘으로 만들었습니다" });
   s.addNotes("Eric B. & Rakim, Salt-N-Pepa, LL Cool J가 그 옷을 입었습니다. 2020년에는 그 계보의 스타일리스트 Misa Hylton이 MCM 글로벌 크리에이티브 파트너가 됐습니다.");
 }
@@ -387,8 +396,8 @@ chapter(3, "어떻게 동작하나", "AI가 마찰을 없애고 흠을 무늬로
 {
   const s = p.addSlide();
   statement(s, [
-    { t: "문장은" },
-    { t: "AI가 씁니다", c: C.cognac },
+    { t: "사진을 올리면" },
+    { t: "AI가 알아서 기록합니다", c: C.cognac },
   ], { size: 44 });
   s.addNotes("사진 한 장, 상황 칩 세 번, 여덟 초. 문장은 AI가 씁니다.");
 }
@@ -396,7 +405,7 @@ chapter(3, "어떻게 동작하나", "AI가 마찰을 없애고 흠을 무늬로
 /* ═══ 18 AI 3열 ═══ */
 {
   const s = p.addSlide();
-  head(s, "HOW WE USE AI", ["사용자는 사진 한 장만 올립니다"], { size: 34 });
+  head(s, "HOW WE USE AI", ["사용자가 하는 일은 사진 한 장뿐입니다"], { size: 34 });
   columns(s, [
     ["기록", "문장을 쓴다", "장소·날짜·제품을 엮어\n한 편의 글로 만든다.", false],
     ["축적", "이야기로 묶는다", "흩어진 기록을\n하나의 Recap으로.", false],
@@ -411,7 +420,7 @@ chapter(3, "어떻게 동작하나", "AI가 마찰을 없애고 흠을 무늬로
 /* ═══ 19 REMADE ═══ */
 {
   const s = p.addSlide();
-  head(s, "REMADE", ["긁힌 자리가 나만의 무늬가 됩니다"], { size: 34 });
+  head(s, "REMADE", ["MCM이 직접 만드는 수선 상품입니다"], { size: 34 });
   const steps = [["01", "긁혔다"], ["02", "AI가 그린다"], ["03", "장인이 만든다"], ["04", "기록된다"]];
   const gap = (W - 2.4) / steps.length;
   steps.forEach((st, i) => {
@@ -423,13 +432,18 @@ chapter(3, "어떻게 동작하나", "AI가 마찰을 없애고 흠을 무늬로
     s.addText(st[1], { x: x + 0.36, y: 3.82, w: gap - 0.7, h: 0.44, fontFace: F,
       fontSize: 22, bold: true, color: i === 2 ? C.cognac : C.white, margin: 0 });
   });
-  s.addText("AI는 시안만 그립니다. 만드는 건 매장 장인입니다.", {
-    x: 1.0, y: 5.08, w: W - 2, h: 0.42, align: "center", fontFace: F,
-    fontSize: 20, bold: true, color: C.white, margin: 0 });
-  rule(s, 4.4, 5.76, 4.5);
-  s.addText("리폼하면 보통 리셀가가 떨어집니다.\n브랜드 공식 리폼 + DPP 기록이면 오히려 오릅니다.", {
-    x: 1.0, y: 6.02, w: W - 2, h: 0.8, align: "center", fontFace: F,
-    fontSize: 14, color: C.muted, lineSpacing: 23, margin: 0 });
+  s.addImage({ path: IMG("damage.jpg"),   x: 1.55, y: 4.62, w: 1.5, h: 1.5 });
+  s.addText("→", { x: 3.2, y: 5.24, w: 0.4, h: 0.3, align: "center", fontFace: F,
+    fontSize: 15, color: C.dim, margin: 0 });
+  s.addImage({ path: IMG("remade-1.jpg"), x: 3.75, y: 4.62, w: 1.5, h: 1.5 });
+  s.addImage({ path: IMG("remade-2.jpg"), x: 5.45, y: 4.62, w: 1.5, h: 1.5 });
+  s.addImage({ path: IMG("remade-3.jpg"), x: 7.15, y: 4.62, w: 1.5, h: 1.5 });
+  s.addText("AI는 시안만 그립니다.\n만드는 건 MCM 매장입니다.", {
+    x: 9.1, y: 4.86, w: 3.2, h: 0.9, fontFace: F,
+    fontSize: 16, bold: true, color: C.white, lineSpacing: 26, margin: 0 });
+  s.addText("리폼하면 보통 리셀가가 떨어집니다. 브랜드 공식 리폼 + DPP 기록이면 오히려 오릅니다.", {
+    x: 1.0, y: 6.42, w: W - 2, h: 0.36, align: "center", fontFace: F,
+    fontSize: 13, color: C.muted, margin: 0 });
   s.addNotes("AI가 손상 부위에 어울리는 문양 시안 세 개를 만들고 실물은 MCM 장인이 만듭니다. AI가 손을 대체하지 않습니다. 진품성이 유지되고 세상에 하나뿐이라는 증명이 붙기 때문에 값이 오릅니다.");
 }
 
