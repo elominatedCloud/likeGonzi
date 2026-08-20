@@ -49,10 +49,10 @@ export const products:Record<ProductId,Product> = {
     {kind:'care',date:'2026.03.14',title:'가죽 표면 케어 완료',sub:'Calfskin 클리닝 및 모서리 보호'},
     {id:'museum-postcard',kind:'memory',date:'2026.08.04',title:'미술관에서 쓴 엽서',sub:'서울 덕수궁길 · Pina Wallet',place:'서울 덕수궁길',story:'전시의 여운을 엽서에 적는 동안 작은 지갑은 조용히 그날의 시간을 지켜보았다.',note:'전시의 여운을 짧은 문장으로 남긴 날.\n#미술관 #엽서',image:`${A}/pina-ai-museum.png`}]}
 };
-function StatusBar(){return <div className={styles.status}><span>9:41</span><span className={styles.signals}>● ᯤ ▰</span></div>}
-function Pattern(){return <div className={styles.pattern} aria-hidden="true"/>}
 function Header({title,back=false,action}:{title:string;back?:boolean;action?:React.ReactNode}){const router=useRouter();return <header className={styles.header}><span>{back&&<button className={styles.back} onClick={()=>router.back()} aria-label="뒤로 가기">←</button>}</span><h1>{title}</h1><span className={styles.headerAction}>{action}</span></header>}
-function Shell({children,height='auto'}:{children:React.ReactNode;height?:number|'auto'}){return <main className={styles.stage}><section className={styles.phone} style={{minHeight:height==='auto'?undefined:height}}><Pattern/><AmbientPattern variant="log"/><StatusBar/>{children}<BottomNav/></section></main>}
+// app/layout.tsx가 이미 .app-shell로 감싸고 배경 패턴까지 깔아준다.
+// 여기서 프레임을 한 번 더 씌우면 다른 화면보다 좁은 목업이 겹쳐 보인다.
+function Shell({children}:{children:React.ReactNode}){return <main className={styles.stage}><AmbientPattern variant="log"/>{children}<BottomNav/></main>}
 
 export function StorybookPage(){return <Shell><Header title="스토리북"/><div className={styles.storyContent}><p className={styles.eyebrow}>MY STORYBOOK</p><p className={styles.conditionNote}>제품 상태는 최근 등록된 관리·수선 기록을 기준으로 한 데모 표기입니다.</p>{Object.values(products).map(p=>{const memoryCount=p.entries.filter(e=>e.kind==='memory').length;return <article className={styles.storyCard} key={p.id}><img loading="lazy" src={p.image} alt={p.name} className={styles.productImage}/><div className={styles.productInfo}><h2>{p.name}</h2><dl><div><dt>구매</dt><dd>{p.bought}</dd></div><div><dt>상태</dt><dd>{p.condition}<small className={styles.demoLabel}>데모 기준</small></dd></div><div><dt>추억</dt><dd>{memoryCount} 개</dd></div><div><dt>최근 기록</dt><dd>{p.latest}</dd></div></dl></div><Link className={styles.storyLink} href={memoryCount?`/log/${p.id}/timeline`:`/log/${p.id}/record/new`}>{memoryCount?'Storybook 보기 →':'첫 기록 작성하기 →'}</Link></article>})}</div></Shell>}
 
@@ -97,7 +97,7 @@ export function AllTimelinePage(){
     return getProductDetailPath(productId)??`/log/${productId}/timeline`;
   };
 
-  return <Shell height={976}>
+  return <Shell>
     <div className={styles.timelineHead}>
       <h1 className={styles.allTimelineTitle}>전체 타임라인</h1>
       <Link href="/log/stark/record/new" className={styles.addRecord}>+ 기록 추가</Link>
@@ -154,7 +154,7 @@ export function TimelinePage({productId,tab='all'}:{productId:ProductId;tab?:Tab
       image:entry.image??undefined,
     }))
     .sort((a,b)=>a.date.localeCompare(b.date));
-  return <Shell height={976}><div className={styles.timelineHead}><StatusTitle title={p.short}/><Link href={`/log/${p.id}/record/new`} className={styles.addRecord}>+ 기록 추가</Link></div><div className={styles.tabs}><Link className={tab==='all'?styles.on:''} href={`/log/${p.id}/timeline`}>전체</Link><Link className={tab==='mine'?styles.on:''} href={`/log/${p.id}/timeline/my`}>내 기록</Link><Link className={tab==='product'?styles.on:''} href={`/log/${p.id}/timeline/product`}>제품 이력</Link></div><div className={`${styles.timeline} ${tab!=='all'?styles.compactTimeline:''}`}><p className={styles.eyebrow}>MY MEMORY</p>{shown.map((e,i)=><Link href={e.id?`/log/${p.id}/record/${e.id}`:'#'} className={styles.timelineCard} key={`${e.date}-${e.id??i}`}><div className={styles.timelineText}><small>{e.date} · {e.kind==='memory'?'내 기록':'제품 이력'}</small><h2>{e.title}</h2><p>{e.sub}</p>{e.note&&<p className={styles.note}>{e.note}</p>}</div>{e.image?<img loading="lazy" src={e.image} alt=""/>:<span className={styles.shield}>✓</span>}</Link>)}</div></Shell>
+  return <Shell><div className={styles.timelineHead}><StatusTitle title={p.short}/><Link href={`/log/${p.id}/record/new`} className={styles.addRecord}>+ 기록 추가</Link></div><div className={styles.tabs}><Link className={tab==='all'?styles.on:''} href={`/log/${p.id}/timeline`}>전체</Link><Link className={tab==='mine'?styles.on:''} href={`/log/${p.id}/timeline/my`}>내 기록</Link><Link className={tab==='product'?styles.on:''} href={`/log/${p.id}/timeline/product`}>제품 이력</Link></div><div className={`${styles.timeline} ${tab!=='all'?styles.compactTimeline:''}`}><p className={styles.eyebrow}>MY MEMORY</p>{shown.map((e,i)=><Link href={e.id?`/log/${p.id}/record/${e.id}`:'#'} className={styles.timelineCard} key={`${e.date}-${e.id??i}`}><div className={styles.timelineText}><small>{e.date} · {e.kind==='memory'?'내 기록':'제품 이력'}</small><h2>{e.title}</h2><p>{e.sub}</p>{e.note&&<p className={styles.note}>{e.note}</p>}</div>{e.image?<img loading="lazy" src={e.image} alt=""/>:<span className={styles.shield}>✓</span>}</Link>)}</div></Shell>
 }
 function StatusTitle({title}:{title:string}){const router=useRouter();return <><button className={styles.back} onClick={()=>router.back()}>←</button><h1 className={styles.productTitle}>{title}</h1></>}
 
@@ -196,7 +196,7 @@ export function RecordDetailPage({productId,recordId}:{productId:ProductId;recor
   },[initial,productId,recordId]);
 
   if(!memory){
-    return <Shell height={976}><Header title="내 기록" back/><div className={styles.detailLoading}>기록을 불러오고 있어요.</div></Shell>;
+    return <Shell><Header title="내 기록" back/><div className={styles.detailLoading}>기록을 불러오고 있어요.</div></Shell>;
   }
 
   const removeRecord=async()=>{
@@ -230,7 +230,7 @@ export function RecordDetailPage({productId,recordId}:{productId:ProductId;recor
   };
 
   const isMemory=memory.kind==='memory';
-  return <Shell height={976}>
+  return <Shell>
     <Header title={isMemory?'내 기록':'제품 이력'} back action={isMemory?<button className={styles.save} type="button" onClick={()=>{setEditing(value=>!value);setEditError('')}}>{editing?'취소':'수정'}</button>:undefined}/>
     <div className={styles.detailContent}>
       {editError&&<p className={styles.saveError} role="alert">{editError}</p>}
@@ -349,7 +349,7 @@ export function RecordWritePage({productId,initialAiImage}:{productId:ProductId;
     }
   };
 
-  return <Shell height={852}>
+  return <Shell>
     <Header title="새 기록" back action={<button className={styles.save} onClick={save} disabled={saving}>{saving?'저장 중…':'저장'}</button>}/>
     <div className={styles.form}>
       {saveError&&<p className={styles.saveError} role="alert">{saveError}</p>}
@@ -378,7 +378,7 @@ export function RecordWritePage({productId,initialAiImage}:{productId:ProductId;
 
 export function AiRecommendationPage({productId}:{productId:ProductId}){
   const p=products[productId];
-  return <Shell height={930}>
+  return <Shell>
     <Header title="AI 추천 이미지" back/>
     <div className={styles.aiContent}>
       <div className={styles.featurePlaceholder}>

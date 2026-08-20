@@ -52,9 +52,8 @@
 .chipRow button.chipOn{border-color:#9f7c57;background:#6e432c;color:#fff;font-weight:600}
 .chipRow button:focus-visible{outline:2px solid #9f7c57;outline-offset:2px}
 
-/* 배경 패턴도 앱 전역(globals.css)과 같은 발(비즈) 흔들림을 쓴다.
-   CSS 모듈은 keyframes 이름을 스코프해서 전역 정의를 못 쓰므로 여기 따로 둔다.
-   좌우 -32px 여유는 흔들릴 때 가장자리 빈 틈을 막고, .phone의 overflow:hidden이 잘라낸다. */
-.pattern{inset:0 -32px;transform-origin:top center;will-change:transform;animation:beadSway 11s ease-in-out infinite}
-@keyframes beadSway{0%{transform:translateX(0) skewX(0deg)}15%{transform:translateX(5px) skewX(-.15deg)}32%{transform:translateX(4px) skewX(.5deg)}52%{transform:translateX(1px) skewX(-.25deg)}72%{transform:translateX(0) skewX(.18deg)}88%{transform:translateX(0) skewX(-.06deg)}100%{transform:translateX(0) skewX(0deg)}}
-@media(prefers-reduced-motion:reduce){.pattern{animation:none}}
+/* .stage는 .app-shell 안에 그대로 흐르는 블록이다. 폭·배경·바닥 패턴은 전부
+   .app-shell이 이미 잡아주므로 여기서 다시 지정하면 목업 프레임이 겹친다. */
+.stage{display:block;min-height:100dvh;background:none;color:#2d1f11}
+/* 하단 네비가 fixed라 마지막 카드가 가리지 않도록 여유를 준다. */
+.timeline{padding-bottom:calc(var(--nav-height) + 32px)}

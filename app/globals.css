@@ -240,10 +240,6 @@ a {
   transition: opacity 90ms linear;
 }
 
-.ambient-pattern--log {
-  width: min(100vw, 393px);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .ambient-wind-motif {
     opacity: 0;
