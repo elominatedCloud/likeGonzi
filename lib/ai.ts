@@ -12,7 +12,9 @@
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 const OPENAI_IMAGE_URL = "https://api.openai.com/v1/images/generations";
 const MODEL = "gpt-4o-mini";
-const IMAGE_MODEL = "gpt-image-1";
+// gpt-image-1 / 1.5 / 2 는 이 조직에서 한도가 0이다(429 rate_limit_exceeded).
+// mini만 열려 있어 실제로 생성된다. 한도가 풀리면 여기만 바꾸면 된다.
+const IMAGE_MODEL = "gpt-image-1-mini";
 const TIMEOUT_MS = 20_000;
 // 이미지 생성은 텍스트보다 한참 느리다.
 const IMAGE_TIMEOUT_MS = 90_000;
@@ -107,6 +109,10 @@ export async function generateImages(
         size: "1024x1024",
         // 시안 단계라 화질보다 속도를 택한다.
         quality: "low",
+        // png로 받으면 장당 2.3MB다. webp 70이면 150~300KB로 떨어지고
+        // 시안 판단에는 지장이 없다.
+        output_format: "webp",
+        output_compression: 70,
       }),
     });
 
@@ -119,7 +125,7 @@ export async function generateImages(
       data?: { b64_json?: string; url?: string }[];
     };
     const images = (json.data ?? [])
-      .map((d) => (d.b64_json ? `data:image/png;base64,${d.b64_json}` : d.url))
+      .map((d) => (d.b64_json ? `data:image/webp;base64,${d.b64_json}` : d.url))
       .filter((v): v is string => Boolean(v));
 
     return images.length ? images : null;
