@@ -204,6 +204,19 @@ function chapter(n, title, subtitle) {
     ["이전",  "다음 소유자에게",     false],
   ];
   const gap = (W - 1.8) / legs.length;
+
+  // 03 안에 나머지 둘이 들어온다. 구간을 브래킷으로 얹는다.
+  [["CHALLENGE 02 · 인터랙티브 리테일", 0, 2],
+   ["CHALLENGE 01 · AI 프로덕트", 4, 5]].forEach(([label, a, b]) => {
+    const x0 = 0.9 + gap * a + 0.14, x1 = 0.9 + gap * (b + 1) - 0.14;
+    s.addShape(p.ShapeType.line, { x: x0, y: 3.06, w: x1 - x0, h: 0,
+      line: { color: C.deep, width: 0.75 } });
+    [x0, x1].forEach(x => s.addShape(p.ShapeType.line, { x, y: 3.06, w: 0, h: 0.11,
+      line: { color: C.deep, width: 0.75 } }));
+    s.addText(label, { x: x0, y: 2.62, w: x1 - x0, h: 0.3, align: "center",
+      fontFace: F, fontSize: 10.5, bold: true, color: C.deep, charSpacing: 1.6, margin: 0 });
+  });
+
   s.addShape(p.ShapeType.line, { x: 0.9 + gap / 2, y: 3.5, w: (W - 1.8) - gap, h: 0,
     line: { color: C.line, width: 1 } });
   legs.forEach((l, i) => {
@@ -218,11 +231,11 @@ function chapter(n, title, subtitle) {
   s.addText("오프라인에서 발견하고 사서, 온라인에서 남기고 고치고 넘깁니다", {
     x: 1.0, y: 5.36, w: W - 2, h: 0.42, align: "center", fontFace: F,
     fontSize: 20, bold: true, color: C.white, margin: 0 });
-  s.addText("QR·NFC가 그 사이를 잇습니다", {
+  s.addText("03을 제대로 풀면 01과 02가 그 안으로 들어옵니다", {
     x: 1.0, y: 5.9, w: W - 2, h: 0.36, align: "center", fontFace: F,
     fontSize: 14, color: C.cognac, margin: 0 });
   mark(s);
-  s.addNotes("3번 과제는 발견부터 구매 이후까지입니다. 길거리 캠페인 QR로 브랜드를 발견하고, 매장에서 사고, 박스의 QR이나 NFC로 개봉하고, 등록하면 그때부터 기록과 관리가 이어집니다. 마지막은 다음 소유자에게 공식 이력이 그대로 넘어가는 것입니다. 오프라인과 온라인을 QR과 NFC가 잇습니다.");
+  s.addNotes("3번 과제는 발견부터 구매 이후까지입니다. 길거리 캠페인 QR로 브랜드를 발견하고, 매장에서 사고, 박스의 QR이나 NFC로 개봉하고, 등록하면 그때부터 기록과 관리가 이어집니다. 마지막은 다음 소유자에게 공식 이력이 그대로 넘어가는 것입니다. 오프라인과 온라인을 QR과 NFC가 잇습니다. 저희가 고른 건 3번 하나지만 이 트랙을 제대로 풀면 나머지 둘이 그 안으로 들어옵니다. 캠페인 QR부터 개봉까지가 2번 인터랙티브 리테일이고, 사진 한 장으로 기록이 만들어지고 손상 자리에 시안이 그려지는 구간이 1번 AI 프로덕트입니다. 순간을 좋게 만드는 것만으로는 끊긴 여정이 이어지지 않습니다.");
 }
 
 /* ═══ 03 네 가지 축 ═══ */
