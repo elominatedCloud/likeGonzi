@@ -6,6 +6,29 @@ const W = 13.3, H = 7.5;
 const BG = path.join(__dirname, "bg-dark.png");
 const IMG = n => path.join(__dirname, n);
 
+/**
+ * 앱 화면 캡처 슬롯.
+ * 파일이 있으면 그림을 넣고, 없으면 점선 자리만 그린다.
+ * 캡처를 이 폴더에 떨궈두고 다시 돌리면 자동으로 채워진다.
+ */
+const fs = require("fs");
+function shot(s, file, label, x, y, w, h) {
+  const f = path.join(__dirname, file);
+  if (fs.existsSync(f)) {
+    s.addImage({ path: f, x, y, w, h });
+    s.addShape(p.ShapeType.rect, { x, y, w, h,
+      fill: { type: "none" }, line: { color: C.line, width: 0.75 } });
+  } else {
+    s.addShape(p.ShapeType.roundRect, { x, y, w, h, rectRadius: 0.06,
+      fill: { color: "17140F" }, line: { color: C.line, width: 0.75, dashType: "dash" } });
+    s.addText(label, { x: x + 0.1, y: y + h / 2 - 0.24, w: w - 0.2, h: 0.48,
+      align: "center", fontFace: F, fontSize: 10.5, color: C.dim,
+      lineSpacing: 16, margin: 0 });
+  }
+  s.addText(label.split("\n")[0], { x, y: y + h + 0.12, w, h: 0.28, align: "center",
+    fontFace: F, fontSize: 11.5, color: C.muted, margin: 0 });
+}
+
 const C = {
   dark: "12100E", light: "F4F1EC", line: "3A3025",
   cognac: "C4915F", deep: "8B5A2B", white: "FFFFFF", ink: "1A1613",
@@ -25,6 +48,10 @@ const mark = s => s.addText("MCM LUXURY BOOK", {
 const eyebrow = (s, t) => s.addText(t, {
   x: 0, y: 0.62, w: W, h: 0.34, align: "center",
   fontFace: F, fontSize: 11.5, bold: true, color: C.cognac, charSpacing: 3.4 });
+
+const sub = (s, t, y) => s.addText(t, {
+  x: 1.1, y: y || 2.04, w: W - 2.2, h: 0.42, align: "center",
+  fontFace: F, fontSize: 15, color: C.muted, margin: 0 });
 
 const rule = (s, x, y, w) => s.addShape(p.ShapeType.line,
   { x, y, w, h: 0, line: { color: C.line, width: 0.75 } });
@@ -124,6 +151,16 @@ function chapter(n, title, subtitle) {
     color: C.muted, margin: 0 });
   s.addText("Challenge 03 · 360° 고객 경험        2026.08", {
     x: 0.98, y: 5.44, w: 11, h: 0.34, fontFace: F, fontSize: 13, color: C.dim, margin: 0 });
+}
+
+/* ═══ 01b 질문 ═══ */
+{
+  const s = p.addSlide();
+  statement(s, [
+    { t: "3년을 함께한 가방." },
+    { t: "그 기록은 지금 어디 있습니까?", c: C.cognac },
+  ], { size: 40 });
+  s.addNotes("사진은 갤러리 어딘가에 있고, 영수증은 잃어버렸고, 수선 이력은 매장 전산에만 있습니다. 3년을 같이 다녔는데 그걸 한 줄로 보여줄 방법이 없습니다.");
 }
 
 /* ═══ 16 타임라인 ═══ */
@@ -255,15 +292,11 @@ chapter(1, "왜 이걸 만들었나", "사용 빈도라는 축을 하나 더 두
 /* ═══ 03 진술 ═══ */
 {
   const s = p.addSlide();
-  statement(s, ["럭셔리는 새것일 때 가장 비쌉니다"]);
-  s.addNotes("모든 럭셔리 브랜드의 광고와 매장은 새것 상태를 보여줍니다.");
-}
-
-/* ═══ 04 진술 ═══ */
-{
-  const s = p.addSlide();
-  statement(s, [{ t: "그래서 사람들은" }, { t: "쓰지 않습니다", c: C.cognac }]);
-  s.addNotes("비 오는 날 안 들고 나가고, 긁힐까 봐 조심하고, 결국 옷장에 둡니다.");
+  statement(s, [
+    { t: "럭셔리는 새것일 때 가장 비쌉니다." },
+    { t: "그래서 사람들은 쓰지 않습니다.", c: C.cognac },
+  ], { size: 38 });
+  s.addNotes("모든 광고와 매장이 새것 상태를 보여줍니다. 비 오는 날 안 들고 나가고, 긁힐까 봐 조심하고, 결국 옷장에 둡니다.");
 }
 
 /* ═══ 05 포지셔닝 맵 ═══ */
@@ -322,17 +355,11 @@ chapter(1, "왜 이걸 만들었나", "사용 빈도라는 축을 하나 더 두
   s.addNotes("가격대가 그걸 허락합니다. 3대장은 못 하는 일입니다.");
 }
 
-/* ═══ 07 진술 ═══ */
-{
-  const s = p.addSlide();
-  statement(s, [{ t: "매일 쓰면 상합니다" }]);
-  s.addNotes("쓰면 생기는 일입니다. 그리고 이건 이 구간에만 생기는 문제입니다.");
-}
-
 /* ═══ 08 3열 ═══ */
 {
   const s = p.addSlide();
-  head(s, "THE PARADOX", ["상함을 다루는 방식이 다릅니다"], { size: 34 });
+  head(s, "THE PARADOX", ["매일 쓰면 상합니다"], { size: 40 });
+  sub(s, "그런데 상함을 다루는 방식이 저마다 다릅니다", 2.06);
   columns(s, [
     ["3대장", "안 씁니다", "그래서 안 상합니다.\n대신 함께한 시간도 없습니다.", false],
     ["매스 브랜드", "버립니다", "애착이 없어서\n고칠 이유가 없습니다.", false],
@@ -361,19 +388,15 @@ chapter(1, "왜 이걸 만들었나", "사용 빈도라는 축을 하나 더 두
       fontSize: 14, color: C.muted, lineSpacing: 23, margin: 0 });
   });
   s.addText("보증서 분실과 일련번호 불일치가 명품 거래 분쟁의 주된 원인입니다", {
-    x: 1.0, y: 5.34, w: W - 2, h: 0.42, align: "center", fontFace: F,
-    fontSize: 18, bold: true, color: C.white, margin: 0 });
+    x: 1.0, y: 5.28, w: W - 2, h: 0.4, align: "center", fontFace: F,
+    fontSize: 16, color: C.muted, margin: 0 });
+  s.addText("그런데 지금 이 문제를 푸는 브랜드가 없습니다", {
+    x: 1.0, y: 5.84, w: W - 2, h: 0.44, align: "center", fontFace: F,
+    fontSize: 22, bold: true, color: C.cognac, margin: 0 });
   s.addText("트렌비 감정센터 · 명품 플랫폼 소비자 조사 · 한국소비자원 (2025)", {
     x: 0.8, y: H - 0.5, w: W - 1.6, h: 0.34, align: "center", fontFace: F,
     fontSize: 11, color: C.dim, margin: 0 });
   s.addNotes("불편은 감성이 아니라 돈입니다. 같은 제품도 구성품과 이력이 있느냐에 따라 리셀 가격이 30에서 40퍼센트 갈립니다. 명품 플랫폼에 소비자가 요구한 개선점 1위가 정품 보증 시스템이었고, 감정에서 걸러진 가품이 50개 중 1개입니다. 그런데 그 증빙을 지금은 각자 종이로 보관합니다. 보증서를 잃어버리는 순간 값도 사라집니다.");
-}
-
-/* ═══ 09 진술 ═══ */
-{
-  const s = p.addSlide();
-  statement(s, ["지금 이 문제를 푸는 브랜드는 없습니다"], { size: 40 });
-  s.addNotes("수선은 있지만 원래대로 되돌려주는 것뿐입니다.");
 }
 
 chapter(2, "흠이 역사가 된다", "고칠수록 나만의 것이 되는 이유");
@@ -455,20 +478,11 @@ chapter(3, "어떻게 동작하나", "AI가 마찰을 없애고 흠을 무늬로
   s.addNotes("기록이 값이 된다는 건 앞에서 봤습니다. 그런데 지금은 세 군데로 흩어져 있고, 모으라고 하면 아무도 하지 않습니다. 여기가 AI가 들어갈 자리입니다.");
 }
 
-/* ═══ 17 진술 ★ ═══ */
-{
-  const s = p.addSlide();
-  statement(s, [
-    { t: "사진을 올리면" },
-    { t: "AI가 알아서 기록합니다", c: C.cognac },
-  ], { size: 44 });
-  s.addNotes("사진 한 장, 상황 칩 세 번, 여덟 초. 문장은 AI가 씁니다.");
-}
-
 /* ═══ 18 AI 3열 ═══ */
 {
   const s = p.addSlide();
-  head(s, "HOW WE USE AI", ["사용자가 하는 일은 사진 한 장뿐입니다"], { size: 34 });
+  head(s, "HOW WE USE AI", ["사진을 올리면 AI가 알아서 기록합니다"], { size: 32 });
+  sub(s, "사용자가 하는 일은 사진 한 장과 칩 세 번뿐입니다", 2.06);
   columns(s, [
     ["기록", "문장을 쓴다", "장소·날짜·제품을 엮어\n한 편의 글로 만든다.", false],
     ["축적", "이야기로 묶는다", "흩어진 기록을\n하나의 Recap으로.", false],
@@ -501,7 +515,8 @@ chapter(3, "어떻게 동작하나", "AI가 마찰을 없애고 흠을 무늬로
       fontSize: 13, color: C.muted, lineSpacing: 21, margin: 0 });
   });
 
-  s.addText("매장에서 상태를 보고\n방법을 안내합니다", { x: 1.3, y: 4.62, w: 4.6, h: 0.8,
+  shot(s, "shot-repair.png", "수선 접수\n부위를 눌러 고른다", 1.3, 4.5, 1.4, 1.4);
+  s.addText("매장에서 상태를 보고\n방법을 안내합니다", { x: 3.0, y: 4.86, w: 2.9, h: 0.8,
     fontFace: F, fontSize: 13, color: C.muted, lineSpacing: 21, margin: 0 });
   s.addImage({ path: IMG("remade-1.jpg"), x: 6.8,  y: 4.56, w: 1.4, h: 1.4 });
   s.addImage({ path: IMG("remade-2.jpg"), x: 8.35, y: 4.56, w: 1.4, h: 1.4 });
@@ -515,18 +530,13 @@ chapter(3, "어떻게 동작하나", "AI가 마찰을 없애고 흠을 무늬로
   s.addNotes("고칠 때 두 갈래에서 고릅니다. 복원은 원래 상태로 되돌리는 것이고 대부분이 여기로 옵니다. REMADE는 흠 위에 무늬를 새기는 선택형 프리미엄입니다. 오른쪽 세 장은 실제 생성 결과입니다. 중요한 건 어느 쪽을 고르든 이력이 한 줄에 남고, 그 이력이 다음 소유자에게 그대로 넘어간다는 점입니다. 소유권 이전은 스키마까지 있고 화면은 다음 단계입니다.");
 }
 
-/* ═══ 20 진술 ★ ═══ */
-{
-  const s = p.addSlide();
-  statement(s, [{ t: "MCM이 이미 가진 것을" }, { t: "그대로 씁니다", c: C.cognac }],
-    { size: 40 });
-  s.addNotes("MCM은 이미 NFC와 Aura 블록체인 패스포트를 갖고 있습니다.");
-}
-
 /* ═══ 23b 디지털 제품 여권 ═══ */
 {
   const s = p.addSlide();
-  head(s, "DIGITAL PRODUCT PASSPORT", ["스캔하면 도착하는 자리입니다"], { size: 34 });
+  head(s, "DIGITAL PRODUCT PASSPORT", ["MCM이 이미 가진 것을 그대로 씁니다"], { size: 32 });
+  sub(s, "스캔하면 도착하는 자리입니다", 2.04);
+
+  shot(s, "shot-passport.png", "제품 상세\n여권 펼침", 0.85, 2.6, 1.9, 3.1);
 
   const left = [
     ["시리얼", "MWKCSVE01C0002"],
@@ -541,14 +551,14 @@ chapter(3, "어떻게 동작하나", "AI가 마찰을 없애고 흠을 무늬로
     ["수리가능성", "8.2 / 10"],
   ];
   [left, right].forEach((col, c) => {
-    const x = c === 0 ? 1.3 : 6.9;
+    const x = c === 0 ? 3.15 : 8.0;
     col.forEach((r, i) => {
       const y = 2.66 + i * 0.62;
-      if (i > 0) rule(s, x, y - 0.1, 4.9);
+      if (i > 0) rule(s, x, y - 0.1, 4.3);
       s.addText(r[0], { x, y: y + 0.06, w: 1.7, h: 0.3, fontFace: F,
         fontSize: 12.5, color: C.dim, margin: 0 });
-      s.addText(r[1], { x: x + 1.75, y: y + 0.05, w: 3.15, h: 0.32, fontFace: F,
-        fontSize: 13, color: C.white, margin: 0 });
+      s.addText(r[1], { x: x + 1.6, y: y + 0.05, w: 2.7, h: 0.32, fontFace: F,
+        fontSize: 12, color: C.white, margin: 0 });
     });
   });
 
@@ -565,22 +575,25 @@ chapter(3, "어떻게 동작하나", "AI가 마찰을 없애고 흠을 무늬로
 /* ═══ 22 데모 ═══ */
 {
   const s = p.addSlide();
-  head(s, "DEMO", ["매장에서 산 박스가 시작점입니다"], { size: 36 });
-  const steps = [["스캔", "박스를 열면"], ["등록", "첫 줄이 찍히고"], ["기록", "AI가 쓰고"], ["REMADE", "그 자리에 그린다"]];
-  const gap = (W - 2.4) / steps.length;
+  head(s, "USER FLOW", ["매장에서 산 박스가 시작점입니다"], { size: 34 });
+  const steps = [
+    ["shot-scan.png",     "스캔\n박스 QR·NFC"],
+    ["shot-register.png", "등록\n첫 줄이 찍힌다"],
+    ["shot-record.png",   "기록\n사진 + 상황 칩"],
+    ["shot-remade.png",   "REMADE\n시안 3안"],
+  ];
+  const iw = 2.25, gapx = 0.5, total = steps.length * iw + (steps.length - 1) * gapx;
   steps.forEach((st, i) => {
-    const x = 1.2 + gap * i, hi = i === 3;
-    if (i > 0) s.addShape(p.ShapeType.line, { x, y: 3.6, w: 0, h: 1.3,
-      line: { color: C.line, width: 0.75 } });
-    s.addText(st[0], { x: x + 0.36, y: 3.7, w: gap - 0.7, h: 0.46, fontFace: F,
-      fontSize: 24, bold: true, color: hi ? C.cognac : C.white, margin: 0 });
-    s.addText(st[1], { x: x + 0.36, y: 4.32, w: gap - 0.7, h: 0.36, fontFace: F,
-      fontSize: 14, color: C.muted, margin: 0 });
+    const x = (W - total) / 2 + i * (iw + gapx);
+    shot(s, st[0], st[1], x, 2.5, iw, 3.6);
+    if (i < steps.length - 1) s.addText("→", { x: x + iw, y: 4.14, w: gapx, h: 0.32,
+      align: "center", fontFace: F, fontSize: 15, color: C.dim, margin: 0 });
   });
-  s.addText("박스는 손으로 끌어서 엽니다. 속도는 사용자가 정합니다", {
-    x: 1.0, y: 5.5, w: W - 2, h: 0.4, align: "center", fontFace: F,
-    fontSize: 18, color: C.white, margin: 0 });
-  s.addNotes("스크롤을 멈추면 애니메이션도 멈춥니다. 수선은 제품 사진 위에서 부위를 직접 누릅니다.");
+  s.addText("QR이나 NFC를 찍는 순간부터 등록 · 기록 · 수선이 한 줄로 이어집니다", {
+    x: 1.0, y: 6.5, w: W - 2, h: 0.4, align: "center", fontFace: F,
+    fontSize: 16, bold: true, color: C.white, margin: 0 });
+  mark(s);
+  s.addNotes("박스의 QR이나 NFC를 찍으면 언박싱으로 들어갑니다. 박스는 손으로 끌어서 엽니다. 등록하면 구매 기록이 타임라인 첫 줄로 자동 생성돼 빈 화면을 보여주지 않습니다. 기록은 사진 한 장과 상황 칩이면 끝이고 문장은 AI가 씁니다. 수선은 제품 사진 위에서 부위를 눌러 접수하고, 거기서 복원과 REMADE를 고릅니다.");
 }
 
 chapter(4, "왜 지금, 무엇으로 버는가", "데이터 · 경쟁 · 타이밍");
@@ -611,20 +624,11 @@ chapter(4, "왜 지금, 무엇으로 버는가", "데이터 · 경쟁 · 타이�
   s.addNotes("사용자가 자기 추억을 남기는 과정에서 자연스럽게 얻어집니다. 동의 없이도 개인 기능은 전부 동작합니다. 코드로 보여드릴 수 있습니다.");
 }
 
-/* ═══ 24 진술 ★ ═══ */
-{
-  const s = p.addSlide();
-  statement(s, [
-    { t: "저희 자리는" },
-    { t: "DPP 위층입니다", c: C.cognac },
-  ], { size: 36 });
-  s.addNotes("MCM은 이미 Aura에 있습니다. 인프라 경쟁에 뛰어들면 집니다.");
-}
-
 /* ═══ 25 경쟁 ═══ */
 {
   const s = p.addSlide();
-  head(s, "COMPETITIVE POSITION", ["대체재는 셋인데, 다섯을 다 가진 곳은 없습니다"], { size: 30 });
+  head(s, "COMPETITIVE POSITION", ["저희 자리는 DPP 위층입니다"], { size: 36 });
+  sub(s, "대체재는 셋인데, 다섯을 다 가진 곳은 없습니다", 2.04);
 
   const cols = ["개인 추억", "공식 제품 이력", "AI Story", "Care · Repair", "소유권 이전"];
   const rowsD = [
@@ -704,6 +708,37 @@ chapter(4, "왜 지금, 무엇으로 버는가", "데이터 · 경쟁 · 타이�
     x: 1.0, y: 6.72, w: W - 2, h: 0.4, align: "center", fontFace: F,
     fontSize: 16, color: C.white, margin: 0 });
   s.addNotes("리셀과 소유권 이전은 로드맵입니다.");
+}
+
+/* ═══ 27b 확장성 ═══ */
+{
+  const s = p.addSlide();
+  head(s, "WHY THIS SCALES", ["새로 지을 게 없습니다"], { size: 38 });
+  const cols = [
+    ["신규 투자", "거의 없다", "수선은 이미 MCM이 한다.\n매장 · 장인 · 물류가 이미 있다.\n접점과 데이터만 얹는다."],
+    ["한계비용", "제품이 늘어도 같다", "박스는 코드로 그린다.\n여권은 스키마 한 줄.\nAI만 건당 과금."],
+    ["다음 브랜드", "그대로 옮겨진다", "GS1 · EU ESPR 표준을 따른다.\n브랜드에 묶인 코드가 없다."],
+  ];
+  const gap = (W - 2.0) / 3;
+  cols.forEach((c, i) => {
+    const x = 1.0 + gap * i;
+    if (i > 0) s.addShape(p.ShapeType.line, { x, y: 2.6, w: 0, h: 2.5,
+      line: { color: C.line, width: 0.75 } });
+    s.addText(c[0], { x: x + 0.34, y: 2.66, w: gap - 0.6, h: 0.3, fontFace: F,
+      fontSize: 12, color: C.cognac, charSpacing: 1.4, margin: 0 });
+    s.addText(c[1], { x: x + 0.34, y: 3.04, w: gap - 0.55, h: 0.46, fontFace: F,
+      fontSize: 22, bold: true, color: C.white, margin: 0 });
+    s.addText(c[2], { x: x + 0.34, y: 3.68, w: gap - 0.66, h: 1.3, fontFace: F,
+      fontSize: 13, color: C.muted, lineSpacing: 22, margin: 0 });
+  });
+  s.addText("한 브랜드에서 되면, 다음 브랜드는 붙이는 일만 남습니다", {
+    x: 1.0, y: 5.5, w: W - 2, h: 0.44, align: "center", fontFace: F,
+    fontSize: 20, bold: true, color: C.white, margin: 0 });
+  s.addText("수선 단가는 이미 시장에 있습니다 — 부분 리폼 7~25만원 · 전체 30~50만원 (2025)", {
+    x: 1.0, y: 6.06, w: W - 2, h: 0.36, align: "center", fontFace: F,
+    fontSize: 13, color: C.muted, margin: 0 });
+  mark(s);
+  s.addNotes("시장 규모 숫자는 아직 산정 중입니다. 대신 구조로 말씀드립니다. 저희는 새로 지을 게 없습니다. 수선은 이미 MCM이 하고 매장과 장인과 물류가 이미 있습니다. 제품이 늘어도 한계비용이 거의 안 늘고, GS1과 EU ESPR 표준을 따르기 때문에 다음 브랜드로 그대로 옮겨집니다. 수선 단가도 이미 시장에 형성돼 있습니다.");
 }
 
 /* ═══ 28 마무리 ═══ */
