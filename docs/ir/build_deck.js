@@ -12,7 +12,7 @@ const IMG = n => path.join(__dirname, n);
  * 캡처를 이 폴더에 떨궈두고 다시 돌리면 자동으로 채워진다.
  */
 const fs = require("fs");
-function shot(s, file, label, x, y, w, h) {
+function shot(s, file, label, x, y, w, h, noLabel) {
   const f = path.join(__dirname, file);
   if (fs.existsSync(f)) {
     s.addImage({ path: f, x, y, w, h });
@@ -25,8 +25,8 @@ function shot(s, file, label, x, y, w, h) {
       align: "center", fontFace: F, fontSize: 10.5, color: C.dim,
       lineSpacing: 16, margin: 0 });
   }
-  s.addText(label.split("\n")[0], { x, y: y + h + 0.12, w, h: 0.28, align: "center",
-    fontFace: F, fontSize: 11.5, color: C.muted, margin: 0 });
+  if (!noLabel) s.addText(label.split("\n")[0], { x, y: y + h + 0.12, w, h: 0.28,
+    align: "center", fontFace: F, fontSize: 11.5, color: C.muted, margin: 0 });
 }
 
 const C = {
@@ -536,7 +536,7 @@ chapter(3, "어떻게 동작하나", "AI가 마찰을 없애고 흠을 무늬로
   head(s, "DIGITAL PRODUCT PASSPORT", ["MCM이 이미 가진 것을 그대로 씁니다"], { size: 32 });
   sub(s, "스캔하면 도착하는 자리입니다", 2.04);
 
-  shot(s, "shot-passport.png", "제품 상세\n여권 펼침", 0.85, 2.6, 1.9, 3.1);
+  shot(s, "shot-passport.png", "제품 상세\n여권 펼침", 0.85, 2.52, 1.85, 3.02, true);
 
   const left = [
     ["시리얼", "MWKCSVE01C0002"],
@@ -577,10 +577,10 @@ chapter(3, "어떻게 동작하나", "AI가 마찰을 없애고 흠을 무늬로
   const s = p.addSlide();
   head(s, "USER FLOW", ["매장에서 산 박스가 시작점입니다"], { size: 34 });
   const steps = [
-    ["shot-scan.png",     "스캔\n박스 QR·NFC"],
-    ["shot-register.png", "등록\n첫 줄이 찍힌다"],
+    ["shot-scan.png",     "스캔\nQR·NFC로 도착"],
+    ["shot-register.png", "등록\n타임라인 첫 줄"],
     ["shot-record.png",   "기록\n사진 + 상황 칩"],
-    ["shot-remade.png",   "REMADE\n시안 3안"],
+    ["shot-remade.png",   "수선\n복원 또는 REMADE"],
   ];
   const iw = 2.25, gapx = 0.5, total = steps.length * iw + (steps.length - 1) * gapx;
   steps.forEach((st, i) => {
