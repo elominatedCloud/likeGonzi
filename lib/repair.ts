@@ -47,6 +47,19 @@ const AREA_BOX_SETS: Record<string, AreaBox[]> = {
     { id: "corner", x: 25, y: 80, w: 12, h: 9 },   // 좌하단 모서리
   ],
 
+  // Ella Boston Bag 정면 (public/FE-namjun/assets/로그_스토리북-3.png) 실측.
+  // 백팩과 형태가 전혀 달라서 default를 쓰면 박스가 허공에 뜬다 — 가로로 누운
+  // 배럴 몸통, 위쪽 아치형 손잡이, 몸통 상단을 가로지르는 지퍼.
+  // 좌표는 이미지 행별 픽셀 프로파일로 실측했다.
+  // 손잡이 아치 y24~41(x38~62), 몸통 y42~66(x23~79), y68은 자물쇠 참만 남는다.
+  boston: [
+    { id: "handle", x: 38, y: 24, w: 24, h: 16 },  // 상단 아치 손잡이
+    { id: "strap", x: 21, y: 52, w: 6, h: 12 },    // 좌측 숄더 스트랩(몸통 바깥)
+    { id: "zipper", x: 29, y: 42, w: 42, h: 5 },   // 몸통 상단 지퍼선
+    { id: "leather", x: 34, y: 48, w: 28, h: 13 }, // 본체 가죽면
+    { id: "corner", x: 23, y: 58, w: 10, h: 8 },   // 좌하단 모서리
+  ],
+
   // 지갑·소품 — 스트랩과 손잡이가 없다.
   // ponytail: 실사 확보 전 추정치. pina 이미지 나오면 실측으로 교체할 것.
   wallet: [
@@ -64,6 +77,7 @@ export function getAreaBoxes(productKey?: string): AreaBox[] {
   if (!productKey) return AREA_BOX_SETS.default;
   const key = productKey.toLowerCase();
   if (key.includes("wallet") || key.includes("pina")) return AREA_BOX_SETS.wallet;
+  if (key.includes("boston") || key.includes("ella")) return AREA_BOX_SETS.boston;
   return AREA_BOX_SETS.default;
 }
 

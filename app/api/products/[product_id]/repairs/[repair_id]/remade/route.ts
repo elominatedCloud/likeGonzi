@@ -93,8 +93,9 @@ export async function POST(request: Request, context: Ctx) {
       productName: (unit?.product_name as string | null) ?? repair.title ?? "MCM bag",
       material: (unit?.material as string | null) ?? "coated canvas",
       color: (unit?.color as string | null) ?? "cognac",
-      areaLabel: AREA_LABEL.get(area ?? "") ?? "표면",
-      conditionLabel: CONDITION_LABEL.get(condition ?? "") ?? "마모",
+      // 라벨이 아니라 id를 넘긴다. 프롬프트가 부위별로 시술 방식을 고른다.
+      areaId: area ?? "other",
+      conditionId: condition ?? "wear",
       memo: repair.memo as string | null,
     }),
     3,

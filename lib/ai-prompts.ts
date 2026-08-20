@@ -101,13 +101,44 @@ export interface RemadeSeed {
   productName: string;
   material: string;
   color: string;
-  /** 사람이 읽는 부위명 — 손잡이 / 스트랩 / 지퍼 / 모서리 / 가죽 표면 */
-  areaLabel: string;
-  /** 사람이 읽는 증상명 — 마모 / 오염 / 스크래치 / 찢어짐 */
-  conditionLabel: string;
+  /** AREA_TAGS의 id — handle / strap / zipper / corner / leather / other */
+  areaId: string;
+  /** CONDITION_TYPES의 id — wear / stain / scratch / tear */
+  conditionId: string;
   /** 접수할 때 사용자가 직접 적은 상태 설명. 없을 수 있다. */
   memo?: string | null;
 }
+
+/**
+ * 부위마다 장인이 손대는 방식이 다르다.
+ *
+ * 예전에는 어느 부위든 "가죽 패치"를 그리게 되어 있어서, 지퍼로 접수해도
+ * 가죽 표면에 패치를 붙인 시안이 나왔다. 접수 내용과 어긋나는 시안은 쓸 수 없다.
+ * 모티프(마름모·로렐)와 색(코냑·골드)은 공통으로 두고, 무엇을 만드는지만 나눈다.
+ */
+const AREA_TREATMENT: Record<string, string> = {
+  handle:
+    "a hand-stitched leather wrap fitted around the handle grip, tooled with a lozenge motif and whip-stitched in warm gold thread",
+  strap:
+    "an embroidered leather keeper sleeve fitted around the shoulder strap, carrying lozenge and laurel motifs in warm gold thread",
+  // 지퍼는 금속이 주인공이다. 가죽 패치를 붙이는 부위가 아니다.
+  zipper:
+    "the zipper itself: a new hand-tooled leather pull tab hanging from the metal slider, with fine laurel embroidery worked along the zipper tape on both sides, the metal teeth clearly visible and in focus",
+  corner:
+    "a leather corner cap wrapping the worn corner, saddle-stitched along both edges with a small lozenge tooled into its face",
+  leather:
+    "an inlaid leather patch set flush into the surface, hand-embroidered with lozenge and laurel motifs in warm gold thread",
+  other:
+    "a hand-embroidered leather patch with lozenge and laurel motifs in warm gold thread",
+};
+
+/** 프롬프트가 영어라 증상도 영어로 넘긴다. */
+const CONDITION_EN: Record<string, string> = {
+  wear: "worn-through",
+  stain: "staining",
+  scratch: "scratch",
+  tear: "torn",
+};
 
 /**
  * REMADE 시안 프롬프트.
@@ -118,17 +149,21 @@ export interface RemadeSeed {
  */
 export function remadePrompt(seed: RemadeSeed) {
   const memo = seed.memo?.trim().slice(0, 200);
+  const treatment = AREA_TREATMENT[seed.areaId] ?? AREA_TREATMENT.other;
+  const condition = CONDITION_EN[seed.conditionId] ?? "worn-through";
+
   return [
-    `A close-up product photograph of a decorative repair applied to a luxury`,
-    `${seed.color} ${seed.material} bag, on the ${seed.areaLabel} area where`,
-    `${seed.conditionLabel} damage occurred.`,
+    `A close-up product photograph of a decorative repair on a luxury`,
+    `${seed.color} ${seed.material} bag, where ${condition} damage occurred.`,
+    `The repair is ${treatment}.`,
     `The damage is not hidden — it is deliberately framed and celebrated,`,
-    `in the spirit of kintsugi: the mended area is the focal point.`,
-    `Hand embroidery and a leather patch, geometric lozenge and laurel motifs,`,
-    `cognac and warm gold thread. Artisanal, restrained.`,
-    `The bag surface itself is plain, smooth, undecorated leather in a single`,
+    `in the spirit of kintsugi: the mended part is the focal point and fills the frame.`,
+    // 여기서 색을 못 박으면 위에서 넘긴 제품 색과 싸운다(검정 가방에 코냑 시안).
+    `The patch leather is tonal with the bag itself; the thread is warm gold.`,
+    `Artisanal, restrained.`,
+    `Everything around the repair is plain, undecorated leather in a single`,
     `solid tone — absolutely no repeating monogram, no printed pattern, no`,
-    `initials, no logos, no text anywhere. Only the patch carries ornament.`,
+    `initials, no logos, no text anywhere. Only the repair carries ornament.`,
     `Soft directional studio light, shallow depth of field, neutral background.`,
     // 사용자가 적은 설명을 그대로 넘긴다. 손상이 어떻게 생겼는지는 본인이 가장
     // 잘 알고, 그 문장이 시안을 그 사람의 가방에 맞춘다.
