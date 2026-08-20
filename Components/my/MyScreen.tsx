@@ -9,9 +9,6 @@ import {
   ClipboardList,
   LoaderCircle,
   LogOut,
-  Package,
-  ShieldCheck,
-  UserRound,
   Wrench,
 } from "lucide-react";
 import { AmbientPattern } from "@/Components/ui/AmbientPattern";
@@ -20,6 +17,7 @@ import { PageHeader } from "@/Components/ui/PageHeader";
 import { supabase } from "@/lib/supabase";
 import { apiFetch } from "@/lib/api-client";
 import { AnalyticsConsentCard } from "@/Components/my/AnalyticsConsentCard";
+import { ProfileCard } from "@/Components/my/ProfileCard";
 
 const DEMO_AUTH_KEYS = [
   "likegonzi-demo-login",
@@ -33,14 +31,6 @@ const DEMO_AUTH_KEYS = [
  */
 function buildMenuItems(productId: string | null) {
   return [
-    {
-      href: productId ? `/products/${productId}` : "/camera?mode=qr",
-      label: "내 제품",
-      description: productId
-        ? "등록된 제품과 디지털 여권"
-        : "아직 등록된 제품이 없어요 · 등록하기",
-      icon: Package,
-    },
     {
       href: "/log/timeline",
       label: "나의 스토리북",
@@ -112,28 +102,7 @@ export function MyScreen() {
       <PageHeader title="마이" backHref="/home" serif={false} />
 
       <div className="px-5 pb-8 pt-4">
-        <section className="soft-card overflow-hidden border border-white/70">
-          <div className="bg-[linear-gradient(135deg,#2d1f11_0%,#6e432c_100%)] px-5 py-6 text-white">
-            <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/12">
-                <UserRound size={26} strokeWidth={1.5} />
-              </div>
-              <div>
-                <p className="text-[11px] font-semibold tracking-[0.14em] text-[#d9c2a2]">
-                  MCM STORYBOOK
-                </p>
-                <h2 className="mt-1 text-[20px] font-semibold">Storybook Member</h2>
-                <p className="mt-1 text-[12px] text-white/65">
-                  제품의 순간과 관리 이력을 이어가세요.
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 px-5 py-3 text-[12px] text-ink-soft">
-            <ShieldCheck size={16} className="text-cognac" strokeWidth={1.7} />
-            현재 기기의 계정 세션을 안전하게 관리합니다.
-          </div>
-        </section>
+        <ProfileCard />
 
         <section className="mt-5 overflow-hidden rounded-[20px] border border-black/5 bg-paper shadow-[0_8px_28px_rgba(43,33,28,0.06)]">
           {menuItems.map((item, index) => {
