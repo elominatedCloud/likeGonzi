@@ -96,3 +96,33 @@ export function generateRecap(seed: RecapSeed) {
     500,
   );
 }
+
+export interface RemadeSeed {
+  productName: string;
+  material: string;
+  color: string;
+  /** 사람이 읽는 부위명 — 손잡이 / 스트랩 / 지퍼 / 모서리 / 가죽 표면 */
+  areaLabel: string;
+  /** 사람이 읽는 증상명 — 마모 / 오염 / 스크래치 / 찢어짐 */
+  conditionLabel: string;
+}
+
+/**
+ * REMADE 시안 프롬프트.
+ *
+ * 손상을 지우는 게 아니라 그 자리에 얹을 장식을 그리게 한다.
+ * 브랜드 모노그램을 그대로 복제하지 않고 기하 모티프(마름모·월계)에서
+ * 출발하도록 유도한다.
+ */
+export function remadePrompt(seed: RemadeSeed) {
+  return [
+    `A close-up product photograph of a decorative repair applied to a luxury`,
+    `${seed.color} ${seed.material} bag, on the ${seed.areaLabel} area where`,
+    `${seed.conditionLabel} damage occurred.`,
+    `The damage is not hidden — it is deliberately framed and celebrated,`,
+    `in the spirit of kintsugi: the mended area is the focal point.`,
+    `Hand embroidery and a leather patch, geometric lozenge and laurel motifs,`,
+    `cognac and warm gold thread. Artisanal, restrained, no logos, no text.`,
+    `Soft directional studio light, shallow depth of field, neutral background.`,
+  ].join(" ");
+}

@@ -141,6 +141,8 @@ create table if not exists public.story_products (
 );
 
 -- 수선 접수. thumbnail_path는 private Storage 경로, thumbnail_url은 데모 폴백(data URL).
+-- source: store(매장 접수) / ai_custom(사용자 직접 등록) / user / remade(AI 리폼 시안 채택).
+--   'ai_custom'은 이미 UI에서 "직접 등록" 라벨로 쓰이므로 REMADE에 재사용하지 않는다.
 create table if not exists public.repairs (
   id uuid default gen_random_uuid() not null,
   product_unit_id uuid not null,
@@ -159,7 +161,7 @@ create table if not exists public.repairs (
   constraint repairs_product_unit_id_fkey foreign key (product_unit_id) references public.product_units (id) on delete cascade,
   constraint repairs_user_id_fkey foreign key (user_id) references auth.users (id) on delete cascade,
   constraint repairs_status_check check (status = any (array['submitted'::text, 'in_progress'::text, 'completed'::text, 'cancelled'::text])),
-  constraint repairs_source_check check (source = any (array['store'::text, 'ai_custom'::text, 'user'::text]))
+  constraint repairs_source_check check (source = any (array['store'::text, 'ai_custom'::text, 'user'::text, 'remade'::text]))
 );
 
 -- 소유권 이전 신청. 현재 FE는 '연동 해제'(user_products 삭제) 방식을 쓰고 이 API는 미사용.

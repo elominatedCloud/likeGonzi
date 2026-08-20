@@ -5,6 +5,7 @@ import { Check, Clock3, MapPin, MessageCircle, RefreshCw } from "lucide-react";
 import { PageHeader } from "@/Components/ui/PageHeader";
 import { BottomNav } from "@/Components/ui/BottomNav";
 import { ProductMiniCard } from "@/Components/care/ProductMiniCard";
+import { RemadePanel } from "@/Components/care/RemadePanel";
 import { apiFetch } from "@/lib/api-client";
 import type { DbRepair } from "@/lib/mock-db";
 import {
@@ -142,6 +143,13 @@ export function RepairDetailScreen({
               <span className="font-medium text-ink">{formatDate(repair.updated_at)}</span>
             </div>
           </section>
+
+          <RemadePanel
+            productId={productId}
+            repairId={repairId}
+            initialImage={repair.ai_image_url}
+            initialSource={repair.source}
+          />
 
           <button type="button" onClick={() => showFeatureNotice("repairContact")} className="mx-5 mt-6 flex w-[calc(100%-2.5rem)] items-center justify-center gap-2 rounded-2xl border border-cognac/25 bg-paper py-3.5 text-[13px] font-semibold text-cognac-deep"><MessageCircle size={17}/> 담당 매장에 문의하기</button>
         </>

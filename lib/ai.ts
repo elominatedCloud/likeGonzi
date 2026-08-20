@@ -10,8 +10,12 @@
  */
 
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
+const OPENAI_IMAGE_URL = "https://api.openai.com/v1/images/generations";
 const MODEL = "gpt-4o-mini";
+const IMAGE_MODEL = "gpt-image-1";
 const TIMEOUT_MS = 20_000;
+// 이미지 생성은 텍스트보다 한참 느리다.
+const IMAGE_TIMEOUT_MS = 90_000;
 
 /** .env.local에서 쓰는 이름과 관례적인 이름을 모두 받아준다. */
 function apiKey() {
@@ -64,6 +68,63 @@ export async function generateText(
     return json.choices?.[0]?.message?.content?.trim() || null;
   } catch (cause) {
     console.error("[ai] request failed", cause);
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * 리폼 시안 이미지를 n장 생성한다.
+ *
+ * 응답은 base64라 data URL로 돌려준다. 해커톤 데모 기준이며,
+ * 운영에서는 Storage에 올리고 경로만 넘기는 게 맞다.
+ * (repairs.thumbnail_url도 같은 이유로 data URL 폴백을 쓰고 있다)
+ *
+ * 키가 없으면 null. 호출부가 "AI 미설정" 상태를 그대로 보여준다.
+ */
+export async function generateImages(
+  prompt: string,
+  count = 3,
+): Promise<string[] | null> {
+  const key = apiKey();
+  if (!key) return null;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), IMAGE_TIMEOUT_MS);
+  try {
+    const response = await fetch(OPENAI_IMAGE_URL, {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: IMAGE_MODEL,
+        prompt,
+        n: count,
+        size: "1024x1024",
+        // 시안 단계라 화질보다 속도를 택한다.
+        quality: "low",
+      }),
+    });
+
+    if (!response.ok) {
+      console.error("[ai] image error", response.status);
+      return null;
+    }
+
+    const json = (await response.json()) as {
+      data?: { b64_json?: string; url?: string }[];
+    };
+    const images = (json.data ?? [])
+      .map((d) => (d.b64_json ? `data:image/png;base64,${d.b64_json}` : d.url))
+      .filter((v): v is string => Boolean(v));
+
+    return images.length ? images : null;
+  } catch (cause) {
+    console.error("[ai] image request failed", cause);
     return null;
   } finally {
     clearTimeout(timer);
