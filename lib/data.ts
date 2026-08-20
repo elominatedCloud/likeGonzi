@@ -110,7 +110,7 @@ export const repairRecords: RepairRecord[] = [
     productId: "stark-backpack",
     date: "2026.06.01",
     title: "오른쪽 숄더 스트랩 보강",
-    location: "AI 커스텀 진단",
+    location: "MCM Seoul",
     thumbnail: IMG.strap,
     source: "ai_custom",
     foundAt: "2026.06",
