@@ -23,11 +23,24 @@ import { RecapCard } from "@/Components/product/RecapCard";
 import { getLogProductId } from "@/lib/product-routes";
 import type { Product, RepairRecord } from "@/types";
 import type { StoryRecord } from "@/types/story-api";
+import type { ProductPassport } from "@/lib/dpp";
 
 interface ProductDetailScreenProps {
   product: Product;
   stories: StoryRecord[];
   repairs: RepairRecord[];
+  passport?: ProductPassport;
+}
+
+/** 여권 항목 한 줄. 값이 비면 줄 자체를 그리지 않는다. */
+function PassportRow({ label, value }: { label: string; value?: string | null }) {
+  if (!value) return null;
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <dt className="type-meta shrink-0 text-muted/70">{label}</dt>
+      <dd className="type-meta text-right tracking-wide text-ink-soft">{value}</dd>
+    </div>
+  );
 }
 
 function shortMaterial(material: string) {
@@ -39,6 +52,7 @@ export function ProductDetailScreen({
   product,
   stories,
   repairs,
+  passport,
 }: ProductDetailScreenProps) {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -167,9 +181,47 @@ export function ProductDetailScreen({
           />
         </button>
         {showSerial && (
-          <p className="type-meta mt-1 tracking-wide text-muted/80">
-            {product.serial} · {product.store}
-          </p>
+          <dl className="mt-2 space-y-1.5 border-t border-black/5 pt-2.5">
+            <PassportRow label="시리얼" value={product.serial} />
+            <PassportRow label="구매처" value={product.store} />
+            <PassportRow label="등록일" value={product.registeredAt} />
+            {passport?.gtin && <PassportRow label="GTIN" value={passport.gtin} />}
+            {passport?.country_of_origin && (
+              <PassportRow label="원산지" value={passport.country_of_origin} />
+            )}
+            {passport?.material_composition.length ? (
+              <PassportRow
+                label="소재 구성"
+                value={passport.material_composition
+                  .map((m) => `${m.material} ${m.share}%`)
+                  .join(" · ")}
+              />
+            ) : null}
+            {passport?.recycled_content_pct !== null &&
+              passport?.recycled_content_pct !== undefined && (
+                <PassportRow
+                  label="재활용 함량"
+                  value={`${passport.recycled_content_pct}%`}
+                />
+              )}
+            {passport?.repairability_score !== null &&
+              passport?.repairability_score !== undefined && (
+                <PassportRow
+                  label="수리가능성"
+                  value={`${passport.repairability_score} / 10`}
+                />
+              )}
+
+            {passport && (
+              <p className="type-meta pt-1.5 leading-4 text-muted/70">
+                {passport.data_source === "demo"
+                  ? "소재·재활용·수리가능성 수치는 시연용 가정치입니다. "
+                  : ""}
+                EU ESPR 디지털 제품 여권 항목이며, 블록체인 원장 기록은 아직
+                연결되지 않았습니다.
+              </p>
+            )}
+          </dl>
         )}
       </section>
 

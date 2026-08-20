@@ -55,8 +55,41 @@ create table if not exists public.products (
   description text,
   slug text,
   created_at timestamptz default now(),
-  constraint products_pkey primary key (id)
+  constraint products_pkey primary key (id),
+  -- EU ESPR 디지털 제품 여권 항목. dpp_data_source가 'demo'면 시연용 가정치라
+  -- 화면에서 그렇게 표시한다. 브랜드 실데이터로 바꾸면 'brand'로 올린다.
+  gtin text,
+  material_composition jsonb,
+  recycled_content_pct numeric(5,2),
+  repairability_score numeric(3,1),
+  country_of_origin text,
+  dpp_data_source text not null default 'demo'
+    check (dpp_data_source in ('demo', 'brand')),
+  constraint products_gtin_digits check (gtin is null or gtin ~ '^[0-9]{13}$')
 );
+
+-- GTIN은 GS1 Digital Link(/01/{gtin}/21/{serial})의 앞자리다.
+-- 290 대역은 제한 유통이라 실제 등록 상품과 충돌하지 않는다.
+create unique index if not exists products_gtin_key on public.products (gtin) where gtin is not null;
+
+-- GS1 Digital Link를 tag_code로 바꾼다. 태그를 찍는 사람은 아직 로그인 전일 수
+-- 있어서 scan_product과 같은 이유로 security definer다.
+create or replace function public.resolve_gs1_link(p_gtin text, p_serial text)
+returns text
+language sql
+security definer
+set search_path to ''
+stable
+as $$
+  select pu.tag_code
+    from public.product_units pu
+    join public.products p on p.id = pu.product_id
+   where p.gtin = p_gtin and pu.serial_no = p_serial
+   limit 1;
+$$;
+
+revoke all on function public.resolve_gs1_link(text, text) from public;
+grant execute on function public.resolve_gs1_link(text, text) to anon, authenticated;
 
 -- slug는 제품 조회 키(resolveOwnedProductRef, create_story_with_products,
 -- issue_product_units)로 쓰이므로 중복을 막는다.

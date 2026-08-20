@@ -1,5 +1,6 @@
 import { IMG } from "@/lib/images";
 import type { ProductDTO, RepairDTO } from "@/lib/mappers";
+import type { ProductPassport } from "@/lib/dpp";
 import type { Product, RepairRecord } from "@/types";
 import type { StoryRecord } from "@/types/story-api";
 
@@ -56,6 +57,7 @@ export interface ProductDetailData extends ProductDTO {
   slug: string;
   is_registered_to_user: boolean;
   authenticity: string;
+  passport: ProductPassport;
   recent_activity: {
     stories: StoryRecord[];
     repairs: RepairDTO[];

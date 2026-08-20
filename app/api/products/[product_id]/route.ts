@@ -4,6 +4,7 @@ import { toProductDTO, type MyProductRow, type RepairRow } from "@/lib/mappers";
 import { toSupabaseRepairDTOs } from "@/lib/supabase-repair-mapper";
 import { listProductStoryDTOs } from "@/lib/supabase-story-mapper";
 import { resolveOwnedProductRef } from "@/lib/supabase-product-refs";
+import { buildPassport } from "@/lib/dpp";
 
 type Ctx = { params: Promise<{ product_id: string }> };
 
@@ -59,6 +60,7 @@ export async function GET(request: Request, context: Ctx) {
     slug: productRef.slug,
     is_registered_to_user: true,
     authenticity: "verified",
+    passport: await buildPassport(supabase, productRow as MyProductRow),
     recent_activity: {
       stories,
       repairs: await toSupabaseRepairDTOs(

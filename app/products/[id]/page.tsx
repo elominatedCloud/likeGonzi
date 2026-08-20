@@ -21,6 +21,7 @@ export default function ProductPage() {
       product={product}
       stories={data.recent_activity.stories}
       repairs={data.recent_activity.repairs.map(toRepairView)}
+      passport={data.passport}
     />
   );
 }
