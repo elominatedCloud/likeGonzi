@@ -67,23 +67,31 @@ export function AnalyticsConsentCard() {
             끄면 통계에서 바로 빠집니다. 참여하지 않아도 모든 기능은 그대로 쓸 수 있어요.
           </p>
         </div>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={consent === true}
-          aria-label="브랜드 통계 참여"
-          onClick={toggle}
-          disabled={consent === null || saving}
-          className={`relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50 ${
-            consent ? "bg-cognac-deep" : "bg-black/15"
-          }`}
-        >
+        {consent === null ? (
+          // 불러오기 전에 스위치를 그리면 "꺼짐"으로 보여서 오해를 준다.
           <span
-            className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${
-              consent ? "left-[22px]" : "left-0.5"
-            }`}
+            className="mt-0.5 h-6 w-11 shrink-0 animate-pulse rounded-full bg-black/10"
+            aria-hidden
           />
-        </button>
+        ) : (
+          <button
+            type="button"
+            role="switch"
+            aria-checked={consent}
+            aria-label="브랜드 통계 참여"
+            onClick={toggle}
+            disabled={saving}
+            className={`relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50 ${
+              consent ? "bg-cognac-deep" : "bg-black/15"
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${
+                consent ? "left-[22px]" : "left-0.5"
+              }`}
+            />
+          </button>
+        )}
       </div>
 
       {saving && (

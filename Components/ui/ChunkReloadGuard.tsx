@@ -4,9 +4,24 @@ import { useEffect } from "react";
 
 const RELOAD_FLAG = "likegonzi-chunk-reload";
 
-function isChunkError(message: string) {
+/**
+ * 에러가 어디에 담겨 오는지가 제각각이다.
+ * - ErrorEvent.message 에만 있는 경우
+ * - 던져진 값이 Error가 아닌 객체라 event.error.name / .message 에만 있는 경우
+ *   (이때 String(값)은 "[object Object]"가 되어 메시지 검사만으로는 놓친다)
+ * 그래서 가능한 출처를 모두 합쳐서 본다.
+ */
+function isChunkError(...parts: unknown[]) {
+  const haystack = parts
+    .map((part) => {
+      if (!part) return "";
+      if (typeof part === "string") return part;
+      const value = part as { name?: string; message?: string };
+      return `${value.name ?? ""} ${value.message ?? ""}`;
+    })
+    .join(" ");
   return /ChunkLoadError|Failed to load chunk|Loading chunk .* failed|Loading CSS chunk/i.test(
-    message,
+    haystack,
   );
 }
 
@@ -28,8 +43,8 @@ export function ChunkReloadGuard() {
       sessionStorage.removeItem(RELOAD_FLAG);
     } catch {}
 
-    const recover = (message: string) => {
-      if (!isChunkError(message)) return;
+    const recover = (...parts: unknown[]) => {
+      if (!isChunkError(...parts)) return;
       try {
         // 새로고침해도 계속 실패하면 더 시도하지 않는다. 무한 루프 방지.
         if (sessionStorage.getItem(RELOAD_FLAG)) return;
@@ -41,11 +56,10 @@ export function ChunkReloadGuard() {
     };
 
     const onError = (event: ErrorEvent) => {
-      recover(event.message || String(event.error ?? ""));
+      recover(event.message, event.error);
     };
     const onRejection = (event: PromiseRejectionEvent) => {
-      const reason = event.reason as { name?: string; message?: string } | undefined;
-      recover(`${reason?.name ?? ""} ${reason?.message ?? String(reason ?? "")}`);
+      recover(event.reason);
     };
 
     window.addEventListener("error", onError);

@@ -85,15 +85,21 @@ export function ProfileCard() {
             <UserRound size={26} strokeWidth={1.5} />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-semibold tracking-[0.14em] text-[#d9c2a2]">
-              {me ? `${me.membership} MEMBER` : "MCM STORYBOOK"}
-            </p>
-            <h2 className="mt-1 truncate text-[20px] font-semibold">
-              {me?.nickname ?? "내 정보"}
-            </h2>
-            <p className="mt-1 truncate text-[12px] text-white/65">
-              {me?.email ?? "불러오는 중…"}
-            </p>
+            {me ? (
+              <>
+                <p className="text-[11px] font-semibold tracking-[0.14em] text-[#d9c2a2]">
+                  {me.membership} MEMBER
+                </p>
+                <h2 className="mt-1 truncate text-[20px] font-semibold">{me.nickname}</h2>
+                <p className="mt-1 truncate text-[12px] text-white/65">{me.email}</p>
+              </>
+            ) : (
+              <div aria-hidden>
+                <div className="h-3 w-24 animate-pulse rounded bg-white/20" />
+                <div className="mt-2 h-5 w-28 animate-pulse rounded bg-white/25" />
+                <div className="mt-2 h-3 w-40 animate-pulse rounded bg-white/15" />
+              </div>
+            )}
           </div>
           {me && !editing && (
             <button
@@ -106,6 +112,14 @@ export function ProfileCard() {
             </button>
           )}
         </div>
+
+        {!me && !error && (
+          <div className="mt-5 grid grid-cols-3 gap-2" aria-busy="true" aria-label="내 정보 불러오는 중">
+            {[0, 1, 2].map((index) => (
+              <div key={index} className="h-14 animate-pulse rounded-xl bg-white/10" />
+            ))}
+          </div>
+        )}
 
         {me && (
           <dl className="mt-5 grid grid-cols-3 gap-2 text-center">

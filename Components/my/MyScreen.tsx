@@ -29,7 +29,7 @@ const DEMO_AUTH_KEYS = [
  * 예전에는 stark-backpack으로 하드코딩돼 있어서, Stark를 소유하지 않은 계정은
  * "내 제품"과 "케어 & 리페어"가 404였다.
  */
-function buildMenuItems(productId: string | null) {
+function buildMenuItems(productId: string | null | undefined) {
   return [
     {
       href: "/log/timeline",
@@ -40,9 +40,14 @@ function buildMenuItems(productId: string | null) {
     {
       href: productId ? `/products/${productId}/care` : "/camera?mode=qr",
       label: "케어 & 리페어",
-      description: productId
-        ? "관리 가이드와 수선 여정"
-        : "아직 등록된 제품이 없어요 · 등록하기",
+      // undefined = 아직 불러오는 중. null = 등록된 제품 없음.
+      // 둘을 같이 다루면 로딩 중에 "제품이 없어요"가 잠깐 스쳐 보인다.
+      description:
+        productId === undefined
+          ? null
+          : productId
+            ? "관리 가이드와 수선 여정"
+            : "아직 등록된 제품이 없어요 · 등록하기",
       icon: Wrench,
     },
     {
@@ -58,14 +63,14 @@ export function MyScreen() {
   const router = useRouter();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [error, setError] = useState("");
-  const [firstProductId, setFirstProductId] = useState<string | null>(null);
+  const [firstProductId, setFirstProductId] = useState<string | null | undefined>(undefined);
 
   useEffect(() => {
     let cancelled = false;
-    apiFetch<{ id: string }[]>("/api/products/my")
+    apiFetch<{ id: string; slug?: string }[]>("/api/products/my")
       .then((json) => {
         if (cancelled || !json.ok) return;
-        setFirstProductId(json.data[0]?.id ?? null);
+        setFirstProductId(json.data[0]?.slug ?? json.data[0]?.id ?? null);
       })
       .catch(() => {});
     return () => { cancelled = true };
@@ -120,9 +125,13 @@ export function MyScreen() {
                   <span className="block text-[14px] font-semibold text-ink">
                     {item.label}
                   </span>
-                  <span className="mt-0.5 block text-[11px] text-muted">
-                    {item.description}
-                  </span>
+                  {item.description === null ? (
+                    <span className="mt-1 block h-3 w-32 animate-pulse rounded bg-black/5" aria-hidden />
+                  ) : (
+                    <span className="mt-0.5 block text-[11px] text-muted">
+                      {item.description}
+                    </span>
+                  )}
                 </span>
                 <ChevronRight size={18} className="text-muted" strokeWidth={1.5} />
               </Link>
