@@ -19,9 +19,11 @@ import styles from './camera.module.css';
 
 type CameraStatus = 'idle' | 'requesting' | 'live' | 'fallback' | 'denied' | 'error';
 type FacingMode = 'environment' | 'user';
-export type CameraMode = 'photo' | 'qr';
+export type CameraMode = 'photo' | 'qr' | 'repair';
 
 const CAMERA_DRAFT_KEY = 'likegonzi-camera-draft';
+/** 수선 신청 화면으로 넘길 사진 */
+export const REPAIR_PHOTO_KEY = 'likegonzi-repair-photo';
 const QR_SCAN_INTERVAL_MS = 400;
 
 /** 브라우저 내장 QR 인식기 (Chrome/Android 계열). Safari에는 아직 없어서 수동 입력으로 폴백한다. */
@@ -42,12 +44,16 @@ function getBarcodeDetector(): BarcodeDetectorLike | null {
 export default function CameraExperience({
   productId,
   mode='photo',
+  returnTo,
 }:{
   productId?:'stark'|'ella'|'pina';
   mode?:CameraMode;
+  /** 촬영 후 돌아갈 화면(수선 신청 등) */
+  returnTo?:string;
 }) {
   const router = useRouter();
   const isQrMode = mode === 'qr';
+  const isRepairMode = mode === 'repair';
   // ?product= 가 없으면 내가 가진 제품 중 첫 번째에 기록한다.
   // 예전에는 'stark' 고정이라 Stark를 소유하지 않은 계정은 촬영 후 저장이
   // PRODUCT_NOT_OWNED로 실패했다.
@@ -222,6 +228,14 @@ export default function CameraExperience({
     if (!capturedPhoto) return;
 
     try {
+      // 수선 촬영은 기록 초안과 섞이면 안 된다. 다른 키로 넘긴다.
+      if (isRepairMode && returnTo) {
+        sessionStorage.setItem(REPAIR_PHOTO_KEY, capturedPhoto);
+        stopCamera();
+        router.push(returnTo);
+        return;
+      }
+
       sessionStorage.setItem(CAMERA_DRAFT_KEY, capturedPhoto);
       stopCamera();
       if (!ownedProductId) {
@@ -256,7 +270,7 @@ export default function CameraExperience({
           </div>
           <div className={styles.appBar}>
             <Image className={styles.logo} src="/camera/mcm-logo.png" width={38} height={31} alt="MCM" priority />
-            <h1 className={styles.screenTitle}>{isQrMode ? '제품 등록' : '사진 기록'}</h1>
+            <h1 className={styles.screenTitle}>{isQrMode ? '제품 등록' : isRepairMode ? '수선 사진' : '사진 기록'}</h1>
             <button type="button" className={styles.bellButton} aria-label="알림" onClick={() => showFeatureNotice('notifications')}>
               <Image src="/camera/bell.png" width={22} height={22} alt="" />
               <span />
@@ -287,12 +301,16 @@ export default function CameraExperience({
             <strong>
               {isQrMode
                 ? '제품 태그의 QR을 사각형 안에 맞춰주세요.'
-                : '오늘의 순간을 사진으로 남겨보세요.'}
+                : isRepairMode
+                  ? '가방 전체와 수선 부위가 보이게 찍어주세요.'
+                  : '오늘의 순간을 사진으로 남겨보세요.'}
             </strong>
             <span>
               {isQrMode
                 ? '인식되면 바로 내 Storybook에 등록됩니다.'
-                : '촬영한 사진은 기록 작성 화면에서 확인할 수 있어요.'}
+                : isRepairMode
+                  ? '수선 범위와 예상 비용을 판단하는 데 쓰입니다.'
+                  : '촬영한 사진은 기록 작성 화면에서 확인할 수 있어요.'}
             </span>
           </div>
 

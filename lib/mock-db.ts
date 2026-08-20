@@ -40,7 +40,9 @@ export interface Ownership {
   registered_at: string;
 }
 
-export type RepairStatus = "submitted" | "in_progress" | "completed" | "cancelled";
+// 상태 정의는 lib/repair.ts가 갖는다(견적·결제 단계 포함).
+export type { RepairStatus } from "@/lib/repair";
+import type { RepairStatus } from "@/lib/repair";
 
 export interface DbRepair {
   id: string;

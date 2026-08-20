@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { SafeImage } from "@/Components/ui/SafeImage";
 import Link from "next/link";
 import { Camera, Check, MapPin, PackageCheck } from "lucide-react";
@@ -9,10 +10,12 @@ import { BottomNav } from "@/Components/ui/BottomNav";
 import { ProductMiniCard } from "@/Components/care/ProductMiniCard";
 import { AreaBoxPicker } from "@/Components/care/AreaBoxPicker";
 import { apiFetch } from "@/lib/api-client";
+import { REPAIR_PHOTO_KEY } from "@/app/camera/CameraExperience";
 import { persistStoryPhoto } from "@/lib/story-photo-storage";
 import { cn } from "@/lib/cn";
 import { CONDITION_TYPES, areaLabel, formatDate } from "@/lib/repair";
-import type { DbRepair } from "@/lib/mock-db";
+// 화면은 mock-db 타입이 아니라 실제 API 응답 타입을 쓴다.
+import type { RepairDTO } from "@/lib/mappers";
 
 interface RepairApplyScreenProps {
   productId: string;
@@ -27,6 +30,7 @@ export function RepairApplyScreen({
   productColor,
   productImage,
 }: RepairApplyScreenProps) {
+  const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [photo, setPhoto] = useState<string | null>(null);
   const [area, setArea] = useState("strap");
@@ -35,7 +39,25 @@ export function RepairApplyScreen({
   const [receiveMethod, setReceiveMethod] = useState<"visit" | "delivery">("visit");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [done, setDone] = useState<DbRepair | null>(null);
+  const [done, setDone] = useState<RepairDTO | null>(null);
+
+  // 카메라 화면에서 찍고 돌아오면 사진을 넘겨받는다.
+  // 렌더 직후 동기 setState는 연쇄 렌더를 만들어서 마이크로태스크로 미룬다.
+  useEffect(() => {
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (cancelled) return;
+      try {
+        const captured = sessionStorage.getItem(REPAIR_PHOTO_KEY);
+        if (!captured) return;
+        setPhoto(captured);
+        sessionStorage.removeItem(REPAIR_PHOTO_KEY);
+      } catch {}
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   function onFile(file?: File | null) {
     if (!file) return;
@@ -47,7 +69,6 @@ export function RepairApplyScreen({
   async function submit() {
     if (!photo) {
       setError("수선 부위를 확인할 수 있는 사진을 먼저 등록해주세요.");
-      fileRef.current?.click();
       return;
     }
     setSubmitting(true);
@@ -57,7 +78,7 @@ export function RepairApplyScreen({
       // 사진은 private Storage(story-photos)에 먼저 올리고 경로만 보낸다.
       // Supabase 세션이 없는 데모 환경에서는 data URL 그대로 폴백.
       const persisted = await persistStoryPhoto(photo, `repairs-${productId}`);
-      const json = await apiFetch<DbRepair>(`/api/products/${productId}/repairs`, {
+      const json = await apiFetch<RepairDTO>(`/api/products/${productId}/repairs`, {
         method: "POST",
         body: JSON.stringify({
           title,
@@ -161,7 +182,11 @@ export function RepairApplyScreen({
 
       <button
         type="button"
-        onClick={() => fileRef.current?.click()}
+        onClick={() =>
+          router.push(
+            `/camera?mode=repair&return=${encodeURIComponent(`/products/${productId}/repairs/new`)}`,
+          )
+        }
         className="soft-card mx-4 mt-4 flex h-44 w-[calc(100%-2rem)] flex-col items-center justify-center overflow-hidden"
       >
         {photo ? (
@@ -178,15 +203,27 @@ export function RepairApplyScreen({
             </p>
           </>
         )}
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          className="hidden"
-          onChange={(e) => onFile(e.target.files?.[0])}
-        />
       </button>
+
+      <div className="mx-4 mt-2 flex items-center justify-between">
+        <p className="text-[11px] text-muted">
+          {photo ? "다시 찍으려면 위 사진을 누르세요." : "카메라가 열립니다."}
+        </p>
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          className="text-[12px] font-semibold text-cognac-deep underline-offset-4 hover:underline"
+        >
+          앨범에서 선택
+        </button>
+      </div>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => onFile(e.target.files?.[0])}
+      />
 
       <section className="mx-4 mt-6">
         <p className="text-[11px] tracking-[0.16em] text-muted">REPAIR AREA</p>

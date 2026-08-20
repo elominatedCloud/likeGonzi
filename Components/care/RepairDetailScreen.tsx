@@ -6,8 +6,10 @@ import { PageHeader } from "@/Components/ui/PageHeader";
 import { BottomNav } from "@/Components/ui/BottomNav";
 import { ProductMiniCard } from "@/Components/care/ProductMiniCard";
 import { RemadePanel } from "@/Components/care/RemadePanel";
+import { EstimatePanel } from "@/Components/care/EstimatePanel";
 import { apiFetch } from "@/lib/api-client";
-import type { DbRepair } from "@/lib/mock-db";
+// 화면은 mock-db 타입이 아니라 실제 API 응답 타입을 쓴다.
+import type { RepairDTO } from "@/lib/mappers";
 import {
   STATUS_STEPS,
   areaFromTags,
@@ -33,12 +35,12 @@ export function RepairDetailScreen({
   productImage,
   repairId,
 }: RepairDetailScreenProps) {
-  const [repair, setRepair] = useState<DbRepair | null>(null);
+  const [repair, setRepair] = useState<RepairDTO | null>(null);
   const [error, setError] = useState("");
   const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
-    apiFetch<DbRepair>(`/api/products/${productId}/repairs/${repairId}`)
+    apiFetch<RepairDTO>(`/api/products/${productId}/repairs/${repairId}`)
       .then((json) => {
         if (json.ok) setRepair(json.data);
         else setError(json.error?.message ?? "내역을 찾을 수 없습니다.");
@@ -143,6 +145,25 @@ export function RepairDetailScreen({
               <span className="font-medium text-ink">{formatDate(repair.updated_at)}</span>
             </div>
           </section>
+
+          <EstimatePanel
+            productId={productId}
+            repairId={repairId}
+            initial={{
+              status: repair.status,
+              estimate_min: repair.estimate_min ?? null,
+              estimate_max: repair.estimate_max ?? null,
+              estimate_days: repair.estimate_days ?? null,
+              estimate_note: repair.estimate_note ?? null,
+              paid_at: repair.paid_at ?? null,
+              is_demo_payment: repair.is_demo_payment ?? true,
+            }}
+            onChange={(next) =>
+              setRepair((current) =>
+                current ? { ...current, ...next, status: next.status as typeof current.status } : current,
+              )
+            }
+          />
 
           <RemadePanel
             productId={productId}

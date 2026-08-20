@@ -14,6 +14,13 @@ const row: RepairRow = {
   thumbnail_path: null,
   source: "user",
   ai_image_url: null,
+  estimate_min: null,
+  estimate_max: null,
+  estimate_days: null,
+  estimate_note: null,
+  estimated_at: null,
+  paid_at: null,
+  is_demo_payment: true,
   created_at: "2026-05-12T04:05:06.000Z",
   updated_at: "2026-05-12T04:05:06.000Z",
 };

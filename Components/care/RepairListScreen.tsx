@@ -7,7 +7,8 @@ import { PageHeader } from "@/Components/ui/PageHeader";
 import { BottomNav } from "@/Components/ui/BottomNav";
 import { Plus, RefreshCw, Wrench } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
-import type { DbRepair } from "@/lib/mock-db";
+// 화면은 mock-db 타입이 아니라 실제 API 응답 타입을 쓴다.
+import type { RepairDTO } from "@/lib/mappers";
 import {
   areaFromTags,
   areaLabel,
@@ -24,13 +25,13 @@ function RepairReceiptCard({
   productName,
   productImage,
 }: {
-  repair: DbRepair;
+  repair: RepairDTO;
   href: string;
   productName: string;
   productImage?: string;
 }) {
   const areas = areaFromTags(repair.condition_tags);
-  const src = productImage ?? repair.thumbnail_url;
+  const src = productImage ?? repair.thumbnail_url ?? "";
   return (
     <Link href={href} className="soft-card flex items-center gap-3 px-3 py-3">
       <div className="relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-xl bg-cream-deep">
@@ -71,13 +72,13 @@ export function RepairListScreen({
   productName,
   productImage,
 }: RepairListScreenProps) {
-  const [repairs, setRepairs] = useState<DbRepair[]>([]);
+  const [repairs, setRepairs] = useState<RepairDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
-    apiFetch<DbRepair[]>(`/api/products/${productId}/repairs`)
+    apiFetch<RepairDTO[]>(`/api/products/${productId}/repairs`)
       .then((json) => {
         if (json.ok) setRepairs(json.data);
         else setError(json.error?.message ?? "수선 내역을 불러오지 못했어요.");
@@ -172,13 +173,13 @@ export function RepairListScreen({
 }
 
 export function MyRepairsList() {
-  const [repairs, setRepairs] = useState<DbRepair[]>([]);
+  const [repairs, setRepairs] = useState<RepairDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
-    apiFetch<DbRepair[]>("/api/repairs")
+    apiFetch<RepairDTO[]>("/api/repairs")
       .then((json) => {
         if (json.ok) setRepairs(json.data);
         else setError(json.error?.message ?? "수선 내역을 불러오지 못했어요.");

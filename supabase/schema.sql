@@ -154,13 +154,27 @@ create table if not exists public.repairs (
   thumbnail_url text,
   thumbnail_path text,
   ai_image_url text,
+  -- 견적. 금액은 lib/repair-estimate.ts 기준표에서 계산한다(AI가 만들지 않는다).
+  estimate_min integer,
+  estimate_max integer,
+  estimate_days integer,
+  estimate_note text,
+  estimated_at timestamptz,
+  -- ⚠️ 실제 결제가 아니다. 데모 시연용 상태 전이이며 돈이 오가지 않는다.
+  --    실결제에는 PG 계약·웹훅·환불 처리가 별도로 필요하다.
+  paid_at timestamptz,
+  is_demo_payment boolean not null default true,
   source text default 'store'::text,
   created_at timestamptz default now(),
   updated_at timestamptz default now() not null,
   constraint repairs_pkey primary key (id),
   constraint repairs_product_unit_id_fkey foreign key (product_unit_id) references public.product_units (id) on delete cascade,
   constraint repairs_user_id_fkey foreign key (user_id) references auth.users (id) on delete cascade,
-  constraint repairs_status_check check (status = any (array['submitted'::text, 'in_progress'::text, 'completed'::text, 'cancelled'::text])),
+  -- 접수 → 견적 완료 → 진행 확정 → 수선 중 → 완료
+  constraint repairs_status_check check (status = any (array['submitted'::text, 'quoted'::text, 'paid'::text, 'in_progress'::text, 'completed'::text, 'cancelled'::text])),
+  constraint repairs_estimate_range_check check (
+    estimate_min is null or estimate_max is null or estimate_min <= estimate_max
+  ),
   constraint repairs_source_check check (source = any (array['store'::text, 'ai_custom'::text, 'user'::text, 'remade'::text]))
 );
 
@@ -826,6 +840,13 @@ create policy repairs_insert_own on public.repairs
        where up.product_unit_id = repairs.product_unit_id and up.user_id = auth.uid()
     )
   );
+
+-- 본인 접수만 수정할 수 있다(견적 수락·진행 확정).
+drop policy if exists repairs_update_own on public.repairs;
+create policy repairs_update_own on public.repairs
+  for update to authenticated
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
 
 -- ownership_transfers: 보낸 사람과 받는 이메일 당사자만 조회
 drop policy if exists transfers_select_involved on public.ownership_transfers;

@@ -1,4 +1,5 @@
 import type { CompanionId, OccasionId } from "@/types/story-api";
+import type { RepairStatus } from "@/lib/repair";
 
 /**
  * snake_case(DB) → 기존 API 응답 계약(mock-db.ts 시절 필드명) 변환 계층.
@@ -92,6 +93,13 @@ export interface RepairRow {
   thumbnail_path: string | null;
   source: string;
   ai_image_url: string | null;
+  estimate_min: number | null;
+  estimate_max: number | null;
+  estimate_days: number | null;
+  estimate_note: string | null;
+  estimated_at: string | null;
+  paid_at: string | null;
+  is_demo_payment: boolean | null;
   created_at: string;
   updated_at: string;
 }
@@ -103,10 +111,19 @@ export interface RepairDTO {
   location: string | null;
   thumbnail_url: string | null;
   source: string;
-  status: string;
+  /** DB의 repairs_status_check와 같은 값 집합 */
+  status: RepairStatus;
   condition_tags: string[];
   receipt_no: string;
   ai_image_url: string | null;
+  /** 견적. 산출 전에는 전부 null이다. */
+  estimate_min: number | null;
+  estimate_max: number | null;
+  estimate_days: number | null;
+  estimate_note: string | null;
+  paid_at: string | null;
+  /** 실제 결제가 아님을 화면에 표기하기 위한 플래그 */
+  is_demo_payment: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -137,10 +154,16 @@ export function toRepairDTO(
     location: row.location,
     thumbnail_url: thumbnailUrl,
     source: row.source,
-    status: row.status,
+    status: row.status as RepairStatus,
     condition_tags: row.condition_tags ?? [],
     receipt_no: repairReceiptNo(row),
     ai_image_url: row.ai_image_url,
+    estimate_min: row.estimate_min,
+    estimate_max: row.estimate_max,
+    estimate_days: row.estimate_days,
+    estimate_note: row.estimate_note,
+    paid_at: row.paid_at,
+    is_demo_payment: row.is_demo_payment ?? true,
     created_at: row.created_at,
     updated_at: row.updated_at,
   };

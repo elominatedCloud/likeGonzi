@@ -1,4 +1,14 @@
-import type { RepairStatus } from "@/lib/mock-db";
+/**
+ * 수선 진행 상태.
+ * 접수 → 견적 완료 → 진행 확정(결제) → 수선 중 → 완료
+ */
+export type RepairStatus =
+  | "submitted"
+  | "quoted"
+  | "paid"
+  | "in_progress"
+  | "completed"
+  | "cancelled";
 
 export const AREA_TAGS = [
   { id: "handle", label: "손잡이" },
@@ -76,6 +86,10 @@ export function listBadge(status: RepairStatus) {
   switch (status) {
     case "submitted":
       return "제품 확인 중";
+    case "quoted":
+      return "견적 확인 필요";
+    case "paid":
+      return "진행 확정";
     case "in_progress":
       return "수선 진행 중";
     case "completed":
@@ -89,6 +103,10 @@ export function statusTone(status: RepairStatus) {
   switch (status) {
     case "submitted":
       return "bg-[#f4eadb] text-cognac";
+    case "quoted":
+      return "bg-[#fff4d8] text-cognac-deep";
+    case "paid":
+      return "bg-[#eef6ea] text-[#3d6b3a]";
     case "in_progress":
       return "bg-ink text-white";
     case "completed":
@@ -102,6 +120,9 @@ export function statusTone(status: RepairStatus) {
 export function currentStep(status: RepairStatus) {
   switch (status) {
     case "submitted":
+      return 1;
+    case "quoted":
+    case "paid":
       return 1;
     case "in_progress":
       return 2;

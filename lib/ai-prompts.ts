@@ -126,3 +126,32 @@ export function remadePrompt(seed: RemadeSeed) {
     `Soft directional studio light, shallow depth of field, neutral background.`,
   ].join(" ");
 }
+
+/**
+ * 견적 설명문. 금액은 여기서 만들지 않는다 —
+ * 기준표(lib/repair-estimate.ts)에서 계산한 값을 받아 "왜 이 범위인지"만 쓴다.
+ * 모델이 숫자를 지어내면 고객에게 근거 없는 금액을 보여주게 된다.
+ */
+export function generateEstimateNote(seed: {
+  productName: string;
+  areaLabel: string;
+  conditionLabel: string;
+  min: number;
+  max: number;
+  days: number;
+}) {
+  return generateText(
+    `당신은 MCM 수선 접수 담당자입니다. 고객에게 견적 범위를 설명합니다. ` +
+      `2~3문장의 한국어 존댓말. 금액과 기간은 주어진 값만 쓰고 다른 숫자를 만들지 마세요. ` +
+      `실물 확인 후 최종 확정된다는 점을 반드시 포함하세요. ` +
+      `과장, 홍보 문구, 사과는 넣지 마세요.`,
+    [
+      `제품: ${seed.productName}`,
+      `수선 부위: ${seed.areaLabel}`,
+      `증상: ${seed.conditionLabel}`,
+      `예상 비용: ${seed.min.toLocaleString()}원 ~ ${seed.max.toLocaleString()}원`,
+      `예상 소요: 약 ${seed.days}일`,
+    ].join("\n"),
+    300,
+  );
+}
