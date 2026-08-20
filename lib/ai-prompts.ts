@@ -122,7 +122,10 @@ export function remadePrompt(seed: RemadeSeed) {
     `The damage is not hidden — it is deliberately framed and celebrated,`,
     `in the spirit of kintsugi: the mended area is the focal point.`,
     `Hand embroidery and a leather patch, geometric lozenge and laurel motifs,`,
-    `cognac and warm gold thread. Artisanal, restrained, no logos, no text.`,
+    `cognac and warm gold thread. Artisanal, restrained.`,
+    `The bag surface itself is plain, smooth, undecorated leather in a single`,
+    `solid tone — absolutely no repeating monogram, no printed pattern, no`,
+    `initials, no logos, no text anywhere. Only the patch carries ornament.`,
     `Soft directional studio light, shallow depth of field, neutral background.`,
   ].join(" ");
 }
