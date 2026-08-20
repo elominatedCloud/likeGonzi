@@ -8,6 +8,7 @@
 | `bg-dark.png` · `bg-light.png` | 배경 |
 | `damage.jpg` · `remade-1~3.jpg` | **REMADE 실제 생성 결과** (gpt-image-1-mini) |
 | `product.png` | 제품 실사 (투명 PNG) |
+| `lin-joseon.jpg` · `lin-kintsugi.jpg` · `lin-harlem.jpg` | 계보 슬라이드 이미지 (AI 생성) |
 
 카피 원본은 [../superpowers/specs/2026-08-10-mcm-ir-deck-copy.md](../superpowers/specs/2026-08-10-mcm-ir-deck-copy.md).
 근거는 [../superpowers/specs/2026-08-10-mcm-ir-evidence.md](../superpowers/specs/2026-08-10-mcm-ir-evidence.md).
@@ -15,7 +16,7 @@
 ## 구성 (29장)
 
 ```
-01  표지            MCM과 함께하는 hi_story
+01  표지            MCM / STORYBOOK · MCM과 함께하는 hi_story
 02  ★ 질문          3년을 함께한 가방. 그 기록은 지금 어디 있습니까?
 03  하나의 타임라인   솔루션 먼저 · Challenge 03 배지
 04  360° 고객 여정   발견 → 구매 → 개봉 → 등록 → 기록 → 수선 → 이전
@@ -28,7 +29,7 @@
 11  매일 쓰면 상합니다 + 3분류
 12  기록이 없으면 값을 잃습니다 + 그런데 이 문제를 푸는 브랜드가 없습니다
 ─── Chapter 2  흠이 역사가 된다
-14  신사임당 / 킨츠기 / Dapper Dan
+14  신사임당 / 킨츠기 / Dapper Dan   이미지 3장 + 출처
 15  내 가방의 역사이자, MCM의 역사입니다
 16  페르소나
 ─── Chapter 3  어떻게 동작하나
@@ -214,3 +215,11 @@ node capture.mjs     # Chrome 창이 열린다. 거기서 로그인하면 6장�
 
 카메라 뷰파인더는 캡처하지 않는다 — 헤드리스 Chrome은 가짜 스트림을 물어서
 실제 화면이 안 나온다. 대신 **스캔 결과인 언박싱 화면**을 쓴다. 정보도 그쪽이 많다.
+
+
+## 계보 슬라이드 이미지
+
+신사임당 그림·킨츠기 도자기·80년대 할렘 사진은 **저작권 때문에 웹에서 가져오지 않았다.**
+`gpt-image-1-mini`로 생성하고 화면 아래에 *"이미지는 AI 생성"*이라고 밝힌다.
+
+Dapper Dan은 실존 인물이라 **얼굴을 만들지 않았다.** 옷과 재봉 작업대만 그렸다.

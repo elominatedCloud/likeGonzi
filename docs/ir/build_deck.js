@@ -41,7 +41,7 @@ const F = "Apple SD Gothic Neo";
 
 const dark = s => { s.background = { color: C.dark }; s.addImage({ path: BG, x: 0, y: 0, w: W, h: H }); };
 
-const mark = s => s.addText("MCM LUXURY BOOK", {
+const mark = s => s.addText("MCM STORYBOOK", {
   x: W - 3.4, y: H - 0.55, w: 2.9, h: 0.3, align: "right",
   fontFace: F, fontSize: 9, color: "4A423A", charSpacing: 1.4 });
 
@@ -129,15 +129,18 @@ function chapter(n, title, subtitle) {
     fontSize: 40, bold: true, color: C.ink, margin: 0 });
   s.addText(subtitle, { x: 1.1, y: 4.46, w: 10.5, h: 0.38, fontFace: F,
     fontSize: 15, color: "7A716A", margin: 0 });
-  s.addText("MCM LUXURY BOOK", { x: W - 3.4, y: H - 0.55, w: 2.9, h: 0.3,
+  s.addText("MCM STORYBOOK", { x: W - 3.4, y: H - 0.55, w: 2.9, h: 0.3,
     align: "right", fontFace: F, fontSize: 9, color: "B3ABA3", charSpacing: 1.4 });
 }
 
 /* ═══ 01 표지 ═══ */
 {
   const s = p.addSlide(); dark(s);
-  s.addText("MCM LUXURY BOOK", { x: 0.95, y: 0.72, w: 6, h: 0.34, fontFace: F,
-    fontSize: 12.5, bold: true, color: C.white, charSpacing: 2.6, margin: 0 });
+  s.addText([
+    { text: "MCM", options: { color: C.white, breakLine: true } },
+    { text: "STORYBOOK", options: { color: C.cognac } },
+  ], { x: 0.95, y: 0.66, w: 6, h: 0.9, fontFace: F, fontSize: 14, bold: true,
+    charSpacing: 3.4, lineSpacing: 24, margin: 0 });
   s.addText("MCM과 함께하는", {
     x: 0.95, y: 2.42, w: 11.6, h: 0.6, fontFace: F, fontSize: 26,
     color: C.white, margin: 0 });
@@ -405,15 +408,32 @@ chapter(2, "흠이 역사가 된다", "고칠수록 나만의 것이 되는 이�
 {
   const s = p.addSlide();
   head(s, "THIS IS NOT NEW", ["같은 생각이 이미 세 번 있었습니다"], { size: 34 });
-  columns(s, [
-    ["조선", "신사임당의 포도", "치마 얼룩 위에 포도를 그렸다.\n버려질 옷이 오히려 팔렸다.", false],
-    ["일본", "킨츠기 金継ぎ", "깨진 자리를 금으로 잇는다.\n흉터를 감추지 않고 드러낸다.", false],
-    ["1988 · 할렘", "Dapper Dan", "MCM 코냑 비세토스를 뜯어\n무대의상으로 다시 꿰맸다.", true],
-  ], 3.42);
-  s.addText("신사임당은 전해지는 일화 · Dapper Dan은 브랜드 기록 (Highsnobiety)", {
-    x: 0.8, y: H - 0.78, w: W - 1.6, h: 0.34, align: "center", fontFace: F,
-    fontSize: 11, color: C.dim, margin: 0 });
-  s.addNotes("신사임당이 얼룩 위에 포도를 그린 이야기가 있습니다. 일본에는 킨츠기가 있습니다. 그리고 1988년 할렘에서 같은 일이 일어났습니다.");
+  const eras = [
+    ["lin-joseon.jpg",   "조선",        "신사임당의 포도",
+     "치마 얼룩 위에 포도를 그렸다.\n버려질 옷이 오히려 팔렸다.", false],
+    ["lin-kintsugi.jpg", "일본",        "킨츠기 金継ぎ",
+     "깨진 자리를 금으로 잇는다.\n흉터를 감추지 않고 드러낸다.", false],
+    ["lin-harlem.jpg",   "1988 · 할렘", "Dapper Dan",
+     "MCM 코냑 비세토스를 뜯어\n무대의상으로 다시 꿰맸다.", true],
+  ];
+  const iw = 2.75, gapx = 0.62, total = 3 * iw + 2 * gapx, x0 = (W - total) / 2;
+  eras.forEach((e, i) => {
+    const x = x0 + i * (iw + gapx);
+    s.addImage({ path: IMG(e[0]), x, y: 2.36, w: iw, h: iw * 0.78 });
+    if (e[4]) s.addShape(p.ShapeType.rect, { x, y: 2.36, w: iw, h: iw * 0.78,
+      fill: { type: "none" }, line: { color: C.cognac, width: 1.25 } });
+    s.addText(e[1], { x, y: 4.62, w: iw, h: 0.3, fontFace: F,
+      fontSize: 11.5, color: C.cognac, charSpacing: 1.4, margin: 0 });
+    s.addText(e[2], { x, y: 4.96, w: iw + 0.3, h: 0.42, fontFace: F,
+      fontSize: 19, bold: true, color: C.white, margin: 0 });
+    s.addText(e[3], { x, y: 5.5, w: iw + 0.2, h: 0.82, fontFace: F,
+      fontSize: 12.5, color: C.muted, lineSpacing: 20, margin: 0 });
+  });
+  s.addText("이미지는 AI 생성 · 신사임당은 전해지는 일화 · Dapper Dan은 브랜드 기록 (Highsnobiety, MCM Heritage)", {
+    x: 0.8, y: H - 0.5, w: W - 1.6, h: 0.32, align: "center", fontFace: F,
+    fontSize: 10.5, color: C.dim, margin: 0 });
+  mark(s);
+  s.addNotes("신사임당이 잔칫상에서 남의 치마에 튄 얼룩 위에 포도를 그린 이야기가 있습니다. 일본에는 깨진 그릇을 금으로 잇는 킨츠기가 있습니다. 그리고 1988년 할렘에서 같은 일이 일어났습니다. 이미지는 저작권 때문에 AI로 생성했고 화면 아래에 밝혀뒀습니다.");
 }
 
 /* ═══ 12 진술 ★ ═══ */
@@ -515,12 +535,13 @@ chapter(3, "어떻게 동작하나", "AI가 마찰을 없애고 흠을 무늬로
       fontSize: 13, color: C.muted, lineSpacing: 21, margin: 0 });
   });
 
-  shot(s, "shot-repair.png", "수선 접수\n부위를 눌러 고른다", 1.3, 4.5, 1.4, 1.4);
-  s.addText("매장에서 상태를 보고\n방법을 안내합니다", { x: 3.0, y: 4.86, w: 2.9, h: 0.8,
-    fontFace: F, fontSize: 13, color: C.muted, lineSpacing: 21, margin: 0 });
-  s.addImage({ path: IMG("remade-1.jpg"), x: 6.8,  y: 4.56, w: 1.4, h: 1.4 });
-  s.addImage({ path: IMG("remade-2.jpg"), x: 8.35, y: 4.56, w: 1.4, h: 1.4 });
-  s.addImage({ path: IMG("remade-3.jpg"), x: 9.9,  y: 4.56, w: 1.4, h: 1.4 });
+  shot(s, "shot-repair.png", "부위를 눌러 접수", 1.3, 4.4, 1.55, 1.65, true);
+  shot(s, "shot-remade.png", "선택 화면", 3.05, 4.4, 1.55, 1.65, true);
+  s.addText("실제 화면입니다.\n접수하면 이 선택이 뜹니다.", { x: 4.9, y: 4.84, w: 2.2, h: 0.8,
+    fontFace: F, fontSize: 12, color: C.muted, lineSpacing: 19, margin: 0 });
+  s.addImage({ path: IMG("remade-1.jpg"), x: 7.35, y: 4.4, w: 1.55, h: 1.55 });
+  s.addImage({ path: IMG("remade-2.jpg"), x: 9.05, y: 4.4, w: 1.55, h: 1.55 });
+  s.addImage({ path: IMG("remade-3.jpg"), x: 10.75, y: 4.4, w: 1.55, h: 1.55 });
 
   rule(s, 1.3, 6.24, W - 2.6);
   s.addText("어느 쪽을 고르든 이력은 한 줄에 남고, 다음 소유자에게 그대로 넘어갑니다", {
