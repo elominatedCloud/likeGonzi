@@ -218,9 +218,37 @@ chapter(1, "MCM은 어디에 서 있나", "가격이 아니라 사용 빈도로 
   columns(s, [
     ["3대장", "안 씁니다", "그래서 안 상합니다.\n대신 함께한 시간도 없습니다.", false],
     ["매스 브랜드", "버립니다", "애착이 없어서\n고칠 이유가 없습니다.", false],
-    ["MCM", "고칩니다", "고칠 만큼 아깝고\n버리기엔 아깝습니다.", true],
+    ["MCM", "고칩니다", "버리기엔 아깝고,\n고쳐 쓸 만한 값입니다.", true],
   ], 3.42);
   s.addNotes("3대장은 안 쓰니까 안 상합니다. 매스 브랜드는 상하면 버립니다. MCM 구간만 매일 쓰고, 상하고, 버리기엔 아까운 물건입니다.");
+}
+
+/* ═══ 10 실제 불편 ═══ */
+{
+  const s = p.addSlide();
+  head(s, "WHAT ACTUALLY HURTS", ["기록이 없으면, 값을 잃습니다"], { size: 36 });
+  const facts = [
+    ["30–40%", "같은 제품도 구성품과 이력 유무로\n리셀 가격이 갈린다"],
+    ["1위", "명품 플랫폼에 소비자가 요구한 개선점\n— 정품 보증 시스템 강화"],
+    ["50개 중 1개", "감정에서 걸러진 가품 비율.\n40%는 백화점·아웃렛에서 산 것"],
+  ];
+  const gap = (W - 2.4) / 3;
+  facts.forEach((f, i) => {
+    const x = 1.2 + gap * i;
+    if (i > 0) s.addShape(p.ShapeType.line, { x, y: 3.0, w: 0, h: 1.8,
+      line: { color: C.line, width: 0.75 } });
+    s.addText(f[0], { x: x + 0.34, y: 3.06, w: gap - 0.6, h: 0.66, fontFace: F,
+      fontSize: 40, bold: true, color: C.cognac, margin: 0 });
+    s.addText(f[1], { x: x + 0.34, y: 3.92, w: gap - 0.72, h: 0.9, fontFace: F,
+      fontSize: 14, color: C.muted, lineSpacing: 23, margin: 0 });
+  });
+  s.addText("보증서 분실과 일련번호 불일치가 명품 거래 분쟁의 주된 원인입니다", {
+    x: 1.0, y: 5.34, w: W - 2, h: 0.42, align: "center", fontFace: F,
+    fontSize: 18, bold: true, color: C.white, margin: 0 });
+  s.addText("트렌비 감정센터 · 명품 플랫폼 소비자 조사 · 한국소비자원 (2025)", {
+    x: 0.8, y: H - 0.5, w: W - 1.6, h: 0.34, align: "center", fontFace: F,
+    fontSize: 11, color: C.dim, margin: 0 });
+  s.addNotes("불편은 감성이 아니라 돈입니다. 같은 제품도 구성품과 이력이 있느냐에 따라 리셀 가격이 30에서 40퍼센트 갈립니다. 명품 플랫폼에 소비자가 요구한 개선점 1위가 정품 보증 시스템이었고, 감정에서 걸러진 가품이 50개 중 1개입니다. 그런데 그 증빙을 지금은 각자 종이로 보관합니다. 보증서를 잃어버리는 순간 값도 사라집니다.");
 }
 
 /* ═══ 09 진술 ═══ */
@@ -230,7 +258,43 @@ chapter(1, "MCM은 어디에 서 있나", "가격이 아니라 사용 빈도로 
   s.addNotes("수선은 있지만 원래대로 되돌려주는 것뿐입니다.");
 }
 
-chapter(2, "흠이 값이 된다", "지우지 말고, 나의 것으로");
+chapter(2, "그래서 만들었습니다", "하나의 타임라인, 그리고 흠을 다루는 방식");
+
+/* ═══ 16 타임라인 ═══ */
+{
+  const s = p.addSlide();
+  head(s, "SOLUTION", ["하나의 타임라인"], { size: 40 });
+  const steps = ["발견", "구매", "사용", "관리", "수선", "물려주기"];
+  const gap = (W - 2.4) / steps.length;
+  s.addShape(p.ShapeType.line, { x: 1.2 + gap / 2, y: 3.92, w: (W - 2.4) - gap, h: 0,
+    line: { color: C.line, width: 1 } });
+  steps.forEach((t, i) => {
+    const cx = 1.2 + gap * (i + 0.5), on = i >= 3, r = on ? 0.19 : 0.13;
+    s.addShape(p.ShapeType.ellipse, { x: cx - r / 2, y: 3.92 - r / 2, w: r, h: r,
+      fill: { color: on ? C.cognac : C.muted }, line: { type: "none" } });
+    s.addText(t, { x: cx - gap / 2, y: 4.28, w: gap, h: 0.36, align: "center",
+      fontFace: F, fontSize: 17, bold: on, color: on ? C.white : C.muted, margin: 0 });
+  });
+  s.addText("내가 남긴 기록과 브랜드가 남긴 기록이 같은 줄에 흐릅니다", {
+    x: 1.0, y: 5.22, w: W - 2, h: 0.42, align: "center", fontFace: F,
+    fontSize: 22, bold: true, color: C.white, margin: 0 });
+  s.addText("사진 앱은 수선 이력을 가질 수 없고, 브랜드 시스템은 내 추억을 가질 수 없습니다", {
+    x: 1.0, y: 5.76, w: W - 2, h: 0.34, align: "center", fontFace: F,
+    fontSize: 14, color: C.muted, margin: 0 });
+  s.addNotes("별도 앱 설치가 없습니다. 제품의 QR·NFC가 진입점입니다. 등록하면 구매 기록이 첫 줄로 자동 생성돼 빈 화면을 보여주지 않습니다.");
+}
+
+/* ═══ 14 제품 개요 ═══ */
+{
+  const s = p.addSlide();
+  head(s, "WHAT WE BUILT", ["타임라인 위에 세 가지가 얹힙니다"], { size: 34 });
+  columns(s, [
+    ["기록", "쌓인다", "사진 한 장을 올리면\nAI가 문장으로 남긴다.", false],
+    ["케어 · 수선", "이어진다", "제품 실사 위에서 부위를 눌러\n접수하고, 이력이 그대로 남는다.", false],
+    ["REMADE", "값이 된다", "긁힌 자리를 나만의 무늬로.\nAI 시안, 장인 제작.", true],
+  ], 3.42);
+  s.addNotes("타임라인 하나 위에 세 가지가 얹힙니다. 기록, 케어와 수선, 그리고 REMADE입니다. 이 뒤로는 왜 이렇게 만들었는지와 어떻게 동작하는지를 말씀드립니다.");
+}
 
 /* ═══ 10 진술 ★ ═══ */
 {
@@ -288,46 +352,35 @@ chapter(2, "흠이 값이 된다", "지우지 말고, 나의 것으로");
   s.addNotes("큰 지출을 했을 때 두려운 건 통장이 아니라 평판입니다. 연령대 실측은 미확보이며 페르소나는 가설입니다.");
 }
 
-chapter(3, "무엇을 만들었나", "하나의 타임라인, 그리고 AI");
+chapter(3, "어떻게 동작하나", "AI가 마찰을 없애고, 흠을 무늬로 바꾼다");
 
-/* ═══ 14 진술 ═══ */
+/* ═══ 22 마찰 ═══ */
 {
   const s = p.addSlide();
-  statement(s, [{ t: "브랜드는 새것만 보여줍니다" }],
-    { note: "5년 쓴 가방이 어떻게 생겼는지 보여주는 브랜드는 없습니다" });
-  s.addNotes("구매 이후 접점은 세일 문자가 전부입니다. 사진은 SNS, 여행은 캘린더, 수선 이력은 브랜드 내부에 흩어집니다.");
-}
-
-/* ═══ 15 진술 ═══ */
-{
-  const s = p.addSlide();
-  statement(s, [{ t: "그리고 기록은" }, { t: "마찰입니다", c: C.cognac }],
-    { note: "사진 고르고, 날짜 쓰고, 장소 쓰고, 설명 쓰고 — 아무도 하지 않습니다" });
-  s.addNotes("지금까지의 해법은 전부 입력창을 더 주는 것이었습니다. 더 안 합니다. 여기가 AI가 들어갈 자리입니다.");
-}
-
-/* ═══ 16 타임라인 ═══ */
-{
-  const s = p.addSlide();
-  head(s, "SOLUTION", ["하나의 타임라인"], { size: 40 });
-  const steps = ["발견", "구매", "사용", "관리", "수선", "물려주기"];
-  const gap = (W - 2.4) / steps.length;
-  s.addShape(p.ShapeType.line, { x: 1.2 + gap / 2, y: 3.92, w: (W - 2.4) - gap, h: 0,
-    line: { color: C.line, width: 1 } });
-  steps.forEach((t, i) => {
-    const cx = 1.2 + gap * (i + 0.5), on = i >= 3, r = on ? 0.19 : 0.13;
-    s.addShape(p.ShapeType.ellipse, { x: cx - r / 2, y: 3.92 - r / 2, w: r, h: r,
-      fill: { color: on ? C.cognac : C.muted }, line: { type: "none" } });
-    s.addText(t, { x: cx - gap / 2, y: 4.28, w: gap, h: 0.36, align: "center",
-      fontFace: F, fontSize: 17, bold: on, color: on ? C.white : C.muted, margin: 0 });
+  head(s, "THE FRICTION", ["기록은 흩어지고, 사라집니다"], { size: 36 });
+  const three = [
+    ["사진", "SNS와 갤러리에"],
+    ["구매 · 보증", "종이 영수증과 카드에"],
+    ["수선 이력", "브랜드 내부에만"],
+  ];
+  const gap = (W - 2.4) / 3;
+  three.forEach((t, i) => {
+    const x = 1.2 + gap * i;
+    if (i > 0) s.addShape(p.ShapeType.line, { x, y: 3.1, w: 0, h: 1.2,
+      line: { color: C.line, width: 0.75 } });
+    s.addText(t[0], { x: x + 0.34, y: 3.2, w: gap - 0.6, h: 0.46, fontFace: F,
+      fontSize: 24, bold: true, color: C.white, margin: 0 });
+    s.addText(t[1], { x: x + 0.34, y: 3.82, w: gap - 0.72, h: 0.4, fontFace: F,
+      fontSize: 14, color: C.muted, margin: 0 });
   });
-  s.addText("내가 남긴 기록과 브랜드가 남긴 기록이 같은 줄에 흐릅니다", {
-    x: 1.0, y: 5.22, w: W - 2, h: 0.42, align: "center", fontFace: F,
-    fontSize: 22, bold: true, color: C.white, margin: 0 });
-  s.addText("사진 앱은 수선 이력을 가질 수 없고, 브랜드 시스템은 내 추억을 가질 수 없습니다", {
-    x: 1.0, y: 5.76, w: W - 2, h: 0.34, align: "center", fontFace: F,
+  s.addText("모으라고 하면 아무도 하지 않습니다", {
+    x: 1.0, y: 4.86, w: W - 2, h: 0.44, align: "center", fontFace: F,
+    fontSize: 24, bold: true, color: C.white, margin: 0 });
+  rule(s, 4.4, 5.56, 4.5);
+  s.addText("사진 고르고, 날짜 쓰고, 장소 쓰고, 설명 쓰고 — 입력창을 더 주면 더 안 합니다", {
+    x: 1.0, y: 5.82, w: W - 2, h: 0.36, align: "center", fontFace: F,
     fontSize: 14, color: C.muted, margin: 0 });
-  s.addNotes("별도 앱 설치가 없습니다. 제품의 QR·NFC가 진입점입니다. 등록하면 구매 기록이 첫 줄로 자동 생성돼 빈 화면을 보여주지 않습니다.");
+  s.addNotes("기록이 값이 된다는 건 앞에서 봤습니다. 그런데 지금은 세 군데로 흩어져 있고, 모으라고 하면 아무도 하지 않습니다. 여기가 AI가 들어갈 자리입니다.");
 }
 
 /* ═══ 17 진술 ★ ═══ */
