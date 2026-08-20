@@ -1,11 +1,13 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
+import Image from 'next/image';
 import { Check, LockKeyhole, Mail, UserRound } from 'lucide-react';
 import { showFeatureNotice } from '@/lib/feature-notice';
 import styles from './AuthPanel.module.css';
 
 type AuthMode = 'login' | 'signup';
+export type OAuthProvider = 'kakao' | 'google';
 
 /** onComplete가 서버 에러 코드를 그대로 올려보낼 때 쓴다. */
 export class AuthError extends Error {
@@ -29,10 +31,11 @@ export interface AuthSubmission {
 interface AuthPanelProps {
   initialMode?: AuthMode;
   onComplete: (submission: AuthSubmission) => Promise<void>;
+  onOAuth: (provider: OAuthProvider) => Promise<void>;
   initialError?: string;
 }
 
-export function AuthPanel({initialMode='login',onComplete,initialError=''}:AuthPanelProps){
+export function AuthPanel({initialMode='login',onComplete,onOAuth,initialError=''}:AuthPanelProps){
   const [mode,setMode]=useState<AuthMode>(initialMode);
   const [name,setName]=useState('');
   const [email,setEmail]=useState('');
@@ -42,11 +45,24 @@ export function AuthPanel({initialMode='login',onComplete,initialError=''}:AuthP
   const [analyticsConsent,setAnalyticsConsent]=useState(false);
   const [error,setError]=useState(initialError);
   const [isSubmitting,setIsSubmitting]=useState(false);
+  const [oauthProvider,setOAuthProvider]=useState<OAuthProvider|null>(null);
 
   const changeMode=(next:AuthMode)=>{
     if(isSubmitting)return;
     setMode(next);
     setError('');
+  };
+
+  const startOAuth=async(provider:OAuthProvider)=>{
+    if(isSubmitting||oauthProvider)return;
+    setError('');
+    setOAuthProvider(provider);
+    try{
+      await onOAuth(provider);
+    }catch(oauthError){
+      setError(oauthError instanceof Error?oauthError.message:'소셜 로그인을 시작하지 못했어요. 잠시 후 다시 시도해 주세요.');
+      setOAuthProvider(null);
+    }
   };
 
   const submit=async(event:FormEvent<HTMLFormElement>)=>{
@@ -133,5 +149,17 @@ export function AuthPanel({initialMode='login',onComplete,initialError=''}:AuthP
     </form>
 
     {mode==='login'?<button type="button" className={styles.support} onClick={()=>showFeatureNotice('passwordRecovery')} disabled={isSubmitting}>비밀번호를 잊으셨나요?</button>:<p className={styles.demoNote}>Supabase 계정이 생성되며 가입 후 홈으로 이동합니다.</p>}
+
+    <div className={styles.divider}><span/><p>또는</p><span/></div>
+    <div className={styles.social} aria-label="소셜 로그인">
+      <button type="button" className={styles.kakao} onClick={()=>void startOAuth('kakao')} disabled={isSubmitting||Boolean(oauthProvider)} aria-busy={oauthProvider==='kakao'}>
+        <Image src="/icon/social/kakao.svg" alt="" width={21} height={21}/>
+        {oauthProvider==='kakao'?'카카오로 이동 중…':'카카오로 계속하기'}
+      </button>
+      <button type="button" className={styles.google} onClick={()=>void startOAuth('google')} disabled={isSubmitting||Boolean(oauthProvider)} aria-busy={oauthProvider==='google'}>
+        <Image src="/icon/social/google.svg" alt="" width={21} height={21}/>
+        {oauthProvider==='google'?'Google로 이동 중…':'Google로 계속하기'}
+      </button>
+    </div>
   </section>;
 }

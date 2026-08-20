@@ -23,4 +23,6 @@
 .terms b{color:#8d5a3b}
 .form .terms .checkbox{display:grid;width:19px;height:19px;padding:0;place-items:center;border:1px solid #b7a99b;border-radius:5px;background:#fff;color:#6e432c}
 .terms input:focus-visible+.checkbox{outline:3px solid rgba(189,148,100,.22);outline-offset:2px}
+.divider{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;margin:18px 2px 13px;color:#918a84;font-size:11px}.divider span{height:1px;background:#ded9d4}.divider p{margin:0}
+.social{display:flex;flex-direction:column;gap:9px}.social button{position:relative;display:flex;align-items:center;justify-content:center;gap:9px;width:100%;height:49px;border-radius:15px;font-size:14px;font-weight:700;cursor:pointer}.social button:disabled{cursor:wait;opacity:.68}.kakao{border:1px solid #fee500;background:#fee500;color:#191919}.google{border:1px solid #d8d5d2;background:#fff;color:#252321}.social img{flex:none}
 @media(max-height:730px){.tabs button{height:46px}.form{gap:9px;margin-top:15px}.form input{height:45px}.submit{height:48px}.support{margin-top:12px}}

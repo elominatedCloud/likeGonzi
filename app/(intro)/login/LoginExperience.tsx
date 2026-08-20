@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { AuthError, AuthPanel, type AuthSubmission } from '@/Components/auth/AuthPanel';
+import { AuthError, AuthPanel, type AuthSubmission, type OAuthProvider } from '@/Components/auth/AuthPanel';
 import { supabase } from '@/lib/supabase';
 import styles from './login.module.css';
 
@@ -113,6 +113,25 @@ export function LoginExperience({
     window.location.replace(mode==='signup' ? '/home' : returnTo);
   };
 
+  const startOAuth = async (provider: OAuthProvider) => {
+    if (!supabase) {
+      throw new Error('Supabase 설정을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.');
+    }
+
+    const callbackUrl = new URL('/login', window.location.origin);
+    callbackUrl.searchParams.set('oauth', provider);
+    callbackUrl.searchParams.set('returnTo', returnTo);
+    if (intent === 'claim') callbackUrl.searchParams.set('intent', 'claim');
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: callbackUrl.toString() },
+    });
+    if (error) {
+      throw new Error(`${provider === 'kakao' ? '카카오' : 'Google'} 로그인을 시작하지 못했어요. ${error.message}`);
+    }
+  };
+
   return (
     <main className={styles.page}>
       <button type="button" className={styles.back} onClick={() => router.push('/start')} aria-label="시작 화면으로 돌아가기">←</button>
@@ -125,7 +144,7 @@ export function LoginExperience({
         )}
       </header>
       <div className={styles.sheet}>
-        <AuthPanel initialMode={initialMode} initialError={initialError} onComplete={complete}/>
+        <AuthPanel initialMode={initialMode} initialError={initialError} onComplete={complete} onOAuth={startOAuth}/>
       </div>
     </main>
   );

@@ -3,8 +3,10 @@
 > Next.js 페이지와 충돌을 피하기 위해 실제 경로는 **`/api` prefix** 를 사용합니다.
 > 명세 `/products/...` ≡ 구현 `/api/products/...`
 
-데모 계정: `gonji@mcm.test` / `password123`
-Authorization 없으면 기본 유저(곤지)로 동작합니다.
+> 과거 mock-db 데모 계정 `gonji@mcm.test` / `password123`은 더 이상 자동 생성되지 않습니다.
+> 현재 `main`은 Supabase Auth를 사용하므로 `.env.local` 연결 후 회원가입으로 계정을
+> 만들거나, 해당 Supabase 프로젝트에 이미 생성된 테스트 계정을 사용해야 합니다.
+> Authorization이 없는 보호 API 요청은 기본 유저로 처리되지 않고 `401`을 반환합니다.
 
 ---
 

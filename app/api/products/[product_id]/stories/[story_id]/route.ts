@@ -8,6 +8,7 @@ import {
   resolveOwnedProductRefs,
 } from "@/lib/supabase-product-refs";
 import { getBearerToken } from "@/lib/supabase-server";
+import { normalizePlace } from "@/lib/place-normalize";
 import { toSupabaseStoryDTOs } from "@/lib/supabase-story-mapper";
 import {
   deleteStory,
@@ -128,6 +129,15 @@ export async function PATCH(request: Request, context: RouteContext) {
   if (body.place !== undefined) updatePayload.location = body.place;
   if (body.memo !== undefined) updatePayload.memo = body.memo;
   if (body.story !== undefined) updatePayload.story = body.story;
+  if (body.occasion !== undefined) updatePayload.occasion = body.occasion;
+  if (body.companion !== undefined) updatePayload.companion = body.companion || null;
+  if (body.city !== undefined) updatePayload.city = body.city || null;
+  if (body.country !== undefined) updatePayload.country = body.country || null;
+  if (body.place !== undefined && body.city === undefined && body.country === undefined) {
+    const normalized = normalizePlace(body.place);
+    updatePayload.city = normalized.city;
+    updatePayload.country = normalized.country;
+  }
 
   let updatedRow = existing.storyRow;
   if (Object.keys(updatePayload).length > 0) {

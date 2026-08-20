@@ -11,12 +11,13 @@ import {
   deleteStory as deleteStoryRequest,
   getStory as getStoryRequest,
   listStories as listStoriesRequest,
+  updateStory as updateStoryRequest,
 } from '@/lib/story-api-client';
 import { COMPANIONS, OCCASIONS, type CompanionId, type OccasionId } from '@/types/story-api';
 import { normalizePlace } from '@/lib/place-normalize';
 import { apiFetch } from '@/lib/api-client';
 import type { TimelineEntry } from '@/app/api/timeline/route';
-import { persistCloudStory, persistStoryPhoto, removeStoryPhoto } from '@/lib/story-photo-storage';
+import { persistStoryPhoto, removeStoryPhoto } from '@/lib/story-photo-storage';
 import type { StoryRecord } from '@/types/story-api';
 import { getProductDetailPath } from '@/lib/product-routes';
 
@@ -48,8 +49,6 @@ export const products:Record<ProductId,Product> = {
     {kind:'care',date:'2026.03.14',title:'가죽 표면 케어 완료',sub:'Calfskin 클리닝 및 모서리 보호'},
     {id:'museum-postcard',kind:'memory',date:'2026.08.04',title:'미술관에서 쓴 엽서',sub:'서울 덕수궁길 · Pina Wallet',place:'서울 덕수궁길',story:'전시의 여운을 엽서에 적는 동안 작은 지갑은 조용히 그날의 시간을 지켜보았다.',note:'전시의 여운을 짧은 문장으로 남긴 날.\n#미술관 #엽서',image:`${A}/pina-ai-museum.png`}]}
 };
-const ALL_PRODUCT_IDS=Object.keys(products) as ProductId[];
-
 function StatusBar(){return <div className={styles.status}><span>9:41</span><span className={styles.signals}>● ᯤ ▰</span></div>}
 function Pattern(){return <div className={styles.pattern} aria-hidden="true"/>}
 function Header({title,back=false,action}:{title:string;back?:boolean;action?:React.ReactNode}){const router=useRouter();return <header className={styles.header}><span>{back&&<button className={styles.back} onClick={()=>router.back()} aria-label="뒤로 가기">←</button>}</span><h1>{title}</h1><span className={styles.headerAction}>{action}</span></header>}
@@ -164,6 +163,12 @@ export function RecordDetailPage({productId,recordId}:{productId:ProductId;recor
   const initial=p.entries.find(e=>e.id===recordId)??null;
   const [memory,setMemory]=useState<Entry|null>(initial);
   const [withProducts,setWithProducts]=useState<ProductId[]>([productId]);
+  const [editing,setEditing]=useState(false);
+  const [editTitle,setEditTitle]=useState(initial?.title??'');
+  const [editPlace,setEditPlace]=useState(initial?.place??'');
+  const [editMemo,setEditMemo]=useState(initial?.note??'');
+  const [editError,setEditError]=useState('');
+  const [saving,setSaving]=useState(false);
 
   useEffect(()=>{
     if(initial)return;
@@ -183,6 +188,9 @@ export function RecordDetailPage({productId,recordId}:{productId:ProductId;recor
         story:found.story,
       });
       setWithProducts((found.product_ids?.filter(id=>id in products) as ProductId[])??[productId]);
+      setEditTitle(found.tag);
+      setEditPlace(found.place);
+      setEditMemo(found.memo);
     });
     return()=>{active=false};
   },[initial,productId,recordId]);
@@ -194,7 +202,8 @@ export function RecordDetailPage({productId,recordId}:{productId:ProductId;recor
   const removeRecord=async()=>{
     if(!window.confirm(`“${memory.title}” 기록을 삭제할까요? 삭제한 기록은 복구할 수 없습니다.`))return;
     if(memory.kind==='memory'){
-      await deleteStoryRequest(productId,recordId);
+      const result=await deleteStoryRequest(productId,recordId);
+      if(!result.ok){setEditError(result.error.message);return}
     }else{
       let deleted:string[]=[];
       try{deleted=JSON.parse(localStorage.getItem(DELETED_RECORDS_KEY)??'[]')}catch{}
@@ -204,16 +213,38 @@ export function RecordDetailPage({productId,recordId}:{productId:ProductId;recor
     router.replace(`/log/${productId}/timeline`);
   };
 
+  const saveEdit=async()=>{
+    if(!editTitle.trim()||saving)return;
+    setSaving(true);
+    setEditError('');
+    try{
+      const result=await updateStoryRequest(productId,recordId,{tag:editTitle.trim(),place:editPlace.trim(),memo:editMemo.trim()});
+      if(!result.ok)throw new Error(result.error.message);
+      setMemory(current=>current?{...current,title:result.data.tag,place:result.data.place,sub:result.data.place,note:result.data.memo,story:result.data.story}:current);
+      setEditing(false);
+    }catch(error){
+      setEditError(error instanceof Error?error.message:'기록을 수정하지 못했습니다.');
+    }finally{
+      setSaving(false);
+    }
+  };
+
   const isMemory=memory.kind==='memory';
   return <Shell height={976}>
-    <Header title={isMemory?'내 기록':'제품 이력'} back/>
+    <Header title={isMemory?'내 기록':'제품 이력'} back action={isMemory?<button className={styles.save} type="button" onClick={()=>{setEditing(value=>!value);setEditError('')}}>{editing?'취소':'수정'}</button>:undefined}/>
     <div className={styles.detailContent}>
+      {editError&&<p className={styles.saveError} role="alert">{editError}</p>}
       <div className={styles.hero}>
         <img loading="lazy" src={memory.image??p.timelineImage} alt={`${memory.title} 기록`}/>
         <div><small>{memory.date} · {memory.place??p.place}</small><h2>{memory.title}</h2></div>
       </div>
       <p className={styles.eyebrow}>{isMemory?'MY MEMORY':'PRODUCT HISTORY'}</p>
-      <p className={styles.memoryText}>{memory.note?.split('\n')[0]??p.memoryCopy}</p>
+      {editing?<div className={styles.editForm}>
+        <label>제목<input value={editTitle} maxLength={80} onChange={event=>setEditTitle(event.target.value)}/></label>
+        <label>장소<input value={editPlace} maxLength={120} onChange={event=>setEditPlace(event.target.value)}/></label>
+        <label>메모<textarea value={editMemo} maxLength={500} onChange={event=>setEditMemo(event.target.value)}/></label>
+        <button type="button" onClick={()=>void saveEdit()} disabled={saving||!editTitle.trim()}>{saving?'저장 중…':'변경사항 저장'}</button>
+      </div>:<p className={styles.memoryText}>{memory.note?.split('\n')[0]??p.memoryCopy}</p>}
       <p className={styles.eyebrow}>WITH</p>
       {withProducts.map(id=>{
         const item=products[id],detailPath=getProductDetailPath(id);
@@ -235,8 +266,7 @@ export function RecordDetailPage({productId,recordId}:{productId:ProductId;recor
 
 export function RecordWritePage({productId,initialAiImage}:{productId:ProductId;initialAiImage?:string}){
   const p=products[productId],router=useRouter(),input=useRef<HTMLInputElement>(null);
-  const [selectedIds,setSelectedIds]=useState<ProductId[]>([productId]);
-  const [pickerOpen,setPickerOpen]=useState(false);
+  const selectedIds:ProductId[]=[productId];
   const [photo,setPhoto]=useState(p.timelineImage);
   const [memo,setMemo]=useState(p.memoryCopy);
   // 상황·동행은 자유 텍스트가 아니라 정해진 값에서 고른다(집계 가능해야 해서).
@@ -249,10 +279,9 @@ export function RecordWritePage({productId,initialAiImage}:{productId:ProductId;
     try{
       const savedDraft=sessionStorage.getItem(STORY_DRAFT_KEY);
       if(savedDraft){
-        const draft=JSON.parse(savedDraft) as {photo?:string;memo?:string;selectedIds?:ProductId[]};
+        const draft=JSON.parse(savedDraft) as {photo?:string;memo?:string};
         if(draft.photo)setPhoto(draft.photo);
         if(typeof draft.memo==='string')setMemo(draft.memo);
-        if(draft.selectedIds?.length)setSelectedIds(draft.selectedIds.filter(id=>id in products));
       }
       const selectedImage=initialAiImage||sessionStorage.getItem(AI_IMAGE_KEY);
       if(selectedImage){
@@ -267,10 +296,6 @@ export function RecordWritePage({productId,initialAiImage}:{productId:ProductId;
     }catch{}
   },[initialAiImage]);
 
-  const toggle=(id:ProductId)=>{
-    if(id===productId)return;
-    setSelectedIds(current=>current.includes(id)?current.filter(value=>value!==id):[...current,id]);
-  };
   const toggleOccasion=(id:OccasionId)=>{
     setOccasion(current=>current.includes(id)?current.filter(value=>value!==id):[...current,id]);
   };
@@ -290,40 +315,17 @@ export function RecordWritePage({productId,initialAiImage}:{productId:ProductId;
 
     try{
       const now=new Date();
-      const title=selectedIds.length>1
-        ?`${selectedIds.map(id=>products[id].short).join('와 ')}의 하루`
-        :`${p.short}와 함께한 새로운 기록`;
-      const story=`${selectedIds.map(id=>products[id].short).join(', ')}와 함께한 순간이 하나의 소중한 기록으로 남았다.`;
+      const title=`${p.short}와 함께한 새로운 기록`;
       // 장소 원문은 그대로 두고 집계용 city/country를 함께 채운다.
       const place=normalizePlace(p.place);
       const persisted=await persistStoryPhoto(photo,productId);
       let createdId='';
-      if(persisted.mode==='cloud'){
-        try{
-          const created=await persistCloudStory({
-            tag:title,
-            photoPath:persisted.photoPath,
-            location:p.place,
-            memo,
-            storyDate:now.toISOString().slice(0,10),
-            productSlugs:selectedIds,
-            occasion,
-            companion,
-            city:place.city,
-            country:place.country,
-          });
-          createdId=created.id;
-        }catch(error){
-          await removeStoryPhoto(persisted.photoPath);
-          throw error;
-        }
-      }else{
+      try{
         const response=await createStoryRequest(productId,{
-          image_url:photo,
+          ...(persisted.mode==='cloud'?{photo_path:persisted.photoPath}:{image_url:photo}),
           tag:title,
           place:p.place,
           memo,
-          story,
           product_ids:selectedIds,
           occasion,
           companion:companion??undefined,
@@ -333,6 +335,9 @@ export function RecordWritePage({productId,initialAiImage}:{productId:ProductId;
         });
         if(!response.ok)throw new Error(response.error.message);
         createdId=response.data.id;
+      }catch(error){
+        if(persisted.mode==='cloud')await removeStoryPhoto(persisted.photoPath);
+        throw error;
       }
       sessionStorage.removeItem(STORY_DRAFT_KEY);
       sessionStorage.removeItem(AI_IMAGE_KEY);
@@ -351,10 +356,8 @@ export function RecordWritePage({productId,initialAiImage}:{productId:ProductId;
       <label>PHOTO</label>
       <button className={styles.photo} onClick={()=>input.current?.click()}><img loading="lazy" src={photo} alt="선택한 기록 사진"/><span>＋ 사진 추가 · 변경</span></button>
       <input ref={input} hidden type="file" accept="image/*" onChange={load}/>
-      <label>PRODUCT <small>한 사진에 함께 나온 상품을 추가하세요.</small></label>
+      <label>PRODUCT <small>이번 MVP는 제품 1개 기준으로 기록합니다.</small></label>
       <div className={styles.selectedChips}>{selectedIds.map(id=><span key={id}><img loading="lazy" src={products[id].image} alt=""/>{products[id].short}</span>)}</div>
-      <div className={styles.productPick}><button className={styles.selectedProduct} onClick={()=>setPickerOpen(v=>!v)}><span>{selectedIds.length}개 상품 선택됨</span><b>{pickerOpen?'⌃':'⌄'}</b></button></div>
-      {pickerOpen&&<div className={styles.productList} role="listbox" aria-label="보유 상품 복수 선택">{Object.values(products).map(item=>{const selected=selectedIds.includes(item.id);return <button key={item.id} onClick={()=>toggle(item.id)} className={selected?styles.productSelected:''} aria-pressed={selected}><img loading="lazy" src={item.image} alt=""/><span><b>{item.short}</b><small>{item.material}{item.id===productId?' · 현재 타임라인':''}</small></span><strong>{selected?'✓':'＋'}</strong></button>})}</div>}
       <label>PLACE</label>
       <div className={styles.field}>⌖　{p.place}<a href={maps} target="_blank" rel="noreferrer">장소 변경　›</a></div>
       <label>OCCASION <small>어떤 상황이었는지 골라주세요. 여러 개 선택할 수 있어요.</small></label>

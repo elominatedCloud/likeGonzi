@@ -37,6 +37,11 @@ Next.js App Router에서는 페이지 라우트와 겹치지 않도록 **`/api` 
 - 필수: `image_url`, `tag`
 - 선택: `place`, `memo`, `story`, `product_ids`, `date`
 
+현재 FE는 해커톤 MVP 결정에 따라 현재 제품 1개만 `product_ids`로 전송합니다.
+사용자가 작성·수정하는 본문은 `memo`를 사용하고, `story`는 서버가 생성하는
+선택적 Story Note 용도로만 사용합니다. Supabase Storage 사진은 `image_url` 대신
+private object path인 `photo_path`를 전송할 수 있습니다.
+
 ### Response
 
 성공:
