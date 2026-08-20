@@ -139,7 +139,7 @@ function chapter(n, title, subtitle) {
   s.addNotes("세 챌린지 중 3번을 메인으로 골랐습니다. 1번과 2번은 특정 순간을 좋게 만들지만 끊긴 경험은 여전히 끊겨 있습니다. 매장에서 산 박스의 QR을 찍는 순간이 2번이고, 그 뒤 AI가 기록을 만드는 게 1번입니다.");
 }
 
-chapter(1, "MCM은 어디에 서 있나", "가격이 아니라 사용 빈도로 보면 자리가 달라진다");
+chapter(1, "MCM은 어디에 서 있나", "사용 빈도라는 축을 하나 더 두면 자리가 달라진다");
 
 /* ═══ 03 진술 ═══ */
 {
@@ -158,13 +158,13 @@ chapter(1, "MCM은 어디에 서 있나", "가격이 아니라 사용 빈도로 
 /* ═══ 05 포지셔닝 맵 ═══ */
 {
   const s = p.addSlide();
-  head(s, "POSITIONING", ["가격이 아니라 사용 빈도로 보면"], { size: 34 });
+  head(s, "POSITIONING", ["사용 빈도로 보면 자리가 다릅니다"], { size: 34 });
 
   const X0 = 2.3, Y0 = 6.35, PW = 8.9, PH = 3.7;
   const zx = X0 + PW * 0.46, zy = Y0 - PH * 0.82, zw = PW * 0.6, zh = PH * 0.64;
   s.addShape(p.ShapeType.roundRect, { x: zx, y: zy, w: zw, h: zh, rectRadius: 0.08,
     fill: { color: C.deep, transparency: 88 }, line: { color: C.cognac, width: 1 } });
-  s.addText("매일 쓰는 럭셔리", { x: zx, y: zy - 0.36, w: zw, h: 0.3, align: "center",
+  s.addText("매일 드는 럭셔리", { x: zx, y: zy - 0.36, w: zw, h: 0.3, align: "center",
     fontFace: F, fontSize: 12.5, bold: true, color: C.cognac, charSpacing: 1.4, margin: 0 });
 
   s.addShape(p.ShapeType.line, { x: X0, y: Y0, w: PW, h: 0, line: { color: C.line, width: 1 } });
@@ -199,15 +199,15 @@ chapter(1, "MCM은 어디에 서 있나", "가격이 아니라 사용 빈도로 
 /* ═══ 06 진술 ═══ */
 {
   const s = p.addSlide();
-  statement(s, [{ t: "MCM은 매일 쓸 수 있습니다" }],
-    { note: "그것이 이 브랜드가 가진 가장 큰 자산입니다" });
+  statement(s, [{ t: "MCM은 매일 듭니다" }],
+    { note: "이 브랜드의 가장 큰 자산입니다" });
   s.addNotes("가격대가 그걸 허락합니다. 3대장은 못 하는 일입니다.");
 }
 
 /* ═══ 07 진술 ═══ */
 {
   const s = p.addSlide();
-  statement(s, [{ t: "매일 쓰면," }, { t: "상합니다", c: C.cognac }]);
+  statement(s, [{ t: "매일 쓰면 상합니다" }]);
   s.addNotes("쓰면 생기는 일입니다. 그리고 이건 이 구간에만 생기는 문제입니다.");
 }
 
@@ -218,7 +218,7 @@ chapter(1, "MCM은 어디에 서 있나", "가격이 아니라 사용 빈도로 
   columns(s, [
     ["3대장", "안 씁니다", "그래서 안 상합니다.\n대신 함께한 시간도 없습니다.", false],
     ["매스 브랜드", "버립니다", "애착이 없어서\n고칠 이유가 없습니다.", false],
-    ["MCM", "고칩니다", "버리기엔 아깝고,\n고쳐 쓸 만한 값입니다.", true],
+    ["MCM", "고칩니다", "버리기엔 아깝습니다.\n고쳐 쓸 값은 합니다.", true],
   ], 3.42);
   s.addNotes("3대장은 안 쓰니까 안 상합니다. 매스 브랜드는 상하면 버립니다. MCM 구간만 매일 쓰고, 상하고, 버리기엔 아까운 물건입니다.");
 }
@@ -226,7 +226,7 @@ chapter(1, "MCM은 어디에 서 있나", "가격이 아니라 사용 빈도로 
 /* ═══ 10 실제 불편 ═══ */
 {
   const s = p.addSlide();
-  head(s, "WHAT ACTUALLY HURTS", ["기록이 없으면, 값을 잃습니다"], { size: 36 });
+  head(s, "WHAT ACTUALLY HURTS", ["기록이 없으면 값을 잃습니다"], { size: 36 });
   const facts = [
     ["30–40%", "같은 제품도 구성품과 이력 유무로\n리셀 가격이 갈린다"],
     ["1위", "명품 플랫폼에 소비자가 요구한 개선점\n— 정품 보증 시스템 강화"],
@@ -278,7 +278,7 @@ chapter(2, "그래서 만들었습니다", "하나의 타임라인, 그리고 �
   s.addText("내가 남긴 기록과 브랜드가 남긴 기록이 같은 줄에 흐릅니다", {
     x: 1.0, y: 5.22, w: W - 2, h: 0.42, align: "center", fontFace: F,
     fontSize: 22, bold: true, color: C.white, margin: 0 });
-  s.addText("사진 앱은 수선 이력을 가질 수 없고, 브랜드 시스템은 내 추억을 가질 수 없습니다", {
+  s.addText("이 둘이 같이 있는 곳은 지금 없습니다", {
     x: 1.0, y: 5.76, w: W - 2, h: 0.34, align: "center", fontFace: F,
     fontSize: 14, color: C.muted, margin: 0 });
   s.addNotes("별도 앱 설치가 없습니다. 제품의 QR·NFC가 진입점입니다. 등록하면 구매 기록이 첫 줄로 자동 생성돼 빈 화면을 보여주지 않습니다.");
@@ -290,7 +290,7 @@ chapter(2, "그래서 만들었습니다", "하나의 타임라인, 그리고 �
   head(s, "WHAT WE BUILT", ["타임라인 위에 세 가지가 얹힙니다"], { size: 34 });
   columns(s, [
     ["기록", "쌓인다", "사진 한 장을 올리면\nAI가 문장으로 남긴다.", false],
-    ["케어 · 수선", "이어진다", "제품 실사 위에서 부위를 눌러\n접수하고, 이력이 그대로 남는다.", false],
+    ["케어 · 수선", "이어진다", "제품 실사 위에서 부위를 눌러 접수하면\n이력이 그대로 남는다.", false],
     ["REMADE", "값이 된다", "긁힌 자리를 나만의 무늬로.\nAI 시안, 장인 제작.", true],
   ], 3.42);
   s.addNotes("타임라인 하나 위에 세 가지가 얹힙니다. 기록, 케어와 수선, 그리고 REMADE입니다. 이 뒤로는 왜 이렇게 만들었는지와 어떻게 동작하는지를 말씀드립니다.");
@@ -300,10 +300,10 @@ chapter(2, "그래서 만들었습니다", "하나의 타임라인, 그리고 �
 {
   const s = p.addSlide();
   statement(s, [
-    { t: "흠을 지우지 않습니다." },
-    { t: "그 자리에 그립니다.", c: C.cognac },
-  ], { size: 44 });
-  s.addNotes("저희는 수선을 되돌리는 일로 보지 않습니다. 그 자리에 그립니다. 그러면 세상에 하나뿐인 물건이 됩니다.");
+    { t: "긁힌 자리에" },
+    { t: "무늬를 새깁니다", c: C.cognac },
+  ], { size: 46 });
+  s.addNotes("수선은 보통 흔적을 없앱니다. 저희는 그 자리에 무늬를 새깁니다. 그러면 세상에 하나뿐인 물건이 됩니다.");
 }
 
 /* ═══ 11 3열 계보 ═══ */
@@ -325,8 +325,8 @@ chapter(2, "그래서 만들었습니다", "하나의 타임라인, 그리고 �
 {
   const s = p.addSlide();
   statement(s, [
-    { t: "앞의 둘은 비유입니다." },
-    { t: "셋째는 MCM 자신의 역사입니다.", c: C.cognac },
+    { t: "셋째는 MCM이" },
+    { t: "직접 겪은 일입니다", c: C.cognac },
   ], { size: 38, note: "Dapper Dan이 뜯어 만든 옷이 이 브랜드를 아이콘으로 만들었습니다" });
   s.addNotes("Eric B. & Rakim, Salt-N-Pepa, LL Cool J가 그 옷을 입었습니다. 2020년에는 그 계보의 스타일리스트 Misa Hylton이 MCM 글로벌 크리에이티브 파트너가 됐습니다.");
 }
@@ -345,19 +345,19 @@ chapter(2, "그래서 만들었습니다", "하나의 타임라인, 그리고 �
   s.addText("과시하고 싶다. 그런데 과시로 보이면 안 된다.", {
     x: 1.0, y: 5.52, w: W - 2, h: 0.4, align: "center", fontFace: F,
     fontSize: 20, bold: true, color: C.cognac, margin: 0 });
-  s.addText("흠이 서사가 되면, 흠이 있는 쪽이 더 당당해집니다", {
+  s.addText("흠이 서사가 되면 흠이 있는 쪽이 더 당당합니다", {
     x: 1.0, y: 6.06, w: W - 2, h: 0.34, align: "center", fontFace: F,
     fontSize: 14, color: C.muted, margin: 0 });
   mark(s);
   s.addNotes("큰 지출을 했을 때 두려운 건 통장이 아니라 평판입니다. 연령대 실측은 미확보이며 페르소나는 가설입니다.");
 }
 
-chapter(3, "어떻게 동작하나", "AI가 마찰을 없애고, 흠을 무늬로 바꾼다");
+chapter(3, "어떻게 동작하나", "AI가 마찰을 없애고 흠을 무늬로 바꾼다");
 
 /* ═══ 22 마찰 ═══ */
 {
   const s = p.addSlide();
-  head(s, "THE FRICTION", ["기록은 흩어지고, 사라집니다"], { size: 36 });
+  head(s, "THE FRICTION", ["기록은 흩어졌다가 사라집니다"], { size: 36 });
   const three = [
     ["사진", "SNS와 갤러리에"],
     ["구매 · 보증", "종이 영수증과 카드에"],
@@ -387,8 +387,8 @@ chapter(3, "어떻게 동작하나", "AI가 마찰을 없애고, 흠을 무늬�
 {
   const s = p.addSlide();
   statement(s, [
-    { t: "AI는 쓰게 하지 않습니다." },
-    { t: "대신 써줍니다.", c: C.cognac },
+    { t: "문장은" },
+    { t: "AI가 씁니다", c: C.cognac },
   ], { size: 44 });
   s.addNotes("사진 한 장, 상황 칩 세 번, 여덟 초. 문장은 AI가 씁니다.");
 }
@@ -423,7 +423,7 @@ chapter(3, "어떻게 동작하나", "AI가 마찰을 없애고, 흠을 무늬�
     s.addText(st[1], { x: x + 0.36, y: 3.82, w: gap - 0.7, h: 0.44, fontFace: F,
       fontSize: 22, bold: true, color: i === 2 ? C.cognac : C.white, margin: 0 });
   });
-  s.addText("AI는 시안까지입니다. 실물은 MCM 장인이 만듭니다.", {
+  s.addText("AI는 시안만 그립니다. 만드는 건 매장 장인입니다.", {
     x: 1.0, y: 5.08, w: W - 2, h: 0.42, align: "center", fontFace: F,
     fontSize: 20, bold: true, color: C.white, margin: 0 });
   rule(s, 4.4, 5.76, 4.5);
@@ -436,7 +436,7 @@ chapter(3, "어떻게 동작하나", "AI가 마찰을 없애고, 흠을 무늬�
 /* ═══ 20 진술 ★ ═══ */
 {
   const s = p.addSlide();
-  statement(s, [{ t: "새로 만들지 않았습니다." }, { t: "이미 있는 것을 썼습니다.", c: C.cognac }],
+  statement(s, [{ t: "MCM이 이미 가진 것을" }, { t: "그대로 씁니다", c: C.cognac }],
     { size: 40 });
   s.addNotes("MCM은 이미 NFC와 Aura 블록체인 패스포트를 갖고 있습니다.");
 }
@@ -444,7 +444,7 @@ chapter(3, "어떻게 동작하나", "AI가 마찰을 없애고, 흠을 무늬�
 /* ═══ 21 자산 목록 ═══ */
 {
   const s = p.addSlide();
-  head(s, "BRAND ASSETS", ["브랜드 자산을 장식으로 쓰지 않았습니다"], { size: 32 });
+  head(s, "BRAND ASSETS", ["브랜드 자산이 화면에서 일을 합니다"], { size: 32 });
   const list = [
     ["비세토스 마름모", "바이에른 깃발 = 흰-파란 하늘", "배경에서 바람에 흐른다"],
     ["로렐", "승리 · 명예의 상징", "정품 인증 배지"],
@@ -507,7 +507,7 @@ chapter(4, "왜 지금, 무엇으로 버는가", "데이터 · 경쟁 · 타이�
     x: 1.0, y: 5.22, w: W - 2, h: 0.36, align: "center", fontFace: F,
     fontSize: 15, color: C.muted, margin: 0 });
   rule(s, 4.4, 5.88, 4.5);
-  s.addText("집계는 동의한 사용자만 · 5건 미만 그룹 제외", {
+  s.addText("동의한 사용자만 집계합니다 · 5건 미만 그룹은 뺍니다", {
     x: 1.0, y: 6.14, w: W - 2, h: 0.36, align: "center", fontFace: F,
     fontSize: 14, color: C.white, margin: 0 });
   s.addNotes("사용자가 자기 추억을 남기는 과정에서 자연스럽게 얻어집니다. 동의 없이도 개인 기능은 전부 동작합니다. 코드로 보여드릴 수 있습니다.");
@@ -517,8 +517,8 @@ chapter(4, "왜 지금, 무엇으로 버는가", "데이터 · 경쟁 · 타이�
 {
   const s = p.addSlide();
   statement(s, [
-    { t: "우리는 DPP를 만들지 않습니다." },
-    { t: "DPP 위에서 사는 사람을 만듭니다.", c: C.cognac },
+    { t: "저희 자리는" },
+    { t: "DPP 위층입니다", c: C.cognac },
   ], { size: 36 });
   s.addNotes("MCM은 이미 Aura에 있습니다. 인프라 경쟁에 뛰어들면 집니다.");
 }
@@ -527,7 +527,7 @@ chapter(4, "왜 지금, 무엇으로 버는가", "데이터 · 경쟁 · 타이�
 {
   const s = p.addSlide();
   head(s, "COMPETITIVE POSITION", ["기존 DPP가 못 하는 것 하나"], { size: 36 });
-  s.addText("소비자가 두 번째로 앱을 여는 것", {
+  s.addText("소비자가 앱을 두 번째로 여는 일", {
     x: 1.0, y: 2.62, w: W - 2, h: 0.5, align: "center", fontFace: F,
     fontSize: 28, bold: true, color: C.cognac, margin: 0 });
   const list = [
@@ -590,7 +590,7 @@ chapter(4, "왜 지금, 무엇으로 버는가", "데이터 · 경쟁 · 타이�
     s.addText(r[1], { x: 5.8, y: y + 0.14, w: 6.0, h: 0.32, fontFace: F,
       fontSize: 13.5, color: C.muted, margin: 0 });
   });
-  s.addText("수선이 비용 센터에서 로열티의 접점으로 바뀝니다", {
+  s.addText("고칠수록 브랜드와 오래 갑니다", {
     x: 1.0, y: 6.72, w: W - 2, h: 0.4, align: "center", fontFace: F,
     fontSize: 16, color: C.white, margin: 0 });
   s.addNotes("리셀과 소유권 이전은 로드맵입니다.");
@@ -600,8 +600,8 @@ chapter(4, "왜 지금, 무엇으로 버는가", "데이터 · 경쟁 · 타이�
 {
   const s = p.addSlide();
   statement(s, [
-    { t: "MCM은 이미 인프라를 갖고 있습니다." },
-    { t: "저희는 그 위에 경험을 얹습니다.", c: C.cognac },
+    { t: "인프라는 MCM에 있습니다." },
+    { t: "경험을 얹는 일이 저희 몫입니다.", c: C.cognac },
   ], { size: 34 });
   s.addText("감사합니다", { x: 1.0, y: 6.1, w: W - 2, h: 0.4, align: "center",
     fontFace: F, fontSize: 14, color: C.dim, charSpacing: 4, margin: 0 });
