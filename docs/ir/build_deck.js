@@ -517,11 +517,12 @@ chapter(3, "어떻게 동작하나", "AI가 마찰을 없애고 흠을 무늬로
     ["Care Score", "기록 기반 규칙 계산 · AI 아님", "규칙"],
     ["수선 견적", "기준표 계산 · AI는 설명문만", "규칙"],
     ["결제", "데모 · 실제 정산 없음", "데모"],
+    ["캠페인 QR 발견", "API 분기만 · 화면 없음", "로드맵"],
     ["소유권 이전", "스키마만 · 화면 없음", "로드맵"],
   ];
   const tone = { "구현": C.cognac, "규칙": C.white, "데모": C.muted, "로드맵": C.dim };
   rows.forEach((r, i) => {
-    const y = 2.5 + i * 0.53;
+    const y = 2.44 + i * 0.5;
     if (i > 0) rule(s, 1.2, y - 0.06, W - 2.4);
     s.addText(r[0], { x: 1.3, y: y + 0.06, w: 4.6, h: 0.32, fontFace: F,
       fontSize: 15, bold: true, color: C.white, margin: 0 });
@@ -531,8 +532,8 @@ chapter(3, "어떻게 동작하나", "AI가 마찰을 없애고 흠을 무늬로
       fontFace: F, fontSize: 12.5, bold: true, color: tone[r[2]], margin: 0 });
   });
   s.addText("제품 상태를 AI가 판정하지 않습니다. 어디에 안 쓰는지도 적어둡니다.", {
-    x: 1.0, y: 6.86, w: W - 2, h: 0.36, align: "center", fontFace: F,
-    fontSize: 14, color: C.cognac, margin: 0 });
+    x: 1.0, y: 6.94, w: W - 2, h: 0.34, align: "center", fontFace: F,
+    fontSize: 13.5, color: C.cognac, margin: 0 });
   mark(s);
   s.addNotes("심사에서 구현 수준을 오해하지 않도록 미리 밝힙니다. Story와 Recap, REMADE 시안은 실제로 API를 호출해 생성됩니다. Care Score와 견적은 규칙 계산이고 AI가 아닙니다. 결제는 데모라 실제 정산이 없습니다. 소유권 이전은 스키마까지만 있습니다.");
 }
@@ -583,7 +584,7 @@ chapter(3, "어떻게 동작하나", "AI가 마찰을 없애고 흠을 무늬로
     s.addText(st[1], { x: x + 0.36, y: 4.32, w: gap - 0.7, h: 0.36, fontFace: F,
       fontSize: 14, color: C.muted, margin: 0 });
   });
-  s.addText("박스를 여는 속도는 사용자가 정합니다", {
+  s.addText("박스는 손으로 끌어서 엽니다. 속도는 사용자가 정합니다", {
     x: 1.0, y: 5.5, w: W - 2, h: 0.4, align: "center", fontFace: F,
     fontSize: 18, color: C.white, margin: 0 });
   s.addNotes("스크롤을 멈추면 애니메이션도 멈춥니다. 수선은 제품 사진 위에서 부위를 직접 누릅니다.");

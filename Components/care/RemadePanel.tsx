@@ -35,6 +35,10 @@ export function RemadePanel({
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
+  // 복원과 REMADE는 같은 접수에서 갈린다. 고르기 전에는 어느 쪽도 진행하지 않는다.
+  const [mode, setMode] = useState<"restore" | "remade" | null>(
+    initialSource === "remade" ? "remade" : null,
+  );
 
   const base = `/api/products/${productId}/repairs/${repairId}/remade`;
 
@@ -73,18 +77,57 @@ export function RemadePanel({
 
   return (
     <section className="mx-5 mt-6 border-t border-black/5 pt-5">
-      <p className="text-[11px] tracking-[0.16em] text-muted">REMADE</p>
+      <p className="text-[11px] tracking-[0.16em] text-muted">REPAIR OPTION</p>
       <h2 className="mt-2 text-[15px] font-semibold leading-relaxed text-ink">
-        흠을 지우지 않습니다.
-        <br />
-        그 자리에 그립니다.
+        어떻게 고칠까요?
       </h2>
-      <p className="mt-2 text-[12px] leading-relaxed text-muted">
-        손상 부위에 어울리는 리폼 시안을 만듭니다. 시안까지가 AI이고,
-        실물은 매장 장인이 제작합니다.
-      </p>
 
-      {picked && (
+      {mode === null && (
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setMode("restore")}
+            className="rounded-2xl border border-black/12 bg-paper px-4 py-4 text-left"
+          >
+            <b className="block text-[14px] text-ink">복원</b>
+            <span className="mt-1 block text-[11px] leading-4 text-muted">
+              원래 상태로.
+              <br />
+              세척 · 보강 · 부품 교체
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("remade")}
+            className="rounded-2xl border border-cognac/40 bg-cognac/[0.07] px-4 py-4 text-left"
+          >
+            <b className="block text-[14px] text-cognac-deep">REMADE</b>
+            <span className="mt-1 block text-[11px] leading-4 text-muted">
+              흠 위에 무늬를.
+              <br />
+              AI 시안 · MCM 제작
+            </span>
+          </button>
+        </div>
+      )}
+
+      {mode === "restore" && (
+        <div className="mt-3 rounded-2xl bg-cream-deep px-4 py-4">
+          <p className="text-[13px] font-semibold text-ink">복원으로 진행합니다</p>
+          <p className="mt-1 text-[11px] leading-4 text-muted">
+            원래 상태에 가깝게 되돌립니다. 매장에서 상태를 확인한 뒤 방법을 안내합니다.
+          </p>
+          <button
+            type="button"
+            onClick={() => setMode(null)}
+            className="mt-3 text-[11px] font-semibold text-cognac-deep underline underline-offset-2"
+          >
+            REMADE도 볼게요
+          </button>
+        </div>
+      )}
+
+      {mode === "remade" && picked && (
         <figure className="mt-4">
           <div className="soft-card relative aspect-square w-full overflow-hidden">
             <SafeImage src={picked} alt="채택된 리폼 시안" fill className="object-cover" unoptimized />
@@ -95,7 +138,11 @@ export function RemadePanel({
         </figure>
       )}
 
-      {!picked && options.length === 0 && (
+      {mode === "remade" && !picked && options.length === 0 && (
+        <>
+        <p className="mt-3 text-[12px] leading-relaxed text-muted">
+          손상 부위에 어울리는 시안을 만듭니다. 시안까지가 AI이고, 실물은 MCM 매장이 제작합니다.
+        </p>
         <button
           type="button"
           onClick={generate}
@@ -116,9 +163,17 @@ export function RemadePanel({
             </>
           )}
         </button>
+        <button
+          type="button"
+          onClick={() => setMode(null)}
+          className="mt-2 w-full text-[11px] text-muted underline underline-offset-2"
+        >
+          복원으로 바꾸기
+        </button>
+        </>
       )}
 
-      {!picked && options.length > 0 && (
+      {mode === "remade" && !picked && options.length > 0 && (
         <>
           <p className="mt-4 text-[12px] text-muted">마음에 드는 시안을 고르세요.</p>
           <div className="mt-2 grid grid-cols-3 gap-2">
