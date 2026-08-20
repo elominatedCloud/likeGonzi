@@ -483,64 +483,36 @@ chapter(3, "어떻게 동작하나", "AI가 마찰을 없애고 흠을 무늬로
 /* ═══ 19 REMADE ═══ */
 {
   const s = p.addSlide();
-  head(s, "REMADE", ["MCM이 직접 만드는 수선 상품입니다"], { size: 34 });
-  const steps = [["01", "긁혔다"], ["02", "AI가 그린다"], ["03", "장인이 만든다"], ["04", "기록된다"]];
-  const gap = (W - 2.4) / steps.length;
-  steps.forEach((st, i) => {
-    const x = 1.2 + gap * i;
-    if (i > 0) s.addShape(p.ShapeType.line, { x, y: 3.36, w: 0, h: 1.1,
-      line: { color: C.line, width: 0.75 } });
-    s.addText(st[0], { x: x + 0.36, y: 3.4, w: 1, h: 0.34, fontFace: F,
-      fontSize: 13, bold: true, color: C.cognac, margin: 0 });
-    s.addText(st[1], { x: x + 0.36, y: 3.82, w: gap - 0.7, h: 0.44, fontFace: F,
-      fontSize: 22, bold: true, color: i === 2 ? C.cognac : C.white, margin: 0 });
-  });
-  s.addImage({ path: IMG("damage.jpg"),   x: 1.55, y: 4.62, w: 1.5, h: 1.5 });
-  s.addText("→", { x: 3.2, y: 5.24, w: 0.4, h: 0.3, align: "center", fontFace: F,
-    fontSize: 15, color: C.dim, margin: 0 });
-  s.addImage({ path: IMG("remade-1.jpg"), x: 3.75, y: 4.62, w: 1.5, h: 1.5 });
-  s.addImage({ path: IMG("remade-2.jpg"), x: 5.45, y: 4.62, w: 1.5, h: 1.5 });
-  s.addImage({ path: IMG("remade-3.jpg"), x: 7.15, y: 4.62, w: 1.5, h: 1.5 });
-  s.addText("AI는 시안만 그립니다.\n만드는 건 MCM 매장입니다.", {
-    x: 9.1, y: 4.86, w: 3.2, h: 0.9, fontFace: F,
-    fontSize: 16, bold: true, color: C.white, lineSpacing: 26, margin: 0 });
-  s.addText("리폼하면 보통 리셀가가 떨어집니다. 브랜드 공식 리폼 + DPP 기록이면 오히려 오릅니다.", {
-    x: 1.0, y: 6.42, w: W - 2, h: 0.36, align: "center", fontFace: F,
-    fontSize: 13, color: C.muted, margin: 0 });
-  s.addNotes("AI가 손상 부위에 어울리는 문양 시안 세 개를 만들고 실물은 MCM 장인이 만듭니다. AI가 손을 대체하지 않습니다. 진품성이 유지되고 세상에 하나뿐이라는 증명이 붙기 때문에 값이 오릅니다.");
-}
+  head(s, "REPAIR & REMADE", ["고칠 때, 두 갈래를 고릅니다"], { size: 34 });
 
-/* ═══ 22b 구현 수준 ═══ */
-{
-  const s = p.addSlide();
-  head(s, "WHAT IS REAL", ["어디까지 만들었는지 밝힙니다"], { size: 34 });
-  const rows = [
-    ["AI Story · Recap 생성", "gpt-4o-mini", "구현"],
-    ["REMADE 시안 생성", "gpt-image-1-mini · 3안 15초", "구현"],
-    ["GS1 Digital Link 태그", "/01/{gtin}/21/{serial} 표준 라우팅", "구현"],
-    ["EU ESPR 여권 항목", "소재 구성 · 재활용 함량 · 수리가능성 · 원산지", "구현"],
-    ["수선 접수 · 상황 데이터 집계", "실사 위 좌표 · 동의 기반 k-익명성", "구현"],
-    ["Care Score · 수선 견적", "기록 기반 규칙 계산 · AI 아님", "규칙"],
-    ["여권 수치 · 결제", "시연용 가정치 · 실제 정산 없음", "데모"],
-    ["Aura 원장 기록", "브랜드 연동 필요", "연동 예정"],
-    ["캠페인 QR · 소유권 이전", "화면 없음", "로드맵"],
+  const forks = [
+    ["복원", "원래 상태로", "세척 · 보강 · 부품 교체\n대부분이 여기로 온다", false],
+    ["REMADE", "흠 위에 무늬를", "AI 시안 3안 · MCM 매장 제작\n선택 · 프리미엄", true],
   ];
-  const tone = { "구현": C.cognac, "규칙": C.white, "데모": C.muted, "연동 예정": C.muted, "로드맵": C.dim };
-  rows.forEach((r, i) => {
-    const y = 2.44 + i * 0.5;
-    if (i > 0) rule(s, 1.2, y - 0.06, W - 2.4);
-    s.addText(r[0], { x: 1.3, y: y + 0.06, w: 4.3, h: 0.32, fontFace: F,
-      fontSize: 15, bold: true, color: C.white, margin: 0 });
-    s.addText(r[1], { x: 5.7, y: y + 0.08, w: 4.7, h: 0.3, fontFace: F,
-      fontSize: 12.5, color: C.muted, margin: 0 });
-    s.addText(r[2], { x: 10.5, y: y + 0.07, w: 1.6, h: 0.3, align: "right",
-      fontFace: F, fontSize: 12.5, bold: true, color: tone[r[2]], margin: 0 });
+  forks.forEach((f, i) => {
+    const x = 1.3 + i * 5.5;
+    if (i > 0) s.addShape(p.ShapeType.line, { x: x - 0.5, y: 2.5, w: 0, h: 1.9,
+      line: { color: C.line, width: 0.75 } });
+    s.addText(f[0], { x, y: 2.54, w: 4.6, h: 0.46, fontFace: F,
+      fontSize: 26, bold: true, color: f[3] ? C.cognac : C.white, margin: 0 });
+    s.addText(f[1], { x, y: 3.1, w: 4.6, h: 0.34, fontFace: F,
+      fontSize: 15, color: C.white, margin: 0 });
+    s.addText(f[2], { x, y: 3.54, w: 4.7, h: 0.8, fontFace: F,
+      fontSize: 13, color: C.muted, lineSpacing: 21, margin: 0 });
   });
-  s.addText("제품 상태를 AI가 판정하지 않습니다. 어디에 안 쓰는지도 적어둡니다.", {
-    x: 1.0, y: 6.94, w: W - 2, h: 0.34, align: "center", fontFace: F,
-    fontSize: 13.5, color: C.cognac, margin: 0 });
+
+  s.addText("매장에서 상태를 보고\n방법을 안내합니다", { x: 1.3, y: 4.62, w: 4.6, h: 0.8,
+    fontFace: F, fontSize: 13, color: C.muted, lineSpacing: 21, margin: 0 });
+  s.addImage({ path: IMG("remade-1.jpg"), x: 6.8,  y: 4.56, w: 1.4, h: 1.4 });
+  s.addImage({ path: IMG("remade-2.jpg"), x: 8.35, y: 4.56, w: 1.4, h: 1.4 });
+  s.addImage({ path: IMG("remade-3.jpg"), x: 9.9,  y: 4.56, w: 1.4, h: 1.4 });
+
+  rule(s, 1.3, 6.24, W - 2.6);
+  s.addText("어느 쪽을 고르든 이력은 한 줄에 남고, 다음 소유자에게 그대로 넘어갑니다", {
+    x: 1.0, y: 6.44, w: W - 2, h: 0.4, align: "center", fontFace: F,
+    fontSize: 17, bold: true, color: C.cognac, margin: 0 });
   mark(s);
-  s.addNotes("심사에서 구현 수준을 오해하지 않도록 미리 밝힙니다. Story와 Recap, REMADE 시안은 실제로 API를 호출해 생성됩니다. Care Score와 견적은 규칙 계산이고 AI가 아닙니다. 결제는 데모라 실제 정산이 없습니다. 소유권 이전은 스키마까지만 있습니다.");
+  s.addNotes("고칠 때 두 갈래에서 고릅니다. 복원은 원래 상태로 되돌리는 것이고 대부분이 여기로 옵니다. REMADE는 흠 위에 무늬를 새기는 선택형 프리미엄입니다. 오른쪽 세 장은 실제 생성 결과입니다. 중요한 건 어느 쪽을 고르든 이력이 한 줄에 남고, 그 이력이 다음 소유자에게 그대로 넘어간다는 점입니다. 소유권 이전은 스키마까지 있고 화면은 다음 단계입니다.");
 }
 
 /* ═══ 20 진술 ★ ═══ */
@@ -743,7 +715,7 @@ chapter(4, "왜 지금, 무엇으로 버는가", "데이터 · 경쟁 · 타이�
   ], { size: 34 });
   s.addText("감사합니다", { x: 1.0, y: 6.1, w: W - 2, h: 0.4, align: "center",
     fontFace: F, fontSize: 14, color: C.dim, charSpacing: 4, margin: 0 });
-  s.addNotes("Phase 1은 스토리북과 Care/Repair, REMADE, 기존 DPP 연동입니다. Phase 2는 Archive Style과 B2B 대시보드, Phase 3은 멀티 브랜드와 리셀 연계입니다. 감사합니다.");
+  s.addNotes("구현 수준을 물으면 이렇게 답합니다. 실제로 도는 것은 AI Story와 Recap 생성, REMADE 시안 생성, GS1 Digital Link 태그 라우팅, EU ESPR 여권 항목, 수선 접수와 상황 데이터 집계입니다. Care Score와 수선 견적은 규칙 계산이고 AI가 아닙니다. 여권 수치와 결제는 시연용이며 화면에 그렇게 표시합니다. Aura 원장 기록은 브랜드 연동이 필요하고, 캠페인 QR과 소유권 이전은 화면이 아직 없습니다. Phase 1은 스토리북과 Care/Repair, REMADE, 기존 DPP 연동입니다. Phase 2는 Archive Style과 B2B 대시보드, Phase 3은 멀티 브랜드와 리셀 연계입니다. 감사합니다.");
 }
 
 p.writeFile({ fileName: "/Users/home/Desktop/likeGonzi/docs/ir/MCM_Luxury_Book_IR.pptx" })
