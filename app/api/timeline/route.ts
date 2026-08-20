@@ -3,6 +3,7 @@ import { requireSupabaseUser } from "@/lib/auth-guard";
 import type { RepairRow, StoryRow } from "@/lib/mappers";
 import { resolveOwnedProductRef, productSlugsForUnitIds } from "@/lib/supabase-product-refs";
 import { signPhotoPath } from "@/lib/supabase-photo-url";
+import { normalizeDemoStoryImage } from "@/lib/story-image";
 
 /** 타임라인 한 줄. 종류가 달라도 화면에서 같은 카드로 그린다. */
 export interface TimelineEntry {
@@ -102,6 +103,7 @@ export async function GET(request: Request) {
   for (const row of storyRows) {
     const unitId = unitByStoryId[row.id];
     if (!unitId) continue;
+    if (row.story_date < unitById[unitId].registered_at.slice(0, 10)) continue;
     entries.push({
       id: row.id,
       kind: "story",
@@ -109,12 +111,16 @@ export async function GET(request: Request) {
       title: row.tag ?? "기록",
       place: row.location,
       note: row.story ?? row.memo,
-      image: row.photo_url ?? ((await signPhotoPath(supabase, row.photo_path)) || null),
+      image: normalizeDemoStoryImage(
+        row.photo_url ?? ((await signPhotoPath(supabase, row.photo_path)) || null),
+        describe(unitId).product_slug,
+      ),
       ...describe(unitId),
     });
   }
 
   for (const row of (repairResult.data ?? []) as RepairRow[]) {
+    if (row.created_at.slice(0, 10) < unitById[row.product_unit_id].registered_at.slice(0, 10)) continue;
     entries.push({
       id: row.id,
       kind: "repair",

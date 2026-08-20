@@ -22,6 +22,12 @@ export function RecapCard({ productId }: { productId: string }) {
   const [refreshKey, setRefreshKey] = useState(0);
   const [shareNote, setShareNote] = useState("");
 
+  function retry() {
+    setError("");
+    setRecap(null);
+    setRefreshKey((value) => value + 1);
+  }
+
   /**
    * Web Share API로 공유한다. 지원하지 않는 브라우저(대부분의 데스크톱)는
    * 클립보드로 폴백한다. SNS SDK를 붙이지 않는다.
@@ -51,7 +57,7 @@ export function RecapCard({ productId }: { productId: string }) {
       .then((json) => {
         if (cancelled) return;
         if (json.ok) setRecap(json.data);
-        else setError(json.error.message);
+        else setError("Story Recap을 불러오지 못했어요. 잠시 후 다시 시도해주세요.");
       })
       .catch(() => {
         if (!cancelled) setError("Recap을 불러오지 못했어요.");
@@ -77,7 +83,7 @@ export function RecapCard({ productId }: { productId: string }) {
             </button>
             <button
               type="button"
-              onClick={() => setRefreshKey((value) => value + 1)}
+              onClick={retry}
               className="inline-flex items-center gap-1 text-[11px] text-gold-soft/70"
               aria-label="Recap 다시 만들기"
             >
@@ -96,9 +102,10 @@ export function RecapCard({ productId }: { productId: string }) {
       )}
 
       {error && (
-        <p className="mt-3 text-[12px] leading-5 text-white/70" role="alert">
-          {error}
-        </p>
+        <div className="mt-3 flex items-center justify-between gap-3" role="alert">
+          <p className="text-[12px] leading-5 text-white/70">{error}</p>
+          <button type="button" onClick={retry} className="shrink-0 text-[11px] font-semibold text-gold-soft">다시 시도</button>
+        </div>
       )}
 
       {recap && (

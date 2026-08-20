@@ -10,24 +10,21 @@ import {
   createStory as createStoryRequest,
   deleteStory as deleteStoryRequest,
   getStory as getStoryRequest,
-  listStories as listStoriesRequest,
   updateStory as updateStoryRequest,
 } from '@/lib/story-api-client';
 import { COMPANIONS, OCCASIONS, type CompanionId, type OccasionId } from '@/types/story-api';
 import { normalizePlace } from '@/lib/place-normalize';
 import { apiFetch } from '@/lib/api-client';
 import type { TimelineEntry } from '@/app/api/timeline/route';
+import type { ProductDTO } from '@/lib/mappers';
 import { persistStoryPhoto, removeStoryPhoto } from '@/lib/story-photo-storage';
-import type { StoryRecord } from '@/types/story-api';
 import { getProductDetailPath } from '@/lib/product-routes';
 
 const A = '/FE-namjun/assets';
 export type ProductId = 'stark' | 'ella' | 'pina';
 type Entry = { id?:string; kind:'product'|'care'|'memory'; date:string; title:string; sub:string; note?:string; image?:string; place?:string; story?:string };
 type Product = { id:ProductId; name:string; short:string; material:string; image:string; bought:string; condition:string; latest:string; place:string; memoryTitle:string; memoryCopy:string; aiReason:string; timelineImage:string; aiImages:string[]; entries:Entry[] };
-type CareRecord = { id:string; productId:ProductId; date:string; title:string; sub:string; note:string; image:string; photos:string[] };
 const DELETED_RECORDS_KEY='likegonzi-deleted-records';
-const CARE_RECORDS_KEY='likegonzi-care-records';
 const STORY_DRAFT_KEY='likegonzi-story-draft';
 const AI_IMAGE_KEY='likegonzi-ai-selected-image';
 
@@ -49,30 +46,101 @@ export const products:Record<ProductId,Product> = {
     {kind:'care',date:'2026.03.14',title:'가죽 표면 케어 완료',sub:'Calfskin 클리닝 및 모서리 보호'},
     {id:'museum-postcard',kind:'memory',date:'2026.08.04',title:'미술관에서 쓴 엽서',sub:'서울 덕수궁길 · Pina Wallet',place:'서울 덕수궁길',story:'전시의 여운을 엽서에 적는 동안 작은 지갑은 조용히 그날의 시간을 지켜보았다.',note:'전시의 여운을 짧은 문장으로 남긴 날.\n#미술관 #엽서',image:`${A}/pina-ai-museum.png`}]}
 };
+type OwnedProduct = ProductDTO&{slug:string};
+
+function isProductId(value:string):value is ProductId{return value in products}
+
+function productCondition(careScore:number){
+  if(careScore>=80)return '양호';
+  if(careScore>=50)return '점검 권장';
+  return '케어 필요';
+}
+
+function displayDate(value:string|undefined){
+  return value?value.slice(0,10).replaceAll('-','.'):'기록 없음';
+}
 function Header({title,back=false,action}:{title:string;back?:boolean;action?:React.ReactNode}){const router=useRouter();return <header className={styles.header}><span>{back&&<button className={styles.back} onClick={()=>router.back()} aria-label="뒤로 가기">←</button>}</span><h1>{title}</h1><span className={styles.headerAction}>{action}</span></header>}
 // app/layout.tsx가 이미 .app-shell로 감싸고 배경 패턴까지 깔아준다.
 // 여기서 프레임을 한 번 더 씌우면 다른 화면보다 좁은 목업이 겹쳐 보인다.
 function Shell({children}:{children:React.ReactNode}){return <main className={styles.stage}><AmbientPattern variant="log"/>{children}<BottomNav/></main>}
 
-export function StorybookPage(){return <Shell><Header title="스토리북"/><div className={styles.storyContent}><p className={styles.eyebrow}>MY STORYBOOK</p><p className={styles.conditionNote}>제품 상태는 최근 등록된 관리·수선 기록을 기준으로 한 데모 표기입니다.</p>{Object.values(products).map(p=>{const memoryCount=p.entries.filter(e=>e.kind==='memory').length;return <article className={styles.storyCard} key={p.id}><img loading="lazy" src={p.image} alt={p.name} className={styles.productImage}/><div className={styles.productInfo}><h2>{p.name}</h2><dl><div><dt>구매</dt><dd>{p.bought}</dd></div><div><dt>상태</dt><dd>{p.condition}<small className={styles.demoLabel}>데모 기준</small></dd></div><div><dt>추억</dt><dd>{memoryCount} 개</dd></div><div><dt>최근 기록</dt><dd>{p.latest}</dd></div></dl></div><Link className={styles.storyLink} href={memoryCount?`/log/${p.id}/timeline`:`/log/${p.id}/record/new`}>{memoryCount?'Storybook 보기 →':'첫 기록 작성하기 →'}</Link></article>})}</div></Shell>}
+export function StorybookPage(){
+  const [ownedProducts,setOwnedProducts]=useState<OwnedProduct[]>([]);
+  const [timeline,setTimeline]=useState<TimelineEntry[]>([]);
+  const [loading,setLoading]=useState(true);
+  const [loadError,setLoadError]=useState('');
+
+  useEffect(()=>{
+    let active=true;
+    Promise.all([apiFetch<OwnedProduct[]>('/api/products/my'),apiFetch<TimelineEntry[]>('/api/timeline')])
+      .then(([productResult,timelineResult])=>{
+        if(!active)return;
+        if(!productResult.ok)throw new Error(productResult.error.message);
+        if(!timelineResult.ok)throw new Error(timelineResult.error.message);
+        setOwnedProducts(productResult.data);
+        setTimeline(timelineResult.data);
+      })
+      .catch(error=>{if(active)setLoadError(error instanceof Error?error.message:'스토리북을 불러오지 못했습니다.')})
+      .finally(()=>{if(active)setLoading(false)});
+    return()=>{active=false};
+  },[]);
+
+  return <Shell><Header title="스토리북"/><div className={styles.storyContent}>
+    <p className={styles.eyebrow}>MY STORYBOOK</p>
+    <p className={styles.conditionNote}>내 계정에 등록된 제품과 실제 기록을 기준으로 표시됩니다.</p>
+    {loading&&<p className={styles.detailLoading}>스토리북을 불러오고 있어요.</p>}
+    {!loading&&loadError&&<p className={styles.detailLoading} role="alert">{loadError}</p>}
+    {!loading&&!loadError&&ownedProducts.length===0&&<div className={styles.detailLoading}><p>아직 등록된 제품이 없습니다.</p><Link href="/camera?mode=qr">제품 등록하기 →</Link></div>}
+    {!loading&&!loadError&&ownedProducts.map(product=>{
+      const productTimeline=timeline.filter(entry=>entry.product_slug===product.slug);
+      const memoryCount=productTimeline.filter(entry=>entry.kind==='story').length;
+      const latest=productTimeline[0]?.date??product.registered_at;
+      const staticProduct=isProductId(product.slug)?products[product.slug]:null;
+      const image=product.cutout_image??staticProduct?.image??'/images/placeholder-bag.svg';
+      return <article className={styles.storyCard} key={product.id}>
+        <img loading="lazy" src={image} alt={product.name} className={styles.productImage}/>
+        <div className={styles.productInfo}><h2>{product.name}</h2><dl>
+          <div><dt>등록</dt><dd>{displayDate(product.registered_at)}</dd></div>
+          <div><dt>상태</dt><dd>{productCondition(product.care_score)}<small className={styles.demoLabel}>케어 점수 기준</small></dd></div>
+          <div><dt>추억</dt><dd>{memoryCount} 개</dd></div>
+          <div><dt>최근 기록</dt><dd>{displayDate(latest)}</dd></div>
+        </dl></div>
+        <Link className={styles.storyLink} href={memoryCount?`/log/${product.slug}/timeline`:`/log/${product.slug}/record/new`}>{memoryCount?'Storybook 보기 →':'첫 기록 작성하기 →'}</Link>
+      </article>
+    })}
+  </div></Shell>
+}
 
 type Tab='all'|'mine'|'product';
 type UnifiedTimelineEntry=Entry&{productIds:ProductId[]};
+function timelinePlace(place:string|null|undefined,kind:TimelineEntry['kind']){
+  const value=place?.trim();
+  if(value&&!/^\?+$/.test(value))return value;
+  return kind==='repair'?'수선소':'장소 미지정';
+}
+function timelineEntryHref(productId:string,entry:Pick<Entry,'id'|'kind'>){
+  const detailPath=getProductDetailPath(productId)??`/products/${encodeURIComponent(productId)}`;
+  if(entry.kind==='memory'&&entry.id)return `/log/${productId}/record/${entry.id}`;
+  if(entry.kind==='care'&&entry.id)return `${detailPath}/repairs/${entry.id}`;
+  return detailPath;
+}
 // localStorage hydration intentionally updates the client shell after mount.
 /* eslint-disable react-hooks/set-state-in-effect */
 export function AllTimelinePage(){
   const [tab,setTab]=useState<Tab>('all');
   const [timeline,setTimeline]=useState<TimelineEntry[]>([]);
+  const [firstProductSlug,setFirstProductSlug]=useState<string|null|undefined>(undefined);
 
   // 등록·기록·수선을 서버에서 한 줄기로 받아온다.
   // 예전에는 제품 이력이 하드코딩, 케어 기록이 localStorage라 수선을 접수해도
   // 여기 안 나타나고 기기를 바꾸면 사라졌다.
   useEffect(()=>{
     let active=true;
-    apiFetch<TimelineEntry[]>('/api/timeline').then(result=>{
-      if(!active||!result.ok)return;
-      setTimeline(result.data);
-    }).catch(()=>{});
+    Promise.all([apiFetch<TimelineEntry[]>('/api/timeline'),apiFetch<OwnedProduct[]>('/api/products/my')]).then(([timelineResult,productResult])=>{
+      if(!active)return;
+      if(timelineResult.ok)setTimeline(timelineResult.data);
+      setFirstProductSlug(productResult.ok?(productResult.data[0]?.slug??null):null);
+    }).catch(()=>{if(active)setFirstProductSlug(null)});
     return()=>{active=false};
   },[]);
 
@@ -83,8 +151,8 @@ export function AllTimelinePage(){
       kind:entry.kind==='story'?'memory':entry.kind==='repair'?'care':'product',
       date:entry.date.replaceAll('-','.'),
       title:entry.title,
-      place:entry.place??undefined,
-      sub:`${entry.place||'장소 미지정'} · ${entry.product_name}`,
+      place:timelinePlace(entry.place,entry.kind),
+      sub:`${timelinePlace(entry.place,entry.kind)} · ${entry.product_name}`,
       note:entry.note??undefined,
       image:entry.image??undefined,
       productIds:[entry.product_slug as ProductId],
@@ -92,15 +160,15 @@ export function AllTimelinePage(){
 
   const entryHref=(entry:UnifiedTimelineEntry)=>{
     const productId=entry.productIds[0];
-    if(entry.kind==='care')return getProductDetailPath(productId)?`${getProductDetailPath(productId)}/care`:`/log/${productId}/timeline`;
-    if(entry.id)return `/log/${productId}/record/${entry.id}`;
-    return getProductDetailPath(productId)??`/log/${productId}/timeline`;
+    return timelineEntryHref(productId,entry);
   };
 
   return <Shell>
     <div className={styles.timelineHead}>
       <h1 className={styles.allTimelineTitle}>전체 타임라인</h1>
-      <Link href="/log/stark/record/new" className={styles.addRecord}>+ 기록 추가</Link>
+      {firstProductSlug===undefined
+        ?<span className={styles.addRecord} aria-label="제품 불러오는 중">불러오는 중</span>
+        :<Link href={firstProductSlug?`/log/${firstProductSlug}/record/new`:'/camera?mode=qr'} className={styles.addRecord}>{firstProductSlug?'+ 기록 추가':'+ 제품 등록'}</Link>}
     </div>
     <div className={styles.tabs} role="tablist" aria-label="타임라인 기록 유형">
       <button type="button" role="tab" aria-selected={tab==='all'} className={tab==='all'?styles.on:''} onClick={()=>setTab('all')}>전체</button>
@@ -148,13 +216,13 @@ export function TimelinePage({productId,tab='all'}:{productId:ProductId;tab?:Tab
       kind:(entry.kind==='story'?'memory':entry.kind==='repair'?'care':'product') as Entry['kind'],
       date:entry.date.replaceAll('-','.'),
       title:entry.title,
-      place:entry.place??undefined,
-      sub:`${entry.place||'장소 미지정'} · ${entry.product_name}`,
+      place:timelinePlace(entry.place,entry.kind),
+      sub:`${timelinePlace(entry.place,entry.kind)} · ${entry.product_name}`,
       note:entry.note??undefined,
       image:entry.image??undefined,
     }))
     .sort((a,b)=>a.date.localeCompare(b.date));
-  return <Shell><div className={styles.timelineHead}><StatusTitle title={p.short}/><Link href={`/log/${p.id}/record/new`} className={styles.addRecord}>+ 기록 추가</Link></div><div className={styles.tabs}><Link className={tab==='all'?styles.on:''} href={`/log/${p.id}/timeline`}>전체</Link><Link className={tab==='mine'?styles.on:''} href={`/log/${p.id}/timeline/my`}>내 기록</Link><Link className={tab==='product'?styles.on:''} href={`/log/${p.id}/timeline/product`}>제품 이력</Link></div><div className={`${styles.timeline} ${tab!=='all'?styles.compactTimeline:''}`}><p className={styles.eyebrow}>MY MEMORY</p>{shown.map((e,i)=><Link href={e.id?`/log/${p.id}/record/${e.id}`:'#'} className={styles.timelineCard} key={`${e.date}-${e.id??i}`}><div className={styles.timelineText}><small>{e.date} · {e.kind==='memory'?'내 기록':'제품 이력'}</small><h2>{e.title}</h2><p>{e.sub}</p>{e.note&&<p className={styles.note}>{e.note}</p>}</div>{e.image?<img loading="lazy" src={e.image} alt=""/>:<span className={styles.shield}>✓</span>}</Link>)}</div></Shell>
+  return <Shell><div className={styles.timelineHead}><StatusTitle title={p.short}/><Link href={`/log/${p.id}/record/new`} className={styles.addRecord}>+ 기록 추가</Link></div><div className={styles.tabs}><Link className={tab==='all'?styles.on:''} href={`/log/${p.id}/timeline`}>전체</Link><Link className={tab==='mine'?styles.on:''} href={`/log/${p.id}/timeline/my`}>내 기록</Link><Link className={tab==='product'?styles.on:''} href={`/log/${p.id}/timeline/product`}>제품 이력</Link></div><div className={`${styles.timeline} ${tab!=='all'?styles.compactTimeline:''}`}><p className={styles.eyebrow}>MY MEMORY</p>{shown.map((e,i)=><Link href={timelineEntryHref(p.id,e)} className={styles.timelineCard} key={`${e.date}-${e.id??i}`}><div className={styles.timelineText}><small>{e.date} · {e.kind==='memory'?'내 기록':'제품 이력'}</small><h2>{e.title}</h2><p>{e.sub}</p>{e.note&&<p className={styles.note}>{e.note}</p>}</div>{e.image?<img loading="lazy" src={e.image} alt=""/>:<span className={styles.shield}>✓</span>}</Link>)}</div></Shell>
 }
 function StatusTitle({title}:{title:string}){const router=useRouter();return <><button className={styles.back} onClick={()=>router.back()}>←</button><h1 className={styles.productTitle}>{title}</h1></>}
 
@@ -162,6 +230,7 @@ export function RecordDetailPage({productId,recordId}:{productId:ProductId;recor
   const p=products[productId],router=useRouter();
   const initial=p.entries.find(e=>e.id===recordId)??null;
   const [memory,setMemory]=useState<Entry|null>(initial);
+  const [recordLoadError,setRecordLoadError]=useState('');
   const [withProducts,setWithProducts]=useState<ProductId[]>([productId]);
   const [editing,setEditing]=useState(false);
   const [editTitle,setEditTitle]=useState(initial?.title??'');
@@ -174,7 +243,8 @@ export function RecordDetailPage({productId,recordId}:{productId:ProductId;recor
     if(initial)return;
     let active=true;
     getStoryRequest(productId,recordId).then(result=>{
-      if(!active||!result.ok)return;
+      if(!active)return;
+      if(!result.ok){setRecordLoadError(result.error.message);return}
       const found=result.data;
       setMemory({
         id:found.id,
@@ -191,12 +261,12 @@ export function RecordDetailPage({productId,recordId}:{productId:ProductId;recor
       setEditTitle(found.tag);
       setEditPlace(found.place);
       setEditMemo(found.memo);
-    });
+    }).catch(()=>{if(active)setRecordLoadError('기록을 불러오지 못했습니다.')});
     return()=>{active=false};
   },[initial,productId,recordId]);
 
   if(!memory){
-    return <Shell><Header title="내 기록" back/><div className={styles.detailLoading}>기록을 불러오고 있어요.</div></Shell>;
+    return <Shell><Header title="내 기록" back/><div className={styles.detailLoading}>{recordLoadError||'기록을 불러오고 있어요.'}</div></Shell>;
   }
 
   const removeRecord=async()=>{
@@ -230,6 +300,7 @@ export function RecordDetailPage({productId,recordId}:{productId:ProductId;recor
   };
 
   const isMemory=memory.kind==='memory';
+  const editMaps=`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(editPlace.trim()||memory.place||p.place)}`;
   return <Shell>
     <Header title={isMemory?'내 기록':'제품 이력'} back action={isMemory?<button className={styles.save} type="button" onClick={()=>{setEditing(value=>!value);setEditError('')}}>{editing?'취소':'수정'}</button>:undefined}/>
     <div className={styles.detailContent}>
@@ -242,6 +313,7 @@ export function RecordDetailPage({productId,recordId}:{productId:ProductId;recor
       {editing?<div className={styles.editForm}>
         <label>제목<input value={editTitle} maxLength={80} onChange={event=>setEditTitle(event.target.value)}/></label>
         <label>장소<input value={editPlace} maxLength={120} onChange={event=>setEditPlace(event.target.value)}/></label>
+        <a className={styles.editMapLink} href={editMaps} target="_blank" rel="noreferrer">Google 지도에서 현재 장소 확인 ↗</a>
         <label>메모<textarea value={editMemo} maxLength={500} onChange={event=>setEditMemo(event.target.value)}/></label>
         <button type="button" onClick={()=>void saveEdit()} disabled={saving||!editTitle.trim()}>{saving?'저장 중…':'변경사항 저장'}</button>
       </div>:<p className={styles.memoryText}>{memory.note?.split('\n')[0]??p.memoryCopy}</p>}

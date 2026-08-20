@@ -15,8 +15,10 @@ export function getLogProductId(productSlug: string): string {
 }
 
 export function getProductDetailPath(productId: string): string | null {
+  const normalizedId = productId.trim();
+  if (!normalizedId) return null;
   const slug = Object.entries(PRODUCT_SLUG_TO_LOG_ID).find(
-    ([, logId]) => logId === productId,
+    ([, logId]) => logId === normalizedId,
   )?.[0];
-  return slug ? `/products/${slug}` : null;
+  return `/products/${encodeURIComponent(slug ?? normalizedId)}`;
 }

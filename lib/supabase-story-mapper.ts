@@ -6,6 +6,7 @@ import {
 } from "@/lib/mappers";
 import { signPhotoPath } from "@/lib/supabase-photo-url";
 import { productSlugsForUnitIds } from "@/lib/supabase-product-refs";
+import { normalizeDemoStoryImage } from "@/lib/story-image";
 
 /** Supabase row와 private Storage 경로를 FE용 Story DTO로 변환한다. */
 export async function toSupabaseStoryDTOs(
@@ -15,9 +16,29 @@ export async function toSupabaseStoryDTOs(
 ): Promise<StoryDTO[]> {
   const allUnitIds = Object.values(unitIdsByStoryId).flat();
   const slugByUnitId = await productSlugsForUnitIds(supabase, allUnitIds);
+  const { data: ownedProducts } = allUnitIds.length
+    ? await supabase
+        .from("my_products_view")
+        .select("id, registered_at")
+        .in("id", [...new Set(allUnitIds)])
+    : { data: [] };
+  const registeredDateByUnitId = Object.fromEntries(
+    (ownedProducts ?? []).map((product) => [
+      product.id as string,
+      String(product.registered_at).slice(0, 10),
+    ]),
+  );
+
+  // 제품 등록 전에 만들어진 잘못된 데모 이력은 어느 Story 조회에서도 노출하지 않는다.
+  const validRows = rows.filter((row) =>
+    (unitIdsByStoryId[row.id] ?? []).every((unitId) => {
+      const registeredDate = registeredDateByUnitId[unitId];
+      return !registeredDate || row.story_date >= registeredDate;
+    }),
+  );
 
   return Promise.all(
-    rows.map(async (row) => {
+    validRows.map(async (row) => {
       const unitIds = unitIdsByStoryId[row.id] ?? [];
       const productSlugs = unitIds.map(
         (unitId) => slugByUnitId[unitId] ?? unitId,
@@ -28,7 +49,11 @@ export async function toSupabaseStoryDTOs(
         imageUrl = await signPhotoPath(supabase, row.photo_path);
       }
 
-      return toStoryDTO(row, productSlugs, imageUrl);
+      return toStoryDTO(
+        row,
+        productSlugs,
+        normalizeDemoStoryImage(imageUrl || null, productSlugs[0] ?? "") ?? "",
+      );
     }),
   );
 }

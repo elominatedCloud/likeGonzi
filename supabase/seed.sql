@@ -84,18 +84,33 @@ with spec(email, slug, occasion, companion, city, country, cnt) as (
 owner_model(email, slug) as (
   select distinct email, slug from spec
 ),
+owned_registration(email, slug, registered_on) as (
+  select u.email, p.slug, min(up.registered_at)::date
+    from public.user_products up
+    join auth.users u on u.id = up.user_id
+    join public.product_units pu on pu.id = up.product_unit_id
+    join public.products p on p.id = pu.product_id
+    join owner_model om on om.email = u.email and om.slug = p.slug
+   group by u.email, p.slug
+),
 inserted as (
   insert into public.stories
     (user_id, tag, photo_url, location, memo, story_date, occasion, companion, city, country)
   select u.id,
          spec.city || '에서의 순간 ' || g,
-         '/FE-namjun/assets/로그_타임라인-1.png',
+         case spec.slug
+           when 'pina' then '/FE-namjun/assets/pina-bookstore-memory.png'
+           when 'ella' then '/FE-namjun/assets/ella-jazz-memory.png'
+           else '/FE-namjun/assets/로그_타임라인-1.png'
+         end,
          spec.city || ' 일대',
          null,
-         current_date - (g * 7),
+         greatest(owned_registration.registered_on, current_date - (g * 7)),
          spec.occasion, spec.companion, spec.city, spec.country
     from spec
     join auth.users u on u.email = spec.email
+    join owned_registration on owned_registration.email = spec.email
+                           and owned_registration.slug = spec.slug
    cross join generate_series(1, spec.cnt) as g
   returning id, user_id
 )
