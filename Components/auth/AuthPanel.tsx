@@ -152,10 +152,6 @@ export function AuthPanel({initialMode='login',onComplete,onOAuth,initialError='
 
     <div className={styles.divider}><span/><p>또는</p><span/></div>
     <div className={styles.social} aria-label="소셜 로그인">
-      <button type="button" className={styles.kakao} onClick={()=>void startOAuth('kakao')} disabled={isSubmitting||Boolean(oauthProvider)} aria-busy={oauthProvider==='kakao'}>
-        <Image src="/icon/social/kakao.svg" alt="" width={21} height={21}/>
-        {oauthProvider==='kakao'?'카카오로 이동 중…':'카카오로 계속하기'}
-      </button>
       <button type="button" className={styles.google} onClick={()=>void startOAuth('google')} disabled={isSubmitting||Boolean(oauthProvider)} aria-busy={oauthProvider==='google'}>
         <Image src="/icon/social/google.svg" alt="" width={21} height={21}/>
         {oauthProvider==='google'?'Google로 이동 중…':'Google로 계속하기'}
