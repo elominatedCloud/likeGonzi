@@ -61,6 +61,8 @@ export function RemadePanel({
 
   async function choose(image: string) {
     setSaving(image);
+    // 지난 시도의 실패 문구가 남아 성공한 뒤에도 계속 보였다.
+    setNotice("");
     const res = await apiFetch(base, {
       method: "PATCH",
       body: JSON.stringify({ image_url: image }),
