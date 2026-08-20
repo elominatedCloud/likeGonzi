@@ -512,23 +512,23 @@ chapter(3, "어떻게 동작하나", "AI가 마찰을 없애고 흠을 무늬로
   const rows = [
     ["AI Story · Recap 생성", "gpt-4o-mini", "구현"],
     ["REMADE 시안 생성", "gpt-image-1-mini · 3안 15초", "구현"],
-    ["수선 부위 선택 · 접수", "제품 실사 위 좌표", "구현"],
-    ["상황 데이터 집계", "동의 기반 · k-익명성", "구현"],
-    ["Care Score", "기록 기반 규칙 계산 · AI 아님", "규칙"],
-    ["수선 견적", "기준표 계산 · AI는 설명문만", "규칙"],
-    ["결제", "데모 · 실제 정산 없음", "데모"],
-    ["캠페인 QR 발견", "API 분기만 · 화면 없음", "로드맵"],
-    ["소유권 이전", "스키마만 · 화면 없음", "로드맵"],
+    ["GS1 Digital Link 태그", "/01/{gtin}/21/{serial} 표준 라우팅", "구현"],
+    ["EU ESPR 여권 항목", "소재 구성 · 재활용 함량 · 수리가능성 · 원산지", "구현"],
+    ["수선 접수 · 상황 데이터 집계", "실사 위 좌표 · 동의 기반 k-익명성", "구현"],
+    ["Care Score · 수선 견적", "기록 기반 규칙 계산 · AI 아님", "규칙"],
+    ["여권 수치 · 결제", "시연용 가정치 · 실제 정산 없음", "데모"],
+    ["Aura 원장 기록", "브랜드 연동 필요", "연동 예정"],
+    ["캠페인 QR · 소유권 이전", "화면 없음", "로드맵"],
   ];
-  const tone = { "구현": C.cognac, "규칙": C.white, "데모": C.muted, "로드맵": C.dim };
+  const tone = { "구현": C.cognac, "규칙": C.white, "데모": C.muted, "연동 예정": C.muted, "로드맵": C.dim };
   rows.forEach((r, i) => {
     const y = 2.44 + i * 0.5;
     if (i > 0) rule(s, 1.2, y - 0.06, W - 2.4);
-    s.addText(r[0], { x: 1.3, y: y + 0.06, w: 4.6, h: 0.32, fontFace: F,
+    s.addText(r[0], { x: 1.3, y: y + 0.06, w: 4.3, h: 0.32, fontFace: F,
       fontSize: 15, bold: true, color: C.white, margin: 0 });
-    s.addText(r[1], { x: 6.1, y: y + 0.08, w: 4.6, h: 0.3, fontFace: F,
+    s.addText(r[1], { x: 5.7, y: y + 0.08, w: 4.7, h: 0.3, fontFace: F,
       fontSize: 12.5, color: C.muted, margin: 0 });
-    s.addText(r[2], { x: 10.9, y: y + 0.07, w: 1.2, h: 0.3, align: "right",
+    s.addText(r[2], { x: 10.5, y: y + 0.07, w: 1.6, h: 0.3, align: "right",
       fontFace: F, fontSize: 12.5, bold: true, color: tone[r[2]], margin: 0 });
   });
   s.addText("제품 상태를 AI가 판정하지 않습니다. 어디에 안 쓰는지도 적어둡니다.", {
@@ -546,27 +546,43 @@ chapter(3, "어떻게 동작하나", "AI가 마찰을 없애고 흠을 무늬로
   s.addNotes("MCM은 이미 NFC와 Aura 블록체인 패스포트를 갖고 있습니다.");
 }
 
-/* ═══ 21 자산 목록 ═══ */
+/* ═══ 23b 디지털 제품 여권 ═══ */
 {
   const s = p.addSlide();
-  head(s, "BRAND ASSETS", ["브랜드 자산이 화면에서 일을 합니다"], { size: 32 });
-  const list = [
-    ["비세토스 마름모", "바이에른 깃발 = 흰-파란 하늘", "배경에서 바람에 흐른다"],
-    ["로렐", "승리 · 명예의 상징", "정품 인증 배지"],
-    ["1988 Dapper Dan", "해체하고 다시 꿰맨 역사", "REMADE"],
-    ["NFC + Aura DPP", "이미 운영 중", "그 위에 얹는다"],
+  head(s, "DIGITAL PRODUCT PASSPORT", ["스캔하면 도착하는 자리입니다"], { size: 34 });
+
+  const left = [
+    ["시리얼", "MWKCSVE01C0002"],
+    ["구매처", "MCM Gangnam"],
+    ["등록일", "2026.08.19"],
+    ["GTIN", "2900000000018"],
   ];
-  list.forEach((r, i) => {
-    const y = 3.1 + i * 0.9, hi = i >= 2;
-    if (i > 0) rule(s, 1.2, y - 0.12, W - 2.4);
-    s.addText(r[0], { x: 1.3, y: y + 0.1, w: 3.4, h: 0.38, fontFace: F,
-      fontSize: 18, bold: true, color: hi ? C.cognac : C.white, margin: 0 });
-    s.addText(r[1], { x: 5.0, y: y + 0.14, w: 4.0, h: 0.34, fontFace: F,
-      fontSize: 14, color: C.muted, margin: 0 });
-    s.addText(r[2], { x: 9.3, y: y + 0.12, w: 2.7, h: 0.36, align: "right", fontFace: F,
-      fontSize: 15, color: C.white, margin: 0 });
+  const right = [
+    ["원산지", "IT"],
+    ["소재 구성", "coated canvas 72% · calf 24% · brass 4%"],
+    ["재활용 함량", "18%"],
+    ["수리가능성", "8.2 / 10"],
+  ];
+  [left, right].forEach((col, c) => {
+    const x = c === 0 ? 1.3 : 6.9;
+    col.forEach((r, i) => {
+      const y = 2.66 + i * 0.62;
+      if (i > 0) rule(s, x, y - 0.1, 4.9);
+      s.addText(r[0], { x, y: y + 0.06, w: 1.7, h: 0.3, fontFace: F,
+        fontSize: 12.5, color: C.dim, margin: 0 });
+      s.addText(r[1], { x: x + 1.75, y: y + 0.05, w: 3.15, h: 0.32, fontFace: F,
+        fontSize: 13, color: C.white, margin: 0 });
+    });
   });
-  s.addNotes("비세토스의 마름모는 바이에른 깃발에서 왔고 독일어로 흰-파란 하늘이라는 뜻입니다. 그래서 배경에서 바람에 흐릅니다.");
+
+  s.addText("EU ESPR 여권 항목을 그대로 채웁니다. GS1 Digital Link 표준 태그로 도착합니다.", {
+    x: 1.0, y: 5.42, w: W - 2, h: 0.4, align: "center", fontFace: F,
+    fontSize: 17, bold: true, color: C.white, margin: 0 });
+  s.addText("소재 · 재활용 · 수리가능성 수치는 화면에 “시연용 가정치”라고 함께 띄웁니다.\n블록체인 원장 기록은 “아직 연결되지 않았습니다”라고 적습니다.", {
+    x: 1.0, y: 5.92, w: W - 2, h: 0.76, align: "center", fontFace: F,
+    fontSize: 13, color: C.muted, lineSpacing: 21, margin: 0 });
+  mark(s);
+  s.addNotes("스캔해서 도착하는 자리가 제품 상세라, 새 화면을 만들지 않고 인증 정보를 여권으로 키웠습니다. EU ESPR이 요구하는 항목을 그대로 채웁니다. 다만 수치는 아직 저희 가정치라 화면에 시연용이라고 같이 띄웁니다. 뒷받침 못 하는 숫자를 사실처럼 보여주지 않습니다. MCM 실데이터를 받으면 표시가 자동으로 사라집니다. Aura 원장 기록만 브랜드 연동이 필요합니다.");
 }
 
 /* ═══ 22 데모 ═══ */
@@ -674,6 +690,9 @@ chapter(4, "왜 지금, 무엇으로 버는가", "데이터 · 경쟁 · 타이�
     x: 1.0, y: 4.76, w: W - 2, h: 0.34, align: "center", fontFace: F,
     fontSize: 13, color: C.dim, margin: 0 });
   rule(s, 4.4, 5.44, 4.5);
+  s.addText("EU ESPR 여권 항목은 이미 화면에 채워져 있습니다", {
+    x: 1.0, y: 5.06, w: W - 2, h: 0.34, align: "center", fontFace: F,
+    fontSize: 14, color: C.muted, margin: 0 });
   s.addText("저희 제품이 이 문장의 다음 장입니다", {
     x: 1.0, y: 5.7, w: W - 2, h: 0.44, align: "center", fontFace: F,
     fontSize: 24, bold: true, color: C.cognac, margin: 0 });
