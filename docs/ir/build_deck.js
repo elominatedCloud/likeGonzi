@@ -111,14 +111,19 @@ function chapter(n, title, subtitle) {
   const s = p.addSlide(); dark(s);
   s.addText("MCM LUXURY BOOK", { x: 0.95, y: 0.72, w: 6, h: 0.34, fontFace: F,
     fontSize: 12.5, bold: true, color: C.white, charSpacing: 2.6, margin: 0 });
+  s.addText("MCM과 함께하는", {
+    x: 0.95, y: 2.42, w: 11.6, h: 0.6, fontFace: F, fontSize: 26,
+    color: C.white, margin: 0 });
   s.addText([
-    { text: "흠을 지우지 않습니다.", options: { color: C.white, breakLine: true } },
-    { text: "나의 것으로 만듭니다", options: { color: C.cognac } },
-  ], { x: 0.95, y: 2.5, w: 11.6, h: 2.2, fontFace: F, fontSize: 52, bold: true,
-    lineSpacing: 74, margin: 0 });
+    { text: "hi", options: { color: C.white } },
+    { text: "_story", options: { color: C.cognac } },
+  ], { x: 0.9, y: 3.02, w: 11.6, h: 1.5, fontFace: F, fontSize: 76, bold: true,
+    charSpacing: -1, margin: 0 });
+  s.addText("흠을 지우지 않습니다. 나의 것으로 만듭니다", {
+    x: 0.98, y: 4.86, w: 11, h: 0.42, fontFace: F, fontSize: 17,
+    color: C.muted, margin: 0 });
   s.addText("Challenge 03 · 360° 고객 경험        2026.08", {
-    x: 0.98, y: 5.4, w: 11, h: 0.34, fontFace: F, fontSize: 13, color: C.dim, margin: 0 });
-  s.addNotes("럭셔리는 새것일 때 가장 비쌉니다. 그래서 사람들은 쓰기를 두려워합니다. 저희는 그 방향을 뒤집었습니다.");
+    x: 0.98, y: 5.44, w: 11, h: 0.34, fontFace: F, fontSize: 13, color: C.dim, margin: 0 });
 }
 
 /* ═══ 16 타임라인 ═══ */
