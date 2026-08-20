@@ -148,16 +148,74 @@ function chapter(n, title, subtitle) {
   s.addNotes("별도 앱 설치가 없습니다. 제품의 QR·NFC가 진입점입니다. 등록하면 구매 기록이 첫 줄로 자동 생성돼 빈 화면을 보여주지 않습니다.");
 }
 
-/* ═══ 14 제품 개요 ═══ */
+/* ═══ 02b 360 여정 ═══ */
 {
   const s = p.addSlide();
-  head(s, "WHAT WE BUILT", ["타임라인 위에 세 가지가 얹힙니다"], { size: 34 });
-  columns(s, [
-    ["기록", "쌓인다", "사진 한 장을 올리면\nAI가 문장으로 남긴다.", false],
-    ["케어 · 수선", "이어진다", "제품 실사 위에서 부위를 눌러 접수하면\n이력이 그대로 남는다.", false],
-    ["REMADE", "값이 된다", "긁힌 자리를 나만의 무늬로.\nAI 시안, 장인 제작.", true],
-  ], 3.42);
-  s.addNotes("타임라인 하나 위에 세 가지가 얹힙니다. 기록, 케어와 수선, 그리고 REMADE입니다. 이 뒤로는 왜 이렇게 만들었는지와 어떻게 동작하는지를 말씀드립니다.");
+  head(s, "360° CUSTOMER JOURNEY", ["발견부터 다음 소유자까지"], { size: 36 });
+  s.addText("CHALLENGE 03 · 360° 고객 경험", {
+    x: 0, y: 2.02, w: W, h: 0.32, align: "center", fontFace: F,
+    fontSize: 11.5, bold: true, color: C.dim, charSpacing: 2.4, margin: 0 });
+
+  const legs = [
+    ["발견",  "길거리 캠페인 QR",   false],
+    ["구매",  "MCM 매장",          false],
+    ["개봉",  "박스 QR·NFC 스캔",   true],
+    ["등록",  "제품이 내 것이 된다", true],
+    ["기록",  "Story · Care",      true],
+    ["수선",  "복원 또는 REMADE",   true],
+    ["이전",  "다음 소유자에게",     false],
+  ];
+  const gap = (W - 1.8) / legs.length;
+  s.addShape(p.ShapeType.line, { x: 0.9 + gap / 2, y: 3.5, w: (W - 1.8) - gap, h: 0,
+    line: { color: C.line, width: 1 } });
+  legs.forEach((l, i) => {
+    const cx = 0.9 + gap * (i + 0.5), on = l[2], r = on ? 0.2 : 0.13;
+    s.addShape(p.ShapeType.ellipse, { x: cx - r / 2, y: 3.5 - r / 2, w: r, h: r,
+      fill: { color: on ? C.cognac : C.muted }, line: { type: "none" } });
+    s.addText(l[0], { x: cx - gap / 2, y: 3.86, w: gap, h: 0.36, align: "center",
+      fontFace: F, fontSize: 17, bold: true, color: on ? C.white : C.muted, margin: 0 });
+    s.addText(l[1], { x: cx - gap / 2, y: 4.28, w: gap, h: 0.6, align: "center",
+      fontFace: F, fontSize: 11.5, color: C.muted, lineSpacing: 17, margin: 0 });
+  });
+  s.addText("오프라인에서 발견하고 사서, 온라인에서 남기고 고치고 넘깁니다", {
+    x: 1.0, y: 5.36, w: W - 2, h: 0.42, align: "center", fontFace: F,
+    fontSize: 20, bold: true, color: C.white, margin: 0 });
+  s.addText("QR·NFC가 그 사이를 잇습니다", {
+    x: 1.0, y: 5.9, w: W - 2, h: 0.36, align: "center", fontFace: F,
+    fontSize: 14, color: C.cognac, margin: 0 });
+  mark(s);
+  s.addNotes("3번 과제는 발견부터 구매 이후까지입니다. 길거리 캠페인 QR로 브랜드를 발견하고, 매장에서 사고, 박스의 QR이나 NFC로 개봉하고, 등록하면 그때부터 기록과 관리가 이어집니다. 마지막은 다음 소유자에게 공식 이력이 그대로 넘어가는 것입니다. 오프라인과 온라인을 QR과 NFC가 잇습니다.");
+}
+
+/* ═══ 03 네 가지 축 ═══ */
+{
+  const s = p.addSlide();
+  head(s, "WHAT WE BUILT", ["타임라인 위에 네 가지가 얹힙니다"], { size: 34 });
+  const axes = [
+    ["STORY", "기록", "사진 한 장을 올리면\nAI가 문장으로 남긴다", "구현"],
+    ["CARE · REPAIR", "제품 수명 연장", "세척 · 보강 · 부품 교체\n부위를 눌러 접수한다", "구현"],
+    ["REMADE", "선택형 커스터마이징", "흠 위에 무늬를 새긴다\nAI 시안 · MCM 제작", "구현"],
+    ["TRANSFER", "다음 소유자로", "공식 이력이 그대로\n넘어간다", "로드맵"],
+  ];
+  const gap = (W - 1.8) / 4;
+  axes.forEach((a, i) => {
+    const x = 0.9 + gap * i, hi = i === 1 || i === 2;
+    if (i > 0) s.addShape(p.ShapeType.line, { x, y: 2.6, w: 0, h: 2.5,
+      line: { color: C.line, width: 0.75 } });
+    s.addText(a[0], { x: x + 0.3, y: 2.66, w: gap - 0.6, h: 0.3, fontFace: F,
+      fontSize: 11, bold: true, color: C.cognac, charSpacing: 1.4, margin: 0 });
+    s.addText(a[1], { x: x + 0.3, y: 3.04, w: gap - 0.55, h: 0.44, fontFace: F,
+      fontSize: 20, bold: true, color: C.white, margin: 0 });
+    s.addText(a[2], { x: x + 0.3, y: 3.64, w: gap - 0.62, h: 0.9, fontFace: F,
+      fontSize: 13, color: C.muted, lineSpacing: 21, margin: 0 });
+    s.addText(a[3], { x: x + 0.3, y: 4.66, w: gap - 0.6, h: 0.3, fontFace: F,
+      fontSize: 11, color: a[3] === "구현" ? C.cognac : C.dim, margin: 0 });
+  });
+  s.addText("네 가지가 각각의 앱이 아니라, 하나의 타임라인 위 레이어입니다", {
+    x: 1.0, y: 5.5, w: W - 2, h: 0.42, align: "center", fontFace: F,
+    fontSize: 18, bold: true, color: C.white, margin: 0 });
+  mark(s);
+  s.addNotes("Story는 기록입니다. Care와 Repair는 제품 수명을 늘립니다. REMADE는 선택형 커스터마이징이고, 소유권 이전은 다음 사용자에게 공식 이력을 넘깁니다. 네 가지가 각각 떨어진 기능이 아니라 하나의 타임라인 위에 쌓이는 레이어입니다. 소유권 이전은 스키마까지 있고 화면은 다음 단계입니다.");
 }
 
 /* ═══ 04 REMADE 실물 ═══ */
@@ -447,6 +505,38 @@ chapter(3, "어떻게 동작하나", "AI가 마찰을 없애고 흠을 무늬로
   s.addNotes("AI가 손상 부위에 어울리는 문양 시안 세 개를 만들고 실물은 MCM 장인이 만듭니다. AI가 손을 대체하지 않습니다. 진품성이 유지되고 세상에 하나뿐이라는 증명이 붙기 때문에 값이 오릅니다.");
 }
 
+/* ═══ 22b 구현 수준 ═══ */
+{
+  const s = p.addSlide();
+  head(s, "WHAT IS REAL", ["어디까지 만들었는지 밝힙니다"], { size: 34 });
+  const rows = [
+    ["AI Story · Recap 생성", "gpt-4o-mini", "구현"],
+    ["REMADE 시안 생성", "gpt-image-1-mini · 3안 15초", "구현"],
+    ["수선 부위 선택 · 접수", "제품 실사 위 좌표", "구현"],
+    ["상황 데이터 집계", "동의 기반 · k-익명성", "구현"],
+    ["Care Score", "기록 기반 규칙 계산 · AI 아님", "규칙"],
+    ["수선 견적", "기준표 계산 · AI는 설명문만", "규칙"],
+    ["결제", "데모 · 실제 정산 없음", "데모"],
+    ["소유권 이전", "스키마만 · 화면 없음", "로드맵"],
+  ];
+  const tone = { "구현": C.cognac, "규칙": C.white, "데모": C.muted, "로드맵": C.dim };
+  rows.forEach((r, i) => {
+    const y = 2.5 + i * 0.53;
+    if (i > 0) rule(s, 1.2, y - 0.06, W - 2.4);
+    s.addText(r[0], { x: 1.3, y: y + 0.06, w: 4.6, h: 0.32, fontFace: F,
+      fontSize: 15, bold: true, color: C.white, margin: 0 });
+    s.addText(r[1], { x: 6.1, y: y + 0.08, w: 4.6, h: 0.3, fontFace: F,
+      fontSize: 12.5, color: C.muted, margin: 0 });
+    s.addText(r[2], { x: 10.9, y: y + 0.07, w: 1.2, h: 0.3, align: "right",
+      fontFace: F, fontSize: 12.5, bold: true, color: tone[r[2]], margin: 0 });
+  });
+  s.addText("제품 상태를 AI가 판정하지 않습니다. 어디에 안 쓰는지도 적어둡니다.", {
+    x: 1.0, y: 6.86, w: W - 2, h: 0.36, align: "center", fontFace: F,
+    fontSize: 14, color: C.cognac, margin: 0 });
+  mark(s);
+  s.addNotes("심사에서 구현 수준을 오해하지 않도록 미리 밝힙니다. Story와 Recap, REMADE 시안은 실제로 API를 호출해 생성됩니다. Care Score와 견적은 규칙 계산이고 AI가 아닙니다. 결제는 데모라 실제 정산이 없습니다. 소유권 이전은 스키마까지만 있습니다.");
+}
+
 /* ═══ 20 진술 ★ ═══ */
 {
   const s = p.addSlide();
@@ -540,27 +630,36 @@ chapter(4, "왜 지금, 무엇으로 버는가", "데이터 · 경쟁 · 타이�
 /* ═══ 25 경쟁 ═══ */
 {
   const s = p.addSlide();
-  head(s, "COMPETITIVE POSITION", ["기존 DPP가 못 하는 것 하나"], { size: 36 });
-  s.addText("소비자가 앱을 두 번째로 여는 일", {
-    x: 1.0, y: 2.62, w: W - 2, h: 0.5, align: "center", fontFace: F,
-    fontSize: 28, bold: true, color: C.cognac, margin: 0 });
-  const list = [
-    ["Aura Consortium", "LVMH 주도 · MCM이 이미 소속", "인프라"],
-    ["Arianee", "패스포트 340만+ · 브랜드 50+", "인프라"],
-    ["Coachtopia", "제품 중심 순환 · 자사 전용", "제품"],
-    ["MCM Luxury Book", "DPP 위의 경험 · 행동 레이어", "경험"],
+  head(s, "COMPETITIVE POSITION", ["대체재는 셋인데, 다섯을 다 가진 곳은 없습니다"], { size: 30 });
+
+  const cols = ["개인 추억", "공식 제품 이력", "AI Story", "Care · Repair", "소유권 이전"];
+  const rowsD = [
+    ["Google Photos · 갤러리", ["●", "", "", "", ""]],
+    ["브랜드 A/S 창구", ["", "●", "", "●", ""]],
+    ["DPP 플랫폼 (Aura · Arianee)", ["", "●", "", "", "●"]],
+    ["MCM Luxury Book", ["●", "●", "●", "●", "◐"]],
   ];
-  list.forEach((r, i) => {
-    const y = 3.72 + i * 0.84, hi = i === 3;
-    if (i > 0) rule(s, 1.4, y - 0.1, W - 2.8);
-    s.addText(r[0], { x: 1.5, y: y + 0.1, w: 3.6, h: 0.36, fontFace: F,
-      fontSize: 17, bold: true, color: hi ? C.cognac : C.white, margin: 0 });
-    s.addText(r[1], { x: 5.3, y: y + 0.13, w: 5.0, h: 0.32, fontFace: F,
-      fontSize: 13.5, color: C.muted, margin: 0 });
-    s.addText(r[2], { x: 10.4, y: y + 0.13, w: 1.4, h: 0.32, align: "right", fontFace: F,
-      fontSize: 13, color: hi ? C.cognac : C.dim, margin: 0 });
+  const x0 = 5.0, cw = (W - x0 - 1.0) / cols.length;
+  cols.forEach((c, j) => s.addText(c, {
+    x: x0 + cw * j, y: 2.6, w: cw, h: 0.5, align: "center", fontFace: F,
+    fontSize: 11.5, color: C.dim, lineSpacing: 16, margin: 0 }));
+  rowsD.forEach((r, i) => {
+    const y = 3.28 + i * 0.78, mine = i === 3;
+    if (i > 0) rule(s, 1.2, y - 0.1, W - 2.4);
+    s.addText(r[0], { x: 1.3, y: y + 0.1, w: 3.6, h: 0.36, fontFace: F,
+      fontSize: 14.5, bold: mine, color: mine ? C.cognac : C.muted, margin: 0 });
+    r[1].forEach((v, j) => s.addText(v, {
+      x: x0 + cw * j, y: y + 0.06, w: cw, h: 0.4, align: "center", fontFace: F,
+      fontSize: 17, color: mine ? C.cognac : C.muted, margin: 0 }));
   });
-  s.addNotes("제조 이력은 한 번 보면 다시 볼 이유가 없습니다. 저희는 소유자 중심이라 재방문이 생기고, 그 재방문이 데이터가 됩니다.");
+  s.addText("◐ 소유권 이전은 스키마까지. 화면은 다음 단계입니다.", {
+    x: 1.2, y: 6.34, w: W - 2.4, h: 0.32, fontFace: F,
+    fontSize: 11.5, color: C.dim, margin: 0 });
+  s.addText("결합이 곧 해자입니다. 하나씩은 이미 다 있습니다.", {
+    x: 1.0, y: 6.74, w: W - 2, h: 0.36, align: "center", fontFace: F,
+    fontSize: 16, bold: true, color: C.white, margin: 0 });
+  mark(s);
+  s.addNotes("사용자가 실제로 대체하는 건 인프라 회사가 아닙니다. 사진은 갤러리에, 수선은 브랜드 A/S 창구에 맡깁니다. DPP 플랫폼은 제조 이력만 담습니다. 하나씩은 이미 다 있습니다. 다섯을 한 줄에 놓은 곳이 없을 뿐입니다.");
 }
 
 /* ═══ 26 왜 지금 ═══ */
@@ -593,7 +692,7 @@ chapter(4, "왜 지금, 무엇으로 버는가", "데이터 · 경쟁 · 타이�
   const list = [
     ["SaaS 구독", "활성 제품 · 사용자 수 기준 월 이용료 + 인사이트 리포트"],
     ["구축비", "전용 UI/UX · 제품 DB · 관리자 시스템"],
-    ["REMADE · Care 중개", "리폼 · 세척 · 수선 예약 연결 수수료"],
+    ["Care · Repair 중개", "세척 · 보강 · 부품 교체 예약 연결 수수료"],
     ["리셀 · 소유권 이전", "로드맵"],
   ];
   list.forEach((r, i) => {
