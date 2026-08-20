@@ -1,324 +1,356 @@
 const pptxgen = require("pptxgenjs");
+const path = require("path");
 const p = new pptxgen();
-p.layout = "LAYOUT_WIDE";           // 13.3 x 7.5
+p.layout = "LAYOUT_WIDE";                 // 13.3 x 7.5
 const W = 13.3, H = 7.5;
+const BG = path.join(__dirname, "bg-dark.png");
 
 const C = {
-  dark:   "12100E",
-  light:  "F4F1EC",
-  card:   "1E1A16",
-  line:   "31291F",
-  cognac: "C4915F",
-  deep:   "8B5A2B",
-  white:  "FFFFFF",
-  ink:    "1A1613",
-  muted:  "8C8177",
-  dim:    "635A51",
+  dark: "12100E", light: "F4F1EC", card: "1E1A16", line: "342B21",
+  cognac: "C4915F", deep: "8B5A2B", white: "FFFFFF", ink: "1A1613",
+  muted: "9A8F84", dim: "6E6459",
 };
-const F = "Arial";
+const F = "Apple SD Gothic Neo";          // PDF에 임베드된다. PPTX는 맥 기준.
 
-/* ── 공통 ───────────────────────────────── */
-const BG_DARK = require("path").join(__dirname, "bg-dark.png");
+/* 타입 스케일 — 크기 대비가 주 무기다. 색으로 강조하지 않는다. */
+const T = { eyebrow: 12, h1: 36, h2: 31, sub: 15, cardTitle: 17, body: 13.5, cap: 11 };
 
-function dark(s) {
-  s.background = { color: C.dark };
-  // 반투명 도형으로 글로우를 만들면 경계가 보인다. 그라디언트 이미지를 깔고
-  // 가장 먼저 추가해 z-order 맨 아래에 둔다.
-  s.addImage({ path: BG_DARK, x: 0, y: 0, w: W, h: H });
-}
-function brandMark(s, color) {
-  s.addText("MCM LUXURY BOOK", {
-    x: W - 3.3, y: H - 0.62, w: 2.8, h: 0.3, align: "right",
-    fontFace: F, fontSize: 9, color: color || C.dim, charSpacing: 1.4,
-  });
-}
-function eyebrow(s, t) {
-  s.addText(t, {
-    x: 0, y: 0.62, w: W, h: 0.3, align: "center",
-    fontFace: F, fontSize: 11, bold: true, color: C.cognac, charSpacing: 3,
-  });
-}
-function headline(s, lines, opt) {
-  const o = opt || {};
+/* ── 프리미티브 ─────────────────────────── */
+const dark = s => { s.background = { color: C.dark }; s.addImage({ path: BG, x: 0, y: 0, w: W, h: H }); };
+
+const mark = s => s.addText("MCM LUXURY BOOK", {
+  x: W - 3.4, y: H - 0.58, w: 2.9, h: 0.3, align: "right",
+  fontFace: F, fontSize: 9.5, color: C.dim, charSpacing: 1.4 });
+
+const eyebrow = (s, t) => s.addText(t, {
+  x: 0, y: 0.58, w: W, h: 0.34, align: "center",
+  fontFace: F, fontSize: T.eyebrow, bold: true, color: C.cognac, charSpacing: 3.2 });
+
+function headline(s, lines, o = {}) {
+  const size = o.size || (lines.length > 1 ? T.h2 : T.h1);
   s.addText(lines.map((l, i) => ({
     text: l.t !== undefined ? l.t : l,
-    options: {
-      breakLine: i < lines.length - 1,
-      color: l.c || C.white, bold: true,
-    },
+    options: { breakLine: i < lines.length - 1, color: l.c || C.white, bold: true },
   })), {
-    x: 0.8, y: o.y || 1.08, w: W - 1.6, h: o.h || 1.5, align: "center",
-    fontFace: F, fontSize: o.size || 30, lineSpacing: o.size ? o.size * 1.34 : 40,
-    valign: "top", margin: 0,
-  });
+    x: 0.7, y: o.y || 1.02, w: W - 1.4, h: o.h || (lines.length > 1 ? 1.5 : 0.9),
+    align: "center", fontFace: F, fontSize: size, lineSpacing: size * 1.32,
+    valign: "top", margin: 0 });
 }
-function sub(s, t, y) {
-  s.addText(t, {
-    x: 1.2, y: y || 2.06, w: W - 2.4, h: 0.5, align: "center",
-    fontFace: F, fontSize: 13, color: C.muted, lineSpacing: 21, margin: 0,
-  });
-}
-function foot(s, t) {
-  s.addText(t, {
-    x: 0.8, y: H - 0.72, w: W - 1.6, h: 0.34, align: "center",
-    fontFace: F, fontSize: 9.5, color: C.dim, margin: 0,
-  });
-}
-function card(s, x, y, w, h) {
-  s.addShape(p.ShapeType.roundRect, {
-    x, y, w, h, rectRadius: 0.09,
-    fill: { color: C.card }, line: { color: C.line, width: 0.75 },
-  });
-}
+const sub = (s, t, y) => s.addText(t, {
+  x: 1.1, y: y, w: W - 2.2, h: 0.42, align: "center",
+  fontFace: F, fontSize: T.sub, color: C.muted, lineSpacing: 24, margin: 0 });
 
-/* ── 1. 표지 ─────────────────────────────── */
-{
-  const s = p.addSlide(); dark(s);
-  s.addText("MCM LUXURY BOOK", {
-    x: 0.95, y: 0.72, w: 5, h: 0.32, fontFace: F, fontSize: 12,
-    bold: true, color: C.white, charSpacing: 2, margin: 0,
-  });
-  s.addText([
-    { text: "AI는 흠을 지우지 않습니다.", options: { color: C.white, breakLine: true } },
-    { text: "값으로 바꿉니다", options: { color: C.cognac } },
-  ], {
-    x: 0.95, y: 2.42, w: 11, h: 1.9, fontFace: F, fontSize: 40, bold: true,
-    lineSpacing: 58, margin: 0,
-  });
-  s.addText("제품과 함께한 시간을 기록으로 남기는 MCM 디지털 라이프 플랫폼", {
-    x: 0.98, y: 4.62, w: 10, h: 0.34, fontFace: F, fontSize: 14, color: C.white, margin: 0,
-  });
-  s.addText("Challenge 03 · 360° 고객 경험    |    QR·NFC · AI Storybook · Care & REMADE", {
-    x: 0.98, y: 5.06, w: 11, h: 0.3, fontFace: F, fontSize: 11, color: C.muted, margin: 0,
-  });
-  s.addText("2026.08    |    Hackathon", {
-    x: 0.98, y: H - 0.9, w: 6, h: 0.3, fontFace: F, fontSize: 11, color: C.dim, margin: 0,
-  });
-  s.addNotes("주제를 받고 가장 먼저 한 일은 AI로 무엇을 더 만들까가 아니라, 럭셔리의 본질을 다시 묻는 것이었습니다. 럭셔리는 새것일 때 가장 비쌉니다. 그래서 사람들은 쓰기를 두려워합니다. 저희는 그 방향을 뒤집었습니다.");
-}
+const foot = (s, t) => s.addText(t, {
+  x: 0.8, y: H - 0.72, w: W - 1.6, h: 0.34, align: "center",
+  fontFace: F, fontSize: T.cap, color: C.dim, margin: 0 });
 
-/* ── 2. 챌린지 선택 ───────────────────────── */
-{
-  const s = p.addSlide(); dark(s);
-  eyebrow(s, "OUR CHALLENGE");
-  headline(s, [{ t: "Challenge 03 · 360° 고객 경험" }], { size: 30 });
-  sub(s, "발견 → 구매 → 사용 → 관리 → 수선 → 다음 소유자까지 끊김 없이", 2.02);
+const card = (s, x, y, w, h, hi) => {
+  s.addShape(p.ShapeType.roundRect, { x, y, w, h, rectRadius: 0.09,
+    fill: { color: C.card }, line: { color: hi ? C.cognac : C.line, width: hi ? 1.5 : 0.75 } });
+};
 
-  const rows = [
-    ["Challenge 01", "AI 프로덕트", "AI Storybook · Recap · REMADE"],
-    ["Challenge 02", "인터랙티브 리테일", "매장 구매 → 박스 QR/NFC → 몰입형 언박싱"],
-    ["Challenge 03", "360° 고객 경험", "전 여정을 하나의 타임라인으로"],
-  ];
-  rows.forEach((r, i) => {
-    const y = 3.12 + i * 1.02;
-    card(s, 1.15, y, W - 2.3, 0.86);
-    s.addText(r[0], { x: 1.5, y: y + 0.28, w: 1.5, h: 0.3, fontFace: F, fontSize: 11,
-      bold: true, color: i === 2 ? C.cognac : C.dim, margin: 0 });
-    s.addText(r[1], { x: 3.15, y: y + 0.25, w: 3.1, h: 0.36, fontFace: F, fontSize: 14,
-      bold: true, color: C.white, margin: 0 });
-    s.addText(r[2], { x: 6.4, y: y + 0.28, w: 5.4, h: 0.34, fontFace: F, fontSize: 12,
-      color: C.muted, margin: 0 });
-  });
-  foot(s, "3번을 제대로 풀면 1번과 2번이 그 안에 들어온다");
-  brandMark(s);
-  s.addNotes("1번과 2번은 특정 순간을 좋게 만들지만 끊긴 경험은 여전히 끊겨 있습니다. 매장에서 산 박스의 QR을 찍는 순간이 2번이고, 그 뒤 기록을 만드는 게 1번입니다.");
-}
-
-/* ── 챕터 구분 ────────────────────────────── */
 function chapter(n, title, subtitle) {
   const s = p.addSlide();
   s.background = { color: C.light };
-  s.addText(`Chapter ${n}`, {
-    x: 1.1, y: 2.82, w: 5, h: 0.34, fontFace: F, fontSize: 13, bold: true,
-    color: C.deep, charSpacing: 2.4, margin: 0,
-  });
-  s.addText(title, {
-    x: 1.08, y: 3.28, w: 11, h: 0.8, fontFace: F, fontSize: 34, bold: true,
-    color: C.ink, margin: 0,
-  });
-  s.addText(subtitle, {
-    x: 1.1, y: 4.3, w: 10, h: 0.34, fontFace: F, fontSize: 13, color: "7A716A", margin: 0,
-  });
-  s.addText("MCM LUXURY BOOK", {
-    x: W - 3.3, y: H - 0.62, w: 2.8, h: 0.3, align: "right",
-    fontFace: F, fontSize: 9, color: "A79E96", charSpacing: 1.4,
-  });
+  s.addText(`Chapter ${n}`, { x: 1.1, y: 2.78, w: 5, h: 0.36, fontFace: F,
+    fontSize: 14, bold: true, color: C.deep, charSpacing: 2.6, margin: 0 });
+  s.addText(title, { x: 1.08, y: 3.26, w: 11, h: 0.9, fontFace: F,
+    fontSize: 38, bold: true, color: C.ink, margin: 0 });
+  s.addText(subtitle, { x: 1.1, y: 4.34, w: 10.5, h: 0.38, fontFace: F,
+    fontSize: 15, color: "7A716A", margin: 0 });
+  s.addText("MCM LUXURY BOOK", { x: W - 3.4, y: H - 0.58, w: 2.9, h: 0.3,
+    align: "right", fontFace: F, fontSize: 9.5, color: "A79E96", charSpacing: 1.4 });
 }
 
-chapter(1, "럭셔리 경험은 어디서 끊기는가", "구매 이후가 비어 있다");
-
-/* ── 3. 공백 ─────────────────────────────── */
+/* ══ 01 표지 ══════════════════════════════ */
 {
   const s = p.addSlide(); dark(s);
-  eyebrow(s, "THE GAP");
-  headline(s, [{ t: "브랜드는 새것만 보여줍니다" }], { size: 30 });
-  sub(s, "광고도, 매장도, 패키지도 전부 새것 상태입니다", 1.98);
+  s.addText("MCM LUXURY BOOK", { x: 0.95, y: 0.7, w: 6, h: 0.34, fontFace: F,
+    fontSize: 13, bold: true, color: C.white, charSpacing: 2.4, margin: 0 });
+  s.addText([
+    { text: "흠을 지우지 않습니다.", options: { color: C.white, breakLine: true } },
+    { text: "나의 것으로 만듭니다", options: { color: C.cognac } },
+  ], { x: 0.95, y: 2.3, w: 11.5, h: 2.1, fontFace: F, fontSize: 48, bold: true,
+    lineSpacing: 68, margin: 0 });
+  s.addText("매일 쓰는 럭셔리를 위한 기록과 리폼 플랫폼", {
+    x: 0.98, y: 4.72, w: 10, h: 0.4, fontFace: F, fontSize: 17, color: C.white, margin: 0 });
+  s.addText("Challenge 03 · 360° 고객 경험    |    2026.08 Hackathon", {
+    x: 0.98, y: 5.22, w: 11, h: 0.34, fontFace: F, fontSize: 13, color: C.muted, margin: 0 });
+  s.addNotes("럭셔리는 새것일 때 가장 비쌉니다. 그래서 사람들은 쓰기를 두려워합니다. 저희는 그 방향을 뒤집었습니다.");
+}
 
-  const items = [
-    ["구매까지는 완벽합니다", "매장 · 패키지 · 접객에 막대한 투자가 들어갑니다.\n경험의 정점은 구매 순간입니다."],
-    ["그 이후는 침묵입니다", "제품 안내 · 프로모션 · A/S.\n가장 애착이 큰 시점부터 관계가 비어 있습니다."],
-    ["기록은 세 군데로 흩어집니다", "사진은 SNS, 여행은 캘린더,\n수선 이력은 브랜드 내부에 남습니다."],
-    ["낡아가는 과정을 아무도 안 보여줍니다", "5년 쓴 가방이 어떻게 생겼는지\n보여주는 브랜드는 없습니다."],
+/* ══ 02 챌린지 선택 ═══════════════════════ */
+{
+  const s = p.addSlide(); dark(s);
+  eyebrow(s, "WHICH CHALLENGE");
+  headline(s, ["저희는 03번을 골랐습니다"], { size: T.h1 });
+
+  const ch = [
+    ["01", "AI 기반 프로덕트", "AI가 경험 자체로 작동하는\n소프트웨어 솔루션", "부수", "REMADE · AI Storybook"],
+    ["02", "인터랙티브 리테일", "온라인의 편리함과 오프라인의\n감각을 잇는 매장 경험", "부수", "박스 QR·NFC → 언박싱"],
+    ["03", "360° 고객 경험", "발견부터 구매 이후까지\n끊김 없이 로열티를 만드는 여정", "메인", "구매 → 사용 → 수선 → 이전"],
   ];
-  items.forEach((it, i) => {
-    const x = 1.15 + (i % 2) * 5.55, y = 3.02 + Math.floor(i / 2) * 1.72;
-    card(s, x, y, 5.0, 1.5);
-    s.addShape(p.ShapeType.ellipse, { x: x + 0.34, y: y + 0.36, w: 0.11, h: 0.11,
-      fill: { color: C.cognac }, line: { type: "none" } });
-    s.addText(it[0], { x: x + 0.62, y: y + 0.26, w: 4.2, h: 0.34, fontFace: F,
-      fontSize: 13.5, bold: true, color: C.white, margin: 0 });
-    s.addText(it[1], { x: x + 0.62, y: y + 0.68, w: 4.1, h: 0.7, fontFace: F,
-      fontSize: 11, color: C.muted, lineSpacing: 17, margin: 0 });
+  ch.forEach((c, i) => {
+    const x = 0.85 + i * 3.95, main = c[3] === "메인";
+    card(s, x, 2.34, 3.6, 3.34, main);
+    s.addText(c[0], { x: x + 0.3, y: 2.62, w: 1.2, h: 0.5, fontFace: F,
+      fontSize: 30, bold: true, color: main ? C.cognac : C.dim, margin: 0 });
+    s.addText(c[3], { x: x + 2.3, y: 2.74, w: 1, h: 0.3, align: "right", fontFace: F,
+      fontSize: 11, bold: true, color: main ? C.cognac : C.dim, charSpacing: 1.4, margin: 0 });
+    s.addText(c[1], { x: x + 0.3, y: 3.24, w: 3.1, h: 0.38, fontFace: F,
+      fontSize: T.cardTitle, bold: true, color: C.white, margin: 0 });
+    s.addText(c[2], { x: x + 0.3, y: 3.74, w: 3.1, h: 0.8, fontFace: F,
+      fontSize: T.body, color: C.muted, lineSpacing: 21, margin: 0 });
+    s.addShape(p.ShapeType.line, { x: x + 0.3, y: 4.72, w: 3.0, h: 0,
+      line: { color: C.line, width: 0.75 } });
+    s.addText(c[4], { x: x + 0.3, y: 4.86, w: 3.1, h: 0.6, fontFace: F,
+      fontSize: T.body, color: main ? C.white : C.muted, bold: main, lineSpacing: 20, margin: 0 });
   });
-  foot(s, "특정 브랜드가 아니라 럭셔리 산업 전체의 구조적 공백");
-  brandMark(s);
-  s.addNotes("브랜드는 구매까지 엄청난 투자를 합니다. 그런데 그 정점 이후는 세일 문자가 전부입니다. 더 근본적인 건 브랜드가 새것 상태만 보여준다는 겁니다.");
+  foot(s, "03을 제대로 풀면 01과 02가 그 안에 들어옵니다");
+  mark(s);
+  s.addNotes("세 챌린지 중 3번을 메인으로 골랐습니다. 1번과 2번은 특정 순간을 좋게 만들지만 끊긴 경험은 여전히 끊겨 있기 때문입니다. 그리고 3번을 제대로 풀면 1번과 2번이 그 안에 들어옵니다. 매장에서 산 박스의 QR을 찍는 순간이 2번이고, 그 뒤 AI가 기록을 만드는 게 1번입니다.");
 }
 
-/* ── 4. 마찰 ─────────────────────────────── */
+chapter(1, "MCM은 어디에 서 있나", "가격이 아니라 사용 빈도로 보면 자리가 달라진다");
+
+/* ══ 03 포지셔닝 맵 ★ ═════════════════════ */
 {
   const s = p.addSlide(); dark(s);
-  eyebrow(s, "WHY IT STAYS EMPTY");
-  headline(s, [{ t: "기록은 마찰입니다" }], { size: 30 });
-  sub(s, "문제는 브랜드가 몰라서가 아니라, 사용자가 기록을 남기지 않는다는 것입니다", 1.98);
+  eyebrow(s, "POSITIONING");
+  headline(s, ["가격이 아니라 사용 빈도로 보면"], { size: T.h1, y: 0.98 });
+  sub(s, "MCM의 자리가 달라집니다", 1.92);
 
-  const fields = ["제목을 입력하세요", "날짜를 선택하세요", "장소를 입력하세요", "설명을 입력하세요", "해시태그"];
-  fields.forEach((t, i) => {
-    const y = 3.06 + i * 0.62;
-    s.addShape(p.ShapeType.roundRect, { x: 1.5, y, w: 5.2, h: 0.5, rectRadius: 0.06,
-      fill: { color: C.dark }, line: { color: C.line, width: 0.75, dashType: "dash" } });
-    s.addText(t, { x: 1.72, y: y + 0.12, w: 4.6, h: 0.28, fontFace: F,
-      fontSize: 11.5, color: C.dim, margin: 0 });
+  const X0 = 4.15, Y0 = 6.06, PW = 6.0, PH = 3.2;
+  // 매일 쓰는 럭셔리 구간
+  const zx = X0 + PW * 0.46, zy = Y0 - PH * 0.80, zw = PW * 0.58, zh = PH * 0.62;
+  s.addShape(p.ShapeType.roundRect, { x: zx, y: zy, w: zw, h: zh, rectRadius: 0.08,
+    fill: { color: C.deep, transparency: 86 }, line: { color: C.cognac, width: 1 } });
+  s.addText("매일 쓰는 럭셔리", { x: zx, y: zy - 0.34, w: zw, h: 0.3, align: "center",
+    fontFace: F, fontSize: 12, bold: true, color: C.cognac, charSpacing: 1.2, margin: 0 });
+
+  s.addShape(p.ShapeType.line, { x: X0, y: Y0, w: PW, h: 0, line: { color: C.line, width: 1 } });
+  s.addShape(p.ShapeType.line, { x: X0, y: Y0 - PH, w: 0, h: PH, line: { color: C.line, width: 1 } });
+  s.addText("일상 사용 빈도  →", { x: X0, y: Y0 + 0.16, w: PW, h: 0.3, align: "center",
+    fontFace: F, fontSize: 11.5, color: C.dim, margin: 0 });
+  s.addText("↑ 가격", { x: X0 - 0.06, y: Y0 - PH - 0.36, w: 1.4, h: 0.3, align: "left",
+    fontFace: F, fontSize: 11.5, color: C.dim, margin: 0 });
+
+  // [x비율, y비율, 라벨, 라벨방향, 강조]
+  const dots = [
+    [0.14, 0.86, "에르메스 · 샤넬 · 루이비통", "R", false],
+    [0.62, 0.42, "Coach · Michael Kors", "R", false],
+    [0.80, 0.26, "Longchamp", "R", false],
+    [0.76, 0.62, "MCM", "R", true],
+    [0.90, 0.08, "매스 브랜드", "R", false],
+  ];
+  dots.forEach(d => {
+    const cx = X0 + PW * d[0], cy = Y0 - PH * d[1], r = d[4] ? 0.2 : 0.13;
+    s.addShape(p.ShapeType.ellipse, { x: cx - r / 2, y: cy - r / 2, w: r, h: r,
+      fill: { color: d[4] ? C.cognac : C.muted }, line: { type: "none" } });
+    const right = d[3] === "R";
+    s.addText(d[2], {
+      x: right ? cx + 0.16 : cx - 3.16, y: cy - 0.16, w: 3.0, h: 0.32,
+      align: right ? "left" : "right", fontFace: F,
+      fontSize: d[4] ? 17 : 12, bold: d[4],
+      color: d[4] ? C.white : C.muted, margin: 0 });
   });
-  card(s, 7.3, 3.06, 4.65, 3.02);
-  s.addText("지금까지의 해법", { x: 7.66, y: 3.36, w: 3.9, h: 0.3, fontFace: F,
-    fontSize: 11, color: C.cognac, bold: true, charSpacing: 1.4, margin: 0 });
-  s.addText("입력창을 더 준다", { x: 7.66, y: 3.72, w: 3.9, h: 0.4, fontFace: F,
+
+  const notes = [
+    ["아껴 쓰는 물건", "가격이 높을수록 옷장에 머문다.\n상하지 않지만 함께한 시간도 없다."],
+    ["매일 쓰는 물건", "MCM은 매일 들 수 있는 가격대다.\n그래서 상한다."],
+  ];
+  notes.forEach((n, i) => {
+    const y = 2.62 + i * 1.72;
+    card(s, 0.85, y, 2.9, 1.52, i === 1);
+    s.addText(n[0], { x: 1.12, y: y + 0.22, w: 2.4, h: 0.34, fontFace: F,
+      fontSize: 15, bold: true, color: i === 1 ? C.cognac : C.white, margin: 0 });
+    s.addText(n[1], { x: 1.12, y: y + 0.66, w: 2.4, h: 0.74, fontFace: F,
+      fontSize: 12, color: C.muted, lineSpacing: 18, margin: 0 });
+  });
+  foot(s, "Coach는 접근 가능 럭셔리 1위 · Longchamp $100–250 · Michael Kors $150–800 (2026)");
+  mark(s);
+  s.addNotes("가격만 보면 MCM은 준명품입니다. 그런데 축을 하나 더 두면 자리가 달라집니다. 일상 사용 빈도입니다. 3대장은 가격이 높아 옷장에 머뭅니다. 매스 브랜드는 매일 쓰지만 애착이 없습니다. 이 구간이 매일 들 수 있으면서 애착이 생기는 유일한 자리이고, MCM은 그중 가장 위에 있습니다.");
+}
+
+/* ══ 04 역설 ★ ═══════════════════════════ */
+{
+  const s = p.addSlide(); dark(s);
+  eyebrow(s, "THE PARADOX");
+  headline(s, ["매일 쓰면, 상합니다"], { size: T.h1 });
+  sub(s, "그리고 이 구간에만 “상한 것을 어떻게 다룰 것인가”라는 문제가 생깁니다", 2.08);
+
+  const cols = [
+    ["3대장", "안 씁니다", "그래서 안 상합니다.\n대신 함께한 시간도 없습니다.", C.dim],
+    ["매스 브랜드", "상하면 버립니다", "애착이 없어서\n고칠 이유가 없습니다.", C.dim],
+    ["MCM", "매일 쓰고, 상합니다", "고칠 만큼 아깝고\n버리기엔 아깝습니다.", C.cognac],
+  ];
+  cols.forEach((c, i) => {
+    const x = 0.85 + i * 3.95, hi = i === 2;
+    card(s, x, 2.94, 3.6, 2.5, hi);
+    s.addText(c[0], { x: x + 0.32, y: 3.2, w: 3.0, h: 0.36, fontFace: F,
+      fontSize: 15, bold: true, color: hi ? C.cognac : C.muted, margin: 0 });
+    s.addText(c[1], { x: x + 0.32, y: 3.66, w: 3.1, h: 0.42, fontFace: F,
+      fontSize: 20, bold: true, color: C.white, margin: 0 });
+    s.addText(c[2], { x: x + 0.32, y: 4.24, w: 3.05, h: 0.8, fontFace: F,
+      fontSize: T.body, color: C.muted, lineSpacing: 21, margin: 0 });
+  });
+  s.addText("지금 이 문제를 풀어주는 브랜드는 없습니다", {
+    x: 0.85, y: 5.82, w: W - 1.7, h: 0.42, align: "center", fontFace: F,
     fontSize: 19, bold: true, color: C.white, margin: 0 });
-  s.addText("→ 더 안 합니다", { x: 7.66, y: 4.2, w: 3.9, h: 0.36, fontFace: F,
-    fontSize: 16, bold: true, color: C.cognac, margin: 0 });
-  s.addText("사진 40장 중 고르고, 날짜 쓰고, 장소 쓰고,\n설명 쓰고. 아무도 하지 않습니다.\n\n여기가 AI가 들어갈 자리입니다.", {
-    x: 7.66, y: 4.74, w: 3.95, h: 1.1, fontFace: F, fontSize: 11.5,
-    color: C.muted, lineSpacing: 18, margin: 0 });
-  brandMark(s);
-  s.addNotes("구매 이후를 채우려는 시도는 계속 있었습니다. 전부 사용자에게 입력을 요구했습니다. 아무도 안 합니다.");
+  mark(s);
+  s.addNotes("3대장은 안 쓰니까 안 상합니다. 매스 브랜드는 상하면 버립니다. MCM 구간만 매일 쓰고, 상하고, 그런데 버리기엔 아까운 물건입니다. 이 문제를 지금 풀어주는 브랜드가 없습니다.");
 }
 
-chapter(2, "흠이 값이 된다", "우리가 세운 가설");
+chapter(2, "흠이 값이 된다", "상함을 지우지 말고, 나의 것으로");
 
-/* ── 5. 가설 ★ ───────────────────────────── */
+/* ══ 05 가설 ★ ═══════════════════════════ */
 {
   const s = p.addSlide(); dark(s);
-  eyebrow(s, "OUR HYPOTHESIS");
-  headline(s, [{ t: "흠이 값이 됩니다" }], { size: 32 });
-  sub(s, "같은 사고방식이 세 문화에 각각 있습니다. 그중 하나는 MCM 자신의 역사입니다", 2.04);
+  eyebrow(s, "OUR ANSWER");
+  headline(s, [
+    { t: "고쳐서 원래대로 돌리지 않습니다." },
+    { t: "고쳐서 나만의 것으로 만듭니다.", c: C.cognac },
+  ], { size: 30, h: 1.6 });
+
+  const flow = [
+    ["매일 쓴다", "가격대가 허락한다"],
+    ["긁힌다", "쓰면 생기는 일이다"],
+    ["그 자리에 그린다", "AI 시안 · 장인 제작"],
+    ["나만의 것이 된다", "세상에 하나뿐"],
+  ];
+  flow.forEach((f, i) => {
+    const x = 0.85 + i * 3.15;
+    card(s, x, 3.0, 2.85, 1.5, i >= 2);
+    s.addText(f[0], { x: x + 0.28, y: 3.28, w: 2.4, h: 0.36, fontFace: F,
+      fontSize: 16, bold: true, color: i >= 2 ? C.cognac : C.white, margin: 0 });
+    s.addText(f[1], { x: x + 0.28, y: 3.74, w: 2.4, h: 0.4, fontFace: F,
+      fontSize: 12, color: C.muted, margin: 0 });
+    if (i < 3) s.addText("→", { x: x + 2.85, y: 3.6, w: 0.3, h: 0.32, align: "center",
+      fontFace: F, fontSize: 15, color: C.dim, margin: 0 });
+  });
+
+  s.addText("흠이 곧 나의 역사가 됩니다", { x: 0.85, y: 5.06, w: W - 1.7, h: 0.5,
+    align: "center", fontFace: F, fontSize: 26, bold: true, color: C.white, margin: 0 });
+  s.addText("이 서비스가 파는 것은 수선이 아니라 “오래 쓸 이유”입니다", {
+    x: 0.85, y: 5.72, w: W - 1.7, h: 0.36, align: "center", fontFace: F,
+    fontSize: 14, color: C.muted, margin: 0 });
+  mark(s);
+  s.addNotes("그래서 저희는 수선을 원래대로 되돌리는 일로 보지 않습니다. 매일 쓰면 긁힙니다. 그 자리에 그립니다. 그러면 세상에 하나뿐인 물건이 됩니다. 흠이 곧 나의 역사가 됩니다.");
+}
+
+/* ══ 06 계보 ══════════════════════════════ */
+{
+  const s = p.addSlide(); dark(s);
+  eyebrow(s, "THIS IS NOT NEW");
+  headline(s, ["같은 생각이 이미 세 번 있었습니다"], { size: T.h1 });
 
   const eras = [
-    ["조선", "신사임당의 포도", "얼룩 위에 그림을 그렸다.\n흠이 작품이 된다."],
-    ["일본", "킨츠기 金継ぎ", "깨진 자리를 금으로 잇는다.\n흉터를 드러낸다."],
-    ["1988 · 할렘", "Dapper Dan", "비세토스를 뜯어 다시 꿰맸다.\nMCM을 아이콘으로 만든 손."],
-    ["2026 · MCM", "REMADE", "AI가 시안을 그리고\n장인이 실물을 만든다."],
+    ["조선", "신사임당의 포도", "치마 얼룩 위에 포도를 그렸다.\n버려질 옷이 오히려 팔렸다."],
+    ["일본", "킨츠기 金継ぎ", "깨진 자리를 금으로 잇는다.\n흉터를 감추지 않고 드러낸다."],
+    ["1988 · 할렘", "Dapper Dan", "MCM 코냑 비세토스를 뜯어\n무대의상으로 다시 꿰맸다."],
   ];
   eras.forEach((e, i) => {
-    const x = 0.85 + i * 2.95;
-    card(s, x, 2.72, 2.72, 1.9);
-    if (i >= 2) {
-      s.addShape(p.ShapeType.roundRect, { x, y: 2.72, w: 2.72, h: 1.9, rectRadius: 0.09,
-        fill: { type: "none" }, line: { color: C.cognac, width: 1.5 } });
-    }
-    s.addText(e[0], { x: x + 0.26, y: 2.96, w: 2.2, h: 0.28, fontFace: F,
-      fontSize: 9.5, color: C.cognac, charSpacing: 1.2, margin: 0 });
-    s.addText(e[1], { x: x + 0.26, y: 3.28, w: 2.3, h: 0.36, fontFace: F,
-      fontSize: 14, bold: true, color: C.white, margin: 0 });
-    s.addText(e[2], { x: x + 0.26, y: 3.74, w: 2.24, h: 0.9, fontFace: F,
-      fontSize: 10.5, color: C.muted, lineSpacing: 16, margin: 0 });
+    const x = 0.85 + i * 3.95, hi = i === 2;
+    card(s, x, 2.34, 3.6, 2.42, hi);
+    s.addText(e[0], { x: x + 0.32, y: 2.6, w: 3.0, h: 0.3, fontFace: F,
+      fontSize: 11.5, color: C.cognac, charSpacing: 1.4, margin: 0 });
+    s.addText(e[1], { x: x + 0.32, y: 2.98, w: 3.1, h: 0.42, fontFace: F,
+      fontSize: 20, bold: true, color: C.white, margin: 0 });
+    s.addText(e[2], { x: x + 0.32, y: 3.56, w: 3.05, h: 0.86, fontFace: F,
+      fontSize: T.body, color: C.muted, lineSpacing: 21, margin: 0 });
   });
-  const derive = [
-    ["3년 썼다", "충동구매가 아니었다"],
-    ["파리에 같이 갔다", "삶에 들어와 있다"],
-    ["긁혔고, 고쳤다", "나는 관리하는 사람이다"],
-  ];
-  derive.forEach((d, i) => {
-    const y = 4.92 + i * 0.44;
-    s.addText(d[0], { x: 3.55, y, w: 2.5, h: 0.3, align: "right", fontFace: F,
-      fontSize: 12.5, color: C.white, margin: 0 });
-    s.addText("→", { x: 6.2, y, w: 0.4, h: 0.3, align: "center", fontFace: F,
-      fontSize: 12, color: C.dim, margin: 0 });
-    s.addText(d[1], { x: 6.7, y, w: 3.2, h: 0.3, fontFace: F,
-      fontSize: 12.5, color: C.muted, margin: 0 });
-  });
-  s.addShape(p.ShapeType.line, { x: 3.55, y: 6.3, w: 6.35, h: 0,
-    line: { color: C.line, width: 0.75 } });
-  s.addText("= 흠이 곧 서사다", { x: 3.55, y: 6.4, w: 6.35, h: 0.32, align: "center",
-    fontFace: F, fontSize: 14, bold: true, color: C.cognac, margin: 0 });
-  foot(s, "신사임당은 전해지는 일화 · Dapper Dan은 브랜드 자체 기록 (Highsnobiety)");
-  brandMark(s);
-  s.addNotes("신사임당이 잔칫상에서 남의 치마에 튄 얼룩 위에 포도를 그린 이야기가 있습니다. 치마는 오히려 팔려 새 치마 값이 됐습니다. 흠이 값이 된 겁니다. 그리고 1988년 할렘에서 같은 일이 일어났습니다. Dapper Dan이 MCM 코냑 비세토스를 뜯어서 무대의상으로 다시 꿰맸고, 그게 이 브랜드를 아이콘으로 만들었습니다. 이건 남의 이야기가 아닙니다. MCM이 이미 겪은 일입니다.");
+  s.addShape(p.ShapeType.roundRect, { x: 0.85, y: 5.12, w: W - 1.7, h: 1.14,
+    rectRadius: 0.09, fill: { color: C.card }, line: { color: C.cognac, width: 1.5 } });
+  s.addText("셋째는 비유가 아닙니다. MCM 자신의 역사입니다.", {
+    x: 1.2, y: 5.34, w: 11, h: 0.4, fontFace: F, fontSize: 20, bold: true,
+    color: C.cognac, margin: 0 });
+  s.addText("Dapper Dan이 뜯어 만든 옷을 Eric B. & Rakim, Salt-N-Pepa, LL Cool J가 입었고, 그것이 이 브랜드를 아이콘으로 만들었습니다.", {
+    x: 1.2, y: 5.78, w: 11, h: 0.34, fontFace: F, fontSize: T.body, color: C.muted, margin: 0 });
+  foot(s, "신사임당은 전해지는 일화 · Dapper Dan은 브랜드 기록 (Highsnobiety)");
+  mark(s);
+  s.addNotes("신사임당이 얼룩 위에 포도를 그린 이야기가 있습니다. 일본에는 킨츠기가 있습니다. 그리고 1988년 할렘에서 같은 일이 일어났습니다. 셋째는 비유가 아니라 MCM 자신의 역사입니다. 2020년에는 그 계보의 스타일리스트 Misa Hylton이 글로벌 크리에이티브 파트너가 됐습니다.");
 }
 
-/* ── 6. 페르소나 ─────────────────────────── */
+/* ══ 07 페르소나 ══════════════════════════ */
 {
   const s = p.addSlide(); dark(s);
   eyebrow(s, "WHO WE BUILD FOR");
-  headline(s, [{ t: "“무리해서 산 거 아니야." }, { t: "3년째 잘 쓰고 있어.”" }], { size: 27, h: 1.7 });
+  headline(s, [{ t: "“무리해서 산 거 아니야." }, { t: "3년째 잘 쓰고 있어.”" }], { size: 30, h: 1.6 });
 
-  card(s, 1.15, 3.16, 5.1, 2.5);
-  s.addText("서지우 · 28", { x: 1.5, y: 3.44, w: 4.4, h: 0.36, fontFace: F,
-    fontSize: 16, bold: true, color: C.white, margin: 0 });
-  s.addText("뷰티 브랜드 마케터 4년차 · 서울 1인 가구\nMCM 백팩 1점 · 주 4회 사용", {
-    x: 1.5, y: 3.88, w: 4.4, h: 0.62, fontFace: F, fontSize: 11.5, color: C.muted,
-    lineSpacing: 18, margin: 0 });
-  s.addText("과시하고 싶다.\n그런데 과시로 보이면 안 된다.", {
-    x: 1.5, y: 4.62, w: 4.4, h: 0.66, fontFace: F, fontSize: 14, bold: true,
-    color: C.cognac, lineSpacing: 22, margin: 0 });
-  s.addText("필요한 건 자랑 도구가 아니라 정당화 도구입니다", {
-    x: 1.5, y: 5.3, w: 4.5, h: 0.28, fontFace: F, fontSize: 11, color: C.muted, margin: 0 });
+  card(s, 0.85, 3.24, 5.6, 2.5);
+  s.addText("서지우 · 28", { x: 1.18, y: 3.54, w: 4.8, h: 0.42, fontFace: F,
+    fontSize: 22, bold: true, color: C.white, margin: 0 });
+  s.addText("뷰티 브랜드 마케터 4년차 · 서울 1인 가구\n첫 자가 구매 명품이 MCM 백팩 · 주 4회 사용", {
+    x: 1.18, y: 4.06, w: 4.9, h: 0.72, fontFace: F, fontSize: T.body,
+    color: C.muted, lineSpacing: 22, margin: 0 });
+  s.addText("과시하고 싶다.\n그런데 과시로 보이면 안 된다.", { x: 1.18, y: 4.9, w: 4.9, h: 0.72,
+    fontFace: F, fontSize: 17, bold: true, color: C.cognac, lineSpacing: 26, margin: 0 });
 
-  const reads = [
-    ["3대장을 샀다면", "“무리했네”", C.dim],
-    ["아무것도 안 산다면", "“포기했네”", C.dim],
-    ["MCM을 샀다면", "“안목 있네”", C.cognac],
-  ];
+  const reads = [["3대장을 샀다면", "“무리했네”"], ["아무것도 안 산다면", "“포기했네”"], ["MCM을 샀다면", "“안목 있네”"]];
   reads.forEach((r, i) => {
-    const y = 3.16 + i * 0.86;
-    card(s, 6.75, y, 5.4, 0.7);
-    s.addText(r[0], { x: 7.05, y: y + 0.2, w: 2.6, h: 0.3, fontFace: F,
-      fontSize: 12, color: C.muted, margin: 0 });
-    s.addText(r[1], { x: 9.5, y: y + 0.17, w: 2.4, h: 0.36, fontFace: F,
-      fontSize: 15, bold: true, color: r[2], align: "right", margin: 0 });
+    const y = 3.24 + i * 0.88, hi = i === 2;
+    card(s, 6.85, y, 5.6, 0.72, hi);
+    s.addText(r[0], { x: 7.18, y: y + 0.2, w: 2.9, h: 0.32, fontFace: F,
+      fontSize: T.body, color: C.muted, margin: 0 });
+    s.addText(r[1], { x: 9.9, y: y + 0.16, w: 2.3, h: 0.4, align: "right", fontFace: F,
+      fontSize: 18, bold: true, color: hi ? C.cognac : C.dim, margin: 0 });
   });
   s.addText("흠이 서사가 되면, 흠이 있는 쪽이 더 당당해집니다", {
-    x: 6.75, y: 5.82, w: 5.4, h: 0.32, fontFace: F, fontSize: 12,
-    bold: true, color: C.cognac, align: "center", margin: 0 });
-  brandMark(s);
-  s.addNotes("큰 지출을 했을 때 두려운 건 통장이 아니라 평판입니다. 그런데 흠이 서사가 되는 순간 관계가 뒤집힙니다. 새것 같은 가방보다 3년 쓰고 한 번 고친 가방이 더 당당해집니다. 연령대 실측은 미확보이며 페르소나는 가설입니다.");
+    x: 6.85, y: 6.0, w: 5.6, h: 0.36, align: "center", fontFace: F,
+    fontSize: 14, bold: true, color: C.white, margin: 0 });
+  mark(s);
+  s.addNotes("큰 지출을 했을 때 두려운 건 통장이 아니라 평판입니다. 흠이 서사가 되는 순간 관계가 뒤집힙니다. 연령대 실측은 미확보이며 페르소나는 가설입니다.");
 }
 
 chapter(3, "무엇을 만들었나", "하나의 타임라인, 그리고 AI");
 
-/* ── 7. 해결 ─────────────────────────────── */
+/* ══ 08 공백 ══════════════════════════════ */
+{
+  const s = p.addSlide(); dark(s);
+  eyebrow(s, "THE GAP");
+  headline(s, ["브랜드는 새것만 보여줍니다"], { size: T.h1 });
+  sub(s, "그리고 사용자는 기록을 남기지 않습니다. 두 문제가 같이 있습니다.", 2.08);
+
+  const two = [
+    ["브랜드 쪽", "구매 이후 접점이 세일 문자뿐", "사진은 SNS, 여행은 캘린더,\n수선 이력은 브랜드 내부.\n제품 하나의 이야기를 아무도 못 본다."],
+    ["사용자 쪽", "기록은 마찰이다", "사진 고르고, 날짜 쓰고, 장소 쓰고,\n설명 쓰고 — 아무도 하지 않는다.\n입력창을 더 주면 더 안 한다."],
+  ];
+  two.forEach((t, i) => {
+    const x = 0.85 + i * 6.1;
+    card(s, x, 2.86, 5.75, 2.7);
+    s.addText(t[0], { x: x + 0.36, y: 3.12, w: 3, h: 0.32, fontFace: F,
+      fontSize: 11.5, color: C.cognac, charSpacing: 1.4, margin: 0 });
+    s.addText(t[1], { x: x + 0.36, y: 3.5, w: 5.1, h: 0.44, fontFace: F,
+      fontSize: 21, bold: true, color: C.white, margin: 0 });
+    s.addText(t[2], { x: x + 0.36, y: 4.1, w: 5.1, h: 1.2, fontFace: F,
+      fontSize: T.body, color: C.muted, lineSpacing: 22, margin: 0 });
+  });
+  s.addText("여기가 AI가 들어갈 자리입니다", { x: 0.85, y: 5.92, w: W - 1.7, h: 0.44,
+    align: "center", fontFace: F, fontSize: 20, bold: true, color: C.cognac, margin: 0 });
+  mark(s);
+  s.addNotes("구매 이후를 채우려는 시도는 계속 있었습니다. 전부 사용자에게 입력을 요구했습니다. 아무도 안 합니다.");
+}
+
+/* ══ 09 해결 ══════════════════════════════ */
 {
   const s = p.addSlide(); dark(s);
   eyebrow(s, "SOLUTION");
-  headline(s, [{ t: "발견부터 다음 소유자까지, 하나의 타임라인" }], { size: 27 });
-  sub(s, "내가 남긴 기록과 브랜드가 남긴 기록이 같은 줄에 흐릅니다", 1.98);
+  headline(s, ["발견부터 다음 소유자까지, 하나의 타임라인"], { size: 32 });
 
   const steps = ["발견", "구매", "사용", "관리", "수선", "물려주기"];
   steps.forEach((t, i) => {
-    const x = 1.1 + i * 1.86;
-    s.addShape(p.ShapeType.roundRect, { x, y: 3.14, w: 1.62, h: 0.72, rectRadius: 0.08,
-      fill: { color: C.card }, line: { color: C.line, width: 0.75 } });
-    s.addText(t, { x, y: 3.36, w: 1.62, h: 0.3, align: "center", fontFace: F,
-      fontSize: 13, bold: true, color: C.white, margin: 0 });
-    if (i < steps.length - 1) {
-      s.addText("→", { x: x + 1.62, y: 3.38, w: 0.24, h: 0.28, align: "center",
-        fontFace: F, fontSize: 12, color: C.dim, margin: 0 });
-    }
+    const x = 0.85 + i * 2.0;
+    s.addShape(p.ShapeType.roundRect, { x, y: 2.72, w: 1.76, h: 0.86, rectRadius: 0.08,
+      fill: { color: C.card }, line: { color: i >= 3 ? C.cognac : C.line, width: i >= 3 ? 1.25 : 0.75 } });
+    s.addText(t, { x, y: 2.98, w: 1.76, h: 0.34, align: "center", fontFace: F,
+      fontSize: 15, bold: true, color: C.white, margin: 0 });
+    if (i < 5) s.addText("→", { x: x + 1.76, y: 3.0, w: 0.24, h: 0.3, align: "center",
+      fontFace: F, fontSize: 13, color: C.dim, margin: 0 });
   });
-  s.addShape(p.ShapeType.line, { x: 1.1, y: 4.1, w: W - 2.2, h: 0,
-    line: { color: C.cognac, width: 1.25 } });
-  s.addText("하나의 기록으로 이어집니다", { x: 1.1, y: 4.2, w: W - 2.2, h: 0.3,
-    align: "center", fontFace: F, fontSize: 12, color: C.cognac, margin: 0 });
+  s.addShape(p.ShapeType.line, { x: 0.85, y: 3.86, w: W - 1.7, h: 0, line: { color: C.cognac, width: 1.25 } });
+  s.addText("내가 남긴 기록과 브랜드가 남긴 기록이 같은 줄에 흐릅니다", {
+    x: 0.85, y: 3.98, w: W - 1.7, h: 0.34, align: "center", fontFace: F,
+    fontSize: 14, color: C.cognac, margin: 0 });
 
   const notes = [
     ["별도 앱 설치 없음", "제품의 QR·NFC가 곧 진입점입니다."],
@@ -326,291 +358,304 @@ chapter(3, "무엇을 만들었나", "하나의 타임라인, 그리고 AI");
     ["빈 화면을 보여주지 않습니다", "구매 이벤트가 첫 줄로 자동 생성됩니다."],
   ];
   notes.forEach((n, i) => {
-    const x = 1.15 + i * 3.7;
-    card(s, x, 4.84, 3.4, 1.34);
-    s.addText(n[0], { x: x + 0.28, y: 5.08, w: 2.9, h: 0.3, fontFace: F,
-      fontSize: 12, bold: true, color: C.white, margin: 0 });
-    s.addText(n[1], { x: x + 0.28, y: 5.44, w: 2.9, h: 0.48, fontFace: F,
-      fontSize: 10.5, color: C.muted, lineSpacing: 15, margin: 0 });
+    const x = 0.85 + i * 3.95;
+    card(s, x, 4.66, 3.6, 1.52);
+    s.addText(n[0], { x: x + 0.32, y: 4.92, w: 3.1, h: 0.36, fontFace: F,
+      fontSize: 15, bold: true, color: C.white, margin: 0 });
+    s.addText(n[1], { x: x + 0.32, y: 5.36, w: 3.05, h: 0.6, fontFace: F,
+      fontSize: 12.5, color: C.muted, lineSpacing: 19, margin: 0 });
   });
-  brandMark(s);
-  s.addNotes("핵심은 내 기록과 브랜드의 기록이 같은 줄에 있다는 점입니다. 사진 앱은 브랜드 기록을 못 갖고 브랜드 시스템은 내 추억을 못 갖습니다. 이 둘이 만나는 곳은 지금 아무 데도 없습니다.");
+  mark(s);
+  s.addNotes("핵심은 내 기록과 브랜드의 기록이 같은 줄에 있다는 점입니다. 사진 앱은 브랜드 기록을 못 갖고, 브랜드 시스템은 내 추억을 못 갖습니다.");
 }
 
-/* ── 8. AI ★ ─────────────────────────────── */
+/* ══ 10 AI ★ ═════════════════════════════ */
 {
   const s = p.addSlide(); dark(s);
   eyebrow(s, "HOW WE USE AI");
-  headline(s, [
-    { t: "AI는 쓰게 하지 않습니다. 대신 써줍니다." },
-    { t: "그리고 흠을 지우지 않습니다. 그 자리에 그립니다.", c: C.cognac },
-  ], { size: 22, h: 1.4 });
-
-  const hdr = ["단계", "사용자가 하는 일", "AI가 하는 일", "상태"];
-  const xs = [1.15, 2.75, 5.5, 11.15];
-  hdr.forEach((h, i) => s.addText(h, { x: xs[i], y: 2.78, w: 2.4, h: 0.28,
-    fontFace: F, fontSize: 10, color: C.dim, charSpacing: 1.2, margin: 0 }));
+  headline(s, ["AI는 쓰게 하지 않습니다. 대신 써줍니다"], { size: 32 });
 
   const rows = [
-    ["기록", "사진 1장 + 상황 칩 탭", "문장으로 만든다 — 장소·날짜·제품을 엮어", "구현"],
-    ["축적", "아무것도 안 함", "Recap 생성 — 흩어진 기록을 하나의 이야기로", "구현"],
-    ["수선", "부위 탭 + 사진", "REMADE — 손상 자리에 어울리는 문양 시안 3안", "구현"],
-    ["스타일링", "시대 하나 선택", "Archive Style — 내 가방을 MCM 전성기 룩으로", "제안"],
-    ["인사이트", "아무것도 안 함", "패턴 도출 — 누가, 어떤 상황에, 어떤 제품을", "구현"],
+    ["기록", "사진 1장 + 상황 칩 탭", "장소·날짜·제품을 엮어 문장으로 만든다", "구현"],
+    ["축적", "아무것도 안 함", "흩어진 기록을 하나의 Recap으로 묶는다", "구현"],
+    ["수선", "부위 탭 + 사진", "손상 자리에 어울리는 리폼 시안 3안", "구현"],
+    ["인사이트", "아무것도 안 함", "누가, 어떤 상황에, 어떤 제품을 쓰는가", "구현"],
   ];
+  s.addText("사용자가 하는 일", { x: 3.15, y: 2.32, w: 3, h: 0.3, fontFace: F,
+    fontSize: 11, color: C.dim, charSpacing: 1.2, margin: 0 });
+  s.addText("AI가 하는 일", { x: 6.5, y: 2.32, w: 3, h: 0.3, fontFace: F,
+    fontSize: 11, color: C.dim, charSpacing: 1.2, margin: 0 });
   rows.forEach((r, i) => {
-    const y = 3.16 + i * 0.66;
-    card(s, 1.15, y, W - 2.3, 0.56);
-    s.addText(r[0], { x: 1.45, y: y + 0.15, w: 1.4, h: 0.28, fontFace: F,
-      fontSize: 12, bold: true, color: C.white, margin: 0 });
-    s.addText(r[1], { x: 2.75, y: y + 0.16, w: 2.7, h: 0.26, fontFace: F,
-      fontSize: 11, color: C.muted, margin: 0 });
-    s.addText(r[2], { x: 5.5, y: y + 0.15, w: 5.5, h: 0.28, fontFace: F,
-      fontSize: 11.5, color: r[0] === "수선" ? C.cognac : C.white,
-      bold: r[0] === "수선", margin: 0 });
-    s.addText(r[3], { x: 11.05, y: y + 0.16, w: 0.95, h: 0.26, align: "right",
-      fontFace: F, fontSize: 10, color: r[3] === "구현" ? C.cognac : C.dim, margin: 0 });
+    const y = 2.72 + i * 0.86, hi = r[0] === "수선";
+    card(s, 0.85, y, W - 1.7, 0.74, hi);
+    s.addText(r[0], { x: 1.2, y: y + 0.2, w: 1.8, h: 0.34, fontFace: F,
+      fontSize: 16, bold: true, color: hi ? C.cognac : C.white, margin: 0 });
+    s.addText(r[1], { x: 3.15, y: y + 0.22, w: 3.2, h: 0.3, fontFace: F,
+      fontSize: T.body, color: C.muted, margin: 0 });
+    s.addText(r[2], { x: 6.5, y: y + 0.21, w: 4.8, h: 0.32, fontFace: F,
+      fontSize: 14.5, color: C.white, bold: hi, margin: 0 });
+    s.addText(r[3], { x: 11.4, y: y + 0.22, w: 0.75, h: 0.3, align: "right", fontFace: F,
+      fontSize: 11, color: C.cognac, margin: 0 });
   });
-  foot(s, "Story·Recap·REMADE 구현 완료 · Archive Style은 다음 단계 · 제품 상태 판정에는 AI를 쓰지 않습니다");
-  brandMark(s);
-  s.addNotes("기존 서비스는 사용자에게 입력을 요구했습니다. 저희는 반대로 갑니다. 사진 한 장, 칩 세 번, 여덟 초입니다. 문장은 AI가 씁니다. 그리고 수선입니다. 저희는 수선을 되돌리는 일로 보지 않습니다. 그 자리에 그립니다. AI가 시안 세 개를 만들고 실물은 MCM 장인이 만듭니다. AI가 손을 대체하지 않습니다. 시안까지입니다.");
+  s.addText("사진 한 장, 칩 세 번, 여덟 초. 문장은 AI가 씁니다.", {
+    x: 0.85, y: 6.32, w: W - 1.7, h: 0.4, align: "center", fontFace: F,
+    fontSize: 18, bold: true, color: C.white, margin: 0 });
+  mark(s);
+  s.addNotes("기존 서비스는 사용자에게 입력을 요구했습니다. 저희는 반대로 갑니다. 제품 상태 판정에는 AI를 쓰지 않습니다. 그건 규칙 기반 계산입니다.");
 }
 
-/* ── 9. MCM 자산 ★ ───────────────────────── */
+/* ══ 11 REMADE ★ ═════════════════════════ */
+{
+  const s = p.addSlide(); dark(s);
+  eyebrow(s, "REMADE");
+  headline(s, [
+    { t: "흠을 지우지 않습니다." },
+    { t: "그 자리에 그립니다.", c: C.cognac },
+  ], { size: 32, h: 1.6 });
+
+  const steps = [
+    ["01", "긁혔다", "제품 실사 위에서\n부위를 직접 탭한다"],
+    ["02", "AI가 그린다", "그 자리에 어울리는\n문양 시안 3안 생성"],
+    ["03", "장인이 만든다", "AI는 시안까지.\n실물은 MCM 매장이 제작"],
+    ["04", "기록된다", "전후 사진이 타임라인에.\n리폼 이력이 DPP에 남는다"],
+  ];
+  steps.forEach((st, i) => {
+    const x = 0.85 + i * 3.15, hi = i === 2;
+    card(s, x, 3.0, 2.85, 2.14, hi);
+    s.addText(st[0], { x: x + 0.28, y: 3.24, w: 1, h: 0.34, fontFace: F,
+      fontSize: 14, bold: true, color: C.cognac, margin: 0 });
+    s.addText(st[1], { x: x + 0.28, y: 3.64, w: 2.4, h: 0.4, fontFace: F,
+      fontSize: 18, bold: true, color: C.white, margin: 0 });
+    s.addText(st[2], { x: x + 0.28, y: 4.16, w: 2.4, h: 0.76, fontFace: F,
+      fontSize: 12.5, color: C.muted, lineSpacing: 19, margin: 0 });
+  });
+  s.addShape(p.ShapeType.roundRect, { x: 0.85, y: 5.42, w: W - 1.7, h: 1.02,
+    rectRadius: 0.09, fill: { color: C.card }, line: { color: C.cognac, width: 1.5 } });
+  s.addText("리폼하면 보통 리셀가가 떨어집니다. 브랜드 공식 리폼 + DPP 기록이면 오히려 오릅니다.", {
+    x: 1.2, y: 5.62, w: 11, h: 0.36, fontFace: F, fontSize: 16, bold: true,
+    color: C.white, margin: 0 });
+  s.addText("진품성이 유지되고, 거기에 세상에 하나뿐이라는 증명이 붙기 때문입니다.", {
+    x: 1.2, y: 6.02, w: 11, h: 0.32, fontFace: F, fontSize: T.body, color: C.muted, margin: 0 });
+  mark(s);
+  s.addNotes("AI가 손상 부위에 어울리는 문양 시안 세 개를 만들고 실물은 MCM 장인이 만듭니다. AI가 손을 대체하지 않습니다. 시안까지입니다. 그리고 브랜드 공식 리폼에 DPP 기록이 붙으면 리셀 가치가 오히려 오릅니다.");
+}
+
+/* ══ 12 MCM 자산 ★ ═══════════════════════ */
 {
   const s = p.addSlide(); dark(s);
   eyebrow(s, "BRAND ASSETS");
-  headline(s, [{ t: "새로 만들지 않았습니다. 이미 있는 것을 썼습니다" }], { size: 26 });
+  headline(s, ["새로 만들지 않았습니다. 이미 있는 것을 썼습니다"], { size: 31 });
 
   const rows = [
     ["비세토스 마름모", "바이에른 깃발 = 흰-파란 하늘", "배경에서 바람에 흐르고, 로그에서 멈춰 쌓인다"],
     ["로렐", "승리 · 명예의 상징", "정품 인증 배지 · 멤버십 등급"],
-    ["스터드", "시그니처 하드웨어", "수선 부위 핀"],
     ["1976 뮌헨 · 여행가방", "창립 품목이 수트케이스", "스토리북의 서사 근거"],
-    ["브랜드 아카이브", "1988 Dapper Dan의 해체 · 재조합", "REMADE — 재해석의 전통을 AI로 계승"],
+    ["브랜드 아카이브", "1988 Dapper Dan의 해체 · 재조합", "REMADE — 재해석의 전통을 잇는다"],
     ["NFC + Aura DPP", "이미 운영 중", "새로 만들지 않는다. 그 위에 얹는다"],
   ];
   rows.forEach((r, i) => {
-    const y = 2.5 + i * 0.68;
-    const key = i >= 4;
-    card(s, 1.15, y, W - 2.3, 0.58);
-    if (key) s.addShape(p.ShapeType.roundRect, { x: 1.15, y, w: W - 2.3, h: 0.58,
-      rectRadius: 0.09, fill: { type: "none" }, line: { color: C.deep, width: 1.25 } });
-    s.addText(r[0], { x: 1.48, y: y + 0.16, w: 2.7, h: 0.28, fontFace: F,
-      fontSize: 12, bold: true, color: key ? C.cognac : C.white, margin: 0 });
-    s.addText(r[1], { x: 4.3, y: y + 0.17, w: 3.5, h: 0.26, fontFace: F,
-      fontSize: 11, color: C.muted, margin: 0 });
-    s.addText(r[2], { x: 7.9, y: y + 0.16, w: 4.05, h: 0.28, fontFace: F,
-      fontSize: 11.5, color: C.white, margin: 0 });
+    const y = 2.42 + i * 0.82, hi = i >= 3;
+    card(s, 0.85, y, W - 1.7, 0.7, hi);
+    s.addText(r[0], { x: 1.2, y: y + 0.19, w: 3.1, h: 0.32, fontFace: F,
+      fontSize: 15, bold: true, color: hi ? C.cognac : C.white, margin: 0 });
+    s.addText(r[1], { x: 4.5, y: y + 0.2, w: 3.6, h: 0.3, fontFace: F,
+      fontSize: 12.5, color: C.muted, margin: 0 });
+    s.addText(r[2], { x: 8.3, y: y + 0.19, w: 3.9, h: 0.32, fontFace: F,
+      fontSize: T.body, color: C.white, margin: 0 });
   });
-  foot(s, "출처: MCM Heritage · Highsnobiety · MCM Digital Product Passport");
-  brandMark(s);
-  s.addNotes("브랜드 자산을 장식으로 쓰지 않았습니다. 비세토스의 마름모는 바이에른 깃발에서 왔고 독일어로 흰-파란 하늘이라는 뜻입니다. 그래서 저희 배경에서 이 마름모는 바람에 흐릅니다. 그리고 마지막 두 줄이 가장 중요합니다. MCM의 헤리티지는 뮌헨 럭셔리가 아니라 재해석입니다. 그리고 MCM은 이미 NFC와 블록체인 패스포트를 갖고 있습니다. 저희는 새 시스템을 제안하지 않습니다.");
+  s.addText("저희는 새 시스템을 제안하지 않습니다. 이미 산 것을 쓰게 만듭니다.", {
+    x: 0.85, y: 6.42, w: W - 1.7, h: 0.4, align: "center", fontFace: F,
+    fontSize: 18, bold: true, color: C.white, margin: 0 });
+  mark(s);
+  s.addNotes("비세토스의 마름모는 바이에른 깃발에서 왔고 독일어로 흰-파란 하늘이라는 뜻입니다. 그래서 배경에서 바람에 흐릅니다. 그리고 MCM은 이미 NFC와 블록체인 패스포트를 갖고 있습니다.");
 }
 
-/* ── 10. 데모 ────────────────────────────── */
+/* ══ 13 데모 ═════════════════════════════ */
 {
   const s = p.addSlide(); dark(s);
   eyebrow(s, "DEMO");
-  headline(s, [{ t: "매장에서 산 박스가 서비스의 시작점입니다" }], { size: 27 });
+  headline(s, ["매장에서 산 박스가 서비스의 시작점입니다"], { size: 32 });
 
   const steps = [
     ["01", "스캔", "박스 QR·NFC를 찍으면\n스크롤에 따라 박스가 열린다", "Challenge 02"],
-    ["02", "등록", "타임라인 첫 줄이 자동 생성.\n빈 화면을 한 번도 보여주지 않는다", ""],
+    ["02", "등록", "타임라인 첫 줄이 자동 생성.\n빈 화면을 보여주지 않는다", ""],
     ["03", "기록", "사진 1장 + 상황 칩 →\nAI가 문장을 쓴다", "Challenge 01"],
-    ["04", "수선", "제품 실사 위에서 부위를 직접 탭.\n그 자리에 REMADE 시안이 그려진다", "핵심"],
+    ["04", "REMADE", "부위를 탭하면 그 자리에\n리폼 시안이 그려진다", "핵심"],
   ];
   steps.forEach((st, i) => {
-    const x = 1.15 + i * 2.78;
-    card(s, x, 2.68, 2.56, 3.2);
-    if (i === 3) s.addShape(p.ShapeType.roundRect, { x, y: 2.68, w: 2.56, h: 3.2,
-      rectRadius: 0.09, fill: { type: "none" }, line: { color: C.cognac, width: 1.5 } });
-    s.addText(st[0], { x: x + 0.26, y: 2.94, w: 1, h: 0.34, fontFace: F,
-      fontSize: 15, bold: true, color: C.cognac, margin: 0 });
-    s.addText(st[1], { x: x + 0.26, y: 3.38, w: 2, h: 0.34, fontFace: F,
-      fontSize: 16, bold: true, color: C.white, margin: 0 });
-    s.addText(st[2], { x: x + 0.26, y: 3.86, w: 2.08, h: 1.0, fontFace: F,
-      fontSize: 11, color: C.muted, lineSpacing: 17, margin: 0 });
-    if (st[3]) s.addText(st[3], { x: x + 0.26, y: 5.42, w: 2, h: 0.28, fontFace: F,
-      fontSize: 9.5, color: C.dim, charSpacing: 1, margin: 0 });
+    const x = 0.85 + i * 3.15, hi = i === 3;
+    card(s, x, 2.6, 2.85, 3.5, hi);
+    s.addText(st[0], { x: x + 0.3, y: 2.86, w: 1, h: 0.36, fontFace: F,
+      fontSize: 17, bold: true, color: C.cognac, margin: 0 });
+    s.addText(st[1], { x: x + 0.3, y: 3.32, w: 2.3, h: 0.42, fontFace: F,
+      fontSize: 20, bold: true, color: C.white, margin: 0 });
+    s.addText(st[2], { x: x + 0.3, y: 3.92, w: 2.4, h: 0.9, fontFace: F,
+      fontSize: T.body, color: C.muted, lineSpacing: 21, margin: 0 });
+    if (st[3]) s.addText(st[3], { x: x + 0.3, y: 5.56, w: 2.3, h: 0.3, fontFace: F,
+      fontSize: 10.5, color: C.dim, charSpacing: 1, margin: 0 });
   });
   foot(s, "박스를 여는 속도는 사용자가 정합니다. 스크롤을 멈추면 애니메이션도 멈춥니다");
-  brandMark(s);
-  s.addNotes("등록하면 구매 기록이 자동으로 첫 줄에 찍힙니다. 사진 한 장을 올리면 AI가 문장을 씁니다. 그리고 이 화면입니다. 제품 사진 위에서 부위를 직접 누릅니다. 글로 왼쪽 아래 모서리가 까졌어요라고 쓰는 게 아니라 그 자리를 누릅니다.");
+  mark(s);
+  s.addNotes("등록하면 구매 기록이 자동으로 첫 줄에 찍힙니다. 그리고 이 화면입니다. 제품 사진 위에서 부위를 직접 누릅니다.");
 }
 
 chapter(4, "왜 지금, 무엇으로 버는가", "데이터 · 경쟁 · 타이밍");
 
-/* ── 11. 데이터 ───────────────────────────── */
+/* ══ 14 데이터 ═══════════════════════════ */
 {
   const s = p.addSlide(); dark(s);
   eyebrow(s, "DATA ASSET");
-  headline(s, [{ t: "기록이 쌓이면, 브랜드가 몰랐던 것이 보입니다" }], { size: 26 });
-  sub(s, "브랜드는 무엇이 팔렸는지는 압니다. 언제, 어떤 상황에 쓰이는지는 모릅니다", 1.96);
+  headline(s, ["브랜드가 몰랐던 것이 보입니다"], { size: T.h1 });
+  sub(s, "브랜드는 무엇이 팔렸는지는 압니다. 언제, 어떤 상황에 쓰이는지는 모릅니다.", 2.08);
 
   const cards = [
-    ["상황 분포", "출근 · 여행 · 전시 · 모임 · 데이트", "brand_occasion_usage"],
-    ["수선 부위 히트맵", "손잡이 · 스트랩 · 지퍼 · 모서리 · 가죽면", "brand_repair_hotspots"],
-    ["도시별 사용", "국가 · 도시 정규화", "brand_city_usage"],
+    ["상황 분포", "출근 · 여행 · 전시 · 모임 · 데이트"],
+    ["수선 부위 히트맵", "어느 부위가 자주 상하는가\n→ 다음 제품 설계로"],
+    ["도시별 사용", "국가 · 도시 정규화"],
   ];
   cards.forEach((c, i) => {
-    const x = 1.15 + i * 3.7;
-    card(s, x, 3.0, 3.4, 1.72);
-    s.addText(c[0], { x: x + 0.28, y: 3.26, w: 2.9, h: 0.32, fontFace: F,
-      fontSize: 14, bold: true, color: C.white, margin: 0 });
-    s.addText(c[1], { x: x + 0.28, y: 3.66, w: 2.9, h: 0.5, fontFace: F,
-      fontSize: 10.5, color: C.muted, lineSpacing: 15, margin: 0 });
-    s.addText(c[2], { x: x + 0.28, y: 4.28, w: 2.9, h: 0.26, fontFace: F,
-      fontSize: 9.5, color: C.cognac, margin: 0 });
+    const x = 0.85 + i * 3.95, hi = i === 1;
+    card(s, x, 2.86, 3.6, 1.94, hi);
+    s.addText(c[0], { x: x + 0.32, y: 3.14, w: 3.1, h: 0.4, fontFace: F,
+      fontSize: 18, bold: true, color: hi ? C.cognac : C.white, margin: 0 });
+    s.addText(c[1], { x: x + 0.32, y: 3.66, w: 3.05, h: 0.8, fontFace: F,
+      fontSize: 12.5, color: C.muted, lineSpacing: 19, margin: 0 });
   });
-  card(s, 1.15, 4.98, W - 2.3, 1.02);
-  s.addText("집계는 동의한 사용자만 · 5건 미만 그룹 제외(k-익명성) · 관리자만 조회", {
-    x: 1.5, y: 5.2, w: 10.5, h: 0.3, fontFace: F, fontSize: 12.5, bold: true,
+  s.addShape(p.ShapeType.roundRect, { x: 0.85, y: 5.1, w: W - 1.7, h: 1.16,
+    rectRadius: 0.09, fill: { color: C.card }, line: { color: C.line, width: 0.75 } });
+  s.addText("집계는 동의한 사용자만 · 5건 미만 그룹 제외 · 관리자만 조회", {
+    x: 1.2, y: 5.34, w: 11, h: 0.38, fontFace: F, fontSize: 16, bold: true,
     color: C.white, margin: 0 });
   s.addText("동의 없이도 개인 기능은 전부 동작합니다. 코드로 보여드릴 수 있습니다.", {
-    x: 1.5, y: 5.54, w: 10.5, h: 0.28, fontFace: F, fontSize: 11, color: C.muted, margin: 0 });
-  brandMark(s);
-  s.addNotes("사용자가 자기 추억을 남기는 과정에서 자연스럽게 얻어집니다. 특히 수선 데이터는 어느 부위가 자주 상하는지를 알려줍니다. 이건 바로 다음 제품 설계에 들어갑니다.");
+    x: 1.2, y: 5.76, w: 11, h: 0.32, fontFace: F, fontSize: T.body, color: C.muted, margin: 0 });
+  mark(s);
+  s.addNotes("사용자가 자기 추억을 남기는 과정에서 자연스럽게 얻어집니다. 수선 데이터는 어느 부위가 자주 상하는지를 알려주고 이건 바로 다음 제품 설계에 들어갑니다.");
 }
 
-/* ── 12. 경쟁 ────────────────────────────── */
+/* ══ 15 경쟁 ═════════════════════════════ */
 {
   const s = p.addSlide(); dark(s);
   eyebrow(s, "COMPETITIVE POSITION");
   headline(s, [
     { t: "우리는 DPP를 만들지 않습니다." },
     { t: "DPP 위에서 사는 사람을 만듭니다.", c: C.cognac },
-  ], { size: 24, h: 1.4 });
+  ], { size: 30, h: 1.6 });
 
   const rows = [
     ["Aura Consortium", "LVMH 주도 · MCM이 이미 소속", "인프라"],
     ["Arianee", "패스포트 340만+ · 브랜드 50+", "인프라"],
-    ["EON", "패션 · 텍스타일 DPP", "인프라"],
-    ["Coachtopia", "제품 중심 순환 · 자사 서브브랜드 전용", "제품"],
+    ["Coachtopia", "제품 중심 순환 · 자사 전용", "제품"],
     ["MCM Luxury Book", "DPP 위의 경험 · 행동 레이어", "경험"],
   ];
   rows.forEach((r, i) => {
-    const y = 2.92 + i * 0.66;
-    const mine = i === 4;
-    card(s, 1.15, y, W - 2.3, 0.56);
-    if (mine) s.addShape(p.ShapeType.roundRect, { x: 1.15, y, w: W - 2.3, h: 0.56,
-      rectRadius: 0.09, fill: { type: "none" }, line: { color: C.cognac, width: 1.5 } });
-    s.addText(r[0], { x: 1.48, y: y + 0.15, w: 3.3, h: 0.28, fontFace: F,
-      fontSize: 12.5, bold: true, color: mine ? C.cognac : C.white, margin: 0 });
-    s.addText(r[1], { x: 5.0, y: y + 0.16, w: 5.4, h: 0.26, fontFace: F,
-      fontSize: 11, color: C.muted, margin: 0 });
-    s.addText(r[2], { x: 10.6, y: y + 0.16, w: 1.35, h: 0.26, align: "right",
-      fontFace: F, fontSize: 10.5, color: mine ? C.cognac : C.dim, margin: 0 });
+    const y = 3.16 + i * 0.82, hi = i === 3;
+    card(s, 0.85, y, W - 1.7, 0.7, hi);
+    s.addText(r[0], { x: 1.2, y: y + 0.19, w: 3.6, h: 0.32, fontFace: F,
+      fontSize: 15, bold: true, color: hi ? C.cognac : C.white, margin: 0 });
+    s.addText(r[1], { x: 5.0, y: y + 0.2, w: 5.4, h: 0.3, fontFace: F,
+      fontSize: T.body, color: C.muted, margin: 0 });
+    s.addText(r[2], { x: 10.7, y: y + 0.2, w: 1.5, h: 0.3, align: "right", fontFace: F,
+      fontSize: 12, color: hi ? C.cognac : C.dim, margin: 0 });
   });
   s.addText("기존 DPP 사업자가 전부 못 하는 것 — 소비자가 두 번째로 앱을 여는 것", {
-    x: 1.15, y: 6.32, w: W - 2.3, h: 0.3, align: "center", fontFace: F,
-    fontSize: 12, bold: true, color: C.white, margin: 0 });
-  brandMark(s);
-  s.addNotes("MCM은 이미 Aura에 있습니다. 저희가 인프라 경쟁에 뛰어들면 집니다. 제조 이력은 한 번 보면 다시 볼 이유가 없습니다. Coachtopia도 제품 중심입니다. 저희는 소유자 중심이라 재방문이 생기고 그 재방문이 데이터가 됩니다.");
+    x: 0.85, y: 6.5, w: W - 1.7, h: 0.4, align: "center", fontFace: F,
+    fontSize: 17, bold: true, color: C.white, margin: 0 });
+  mark(s);
+  s.addNotes("MCM은 이미 Aura에 있습니다. 인프라 경쟁에 뛰어들면 집니다. 제조 이력은 한 번 보면 다시 볼 이유가 없습니다. 저희는 소유자 중심이라 재방문이 생깁니다.");
 }
 
-/* ── 13. 왜 지금 ──────────────────────────── */
+/* ══ 16 왜 지금 ══════════════════════════ */
 {
   const s = p.addSlide(); dark(s);
   eyebrow(s, "WHY NOW");
-  headline(s, [{ t: "세 가지가 지금 겹칩니다" }], { size: 30 });
+  headline(s, ["세 가지가 지금 겹칩니다"], { size: T.h1 });
 
   const cols = [
-    ["01", "브랜드가 준비돼 있다", "MCM은 NFC + Aura 블록체인\n패스포트를 이미 운영 중입니다."],
-    ["02", "시장이 증명했다", "Coach는 같은 접근으로 FY2025\n북미 신규 120만 명, 2/3가 Gen Z."],
-    ["03", "규제가 밀어준다", "EU ESPR 섬유 위임법 2027년 2분기 예상,\n시행 2028~29년 전망."],
+    ["01", "브랜드가 준비돼 있다", "MCM은 NFC + Aura 블록체인\n패스포트를 이미 운영 중"],
+    ["02", "시장이 증명했다", "Coach는 같은 접근으로 FY2025\n북미 신규 120만 명, 2/3가 Gen Z"],
+    ["03", "규제가 밀어준다", "EU ESPR 섬유 위임법 2027년 2분기,\n시행 2028~29년 전망"],
   ];
   cols.forEach((c, i) => {
-    const x = 1.15 + i * 3.7;
-    card(s, x, 2.5, 3.4, 1.94);
-    s.addText(c[0], { x: x + 0.28, y: 2.74, w: 1, h: 0.3, fontFace: F,
-      fontSize: 13, bold: true, color: C.cognac, margin: 0 });
-    s.addText(c[1], { x: x + 0.28, y: 3.12, w: 2.9, h: 0.32, fontFace: F,
-      fontSize: 14, bold: true, color: C.white, margin: 0 });
-    s.addText(c[2], { x: x + 0.28, y: 3.54, w: 2.94, h: 0.72, fontFace: F,
-      fontSize: 10.5, color: C.muted, lineSpacing: 16, margin: 0 });
+    const x = 0.85 + i * 3.95;
+    card(s, x, 2.28, 3.6, 2.04);
+    s.addText(c[0], { x: x + 0.32, y: 2.52, w: 1, h: 0.34, fontFace: F,
+      fontSize: 15, bold: true, color: C.cognac, margin: 0 });
+    s.addText(c[1], { x: x + 0.32, y: 2.92, w: 3.1, h: 0.4, fontFace: F,
+      fontSize: 17, bold: true, color: C.white, margin: 0 });
+    s.addText(c[2], { x: x + 0.32, y: 3.44, w: 3.05, h: 0.8, fontFace: F,
+      fontSize: 12.5, color: C.muted, lineSpacing: 19, margin: 0 });
   });
-
-  card(s, 1.15, 4.68, W - 2.3, 1.42);
+  s.addShape(p.ShapeType.roundRect, { x: 0.85, y: 4.6, w: W - 1.7, h: 1.72,
+    rectRadius: 0.09, fill: { color: C.card }, line: { color: C.cognac, width: 1.5 } });
   s.addText("“패스포트는 제품의 수명을 지원하고, 보존하고, 연장하기 위한", {
-    x: 1.6, y: 4.94, w: 10.4, h: 0.32, fontFace: F, fontSize: 14, color: C.white, margin: 0 });
+    x: 1.25, y: 4.86, w: 11, h: 0.38, fontFace: F, fontSize: 18, color: C.white, margin: 0 });
   s.addText("MCM 커뮤니티 내의 향후 서비스와 경험으로의 접근을 연다.”", {
-    x: 1.6, y: 5.26, w: 10.4, h: 0.32, fontFace: F, fontSize: 14, bold: true,
+    x: 1.25, y: 5.28, w: 11, h: 0.38, fontFace: F, fontSize: 18, bold: true,
     color: C.cognac, margin: 0 });
-  s.addText("MCM 공식 Digital Product Passport 페이지 · us.mcmworldwide.com/en_US/digital-passport", {
-    x: 1.6, y: 5.66, w: 10.4, h: 0.26, fontFace: F, fontSize: 9.5, color: C.dim, margin: 0 });
+  s.addText("MCM 공식 Digital Product Passport 페이지 — 저희 제품이 이 문장의 다음 장입니다", {
+    x: 1.25, y: 5.78, w: 11, h: 0.32, fontFace: F, fontSize: 12.5, color: C.muted, margin: 0 });
   foot(s, "규제 일정은 2026년 8월 기준 · 위임법 2027, 시행 2028~29");
-  brandMark(s);
-  s.addNotes("MCM 공식 패스포트 페이지에 이렇게 적혀 있습니다. 저희 제품이 이 문장의 다음 장입니다. 그리고 EU는 섬유 제품에 디지털 패스포트를 요구하는 방향으로 가고 있습니다. 브랜드는 어차피 해야 합니다. 2027년 의무화라고 말하지 말고 위임법 2027, 시행 2028에서 29로 나눠 말할 것.");
+  mark(s);
+  s.addNotes("MCM 공식 패스포트 페이지에 이렇게 적혀 있습니다. 저희 제품이 이 문장의 다음 장입니다. 2027년 의무화라고 말하지 말고 위임법 2027, 시행 2028에서 29로 나눠 말할 것.");
 }
 
-/* ── 14. 수익모델 ─────────────────────────── */
+/* ══ 17 수익모델 ═════════════════════════ */
 {
   const s = p.addSlide(); dark(s);
   eyebrow(s, "BUSINESS MODEL");
-  headline(s, [{ t: "흠이 값이 되면, 수선이 매출이 됩니다" }], { size: 28 });
-  sub(s, "사용자는 무료입니다. 브랜드가 냅니다.", 2.0);
+  headline(s, ["흠이 값이 되면, 수선이 매출이 됩니다"], { size: 32 });
+  sub(s, "사용자는 무료입니다. 브랜드가 냅니다.", 2.06);
 
   const rows = [
     ["SaaS 구독", "브랜드", "활성 제품 · 사용자 수 기준 월 이용료 + 인사이트 리포트"],
-    ["구축비", "브랜드", "전용 UI/UX · 제품 DB · 관리자 시스템 초기 도입"],
+    ["구축비", "브랜드", "전용 UI/UX · 제품 DB · 관리자 시스템"],
     ["REMADE · Care 중개", "파트너", "리폼 · 세척 · 수선 예약 연결 수수료"],
     ["AI 프리미엄 콘텐츠", "사용자", "고화질 Recap · 기념일 콘텐츠"],
     ["리셀 · 소유권 이전", "파트너", "로드맵"],
   ];
   rows.forEach((r, i) => {
-    const y = 3.0 + i * 0.6;
-    card(s, 1.15, y, 7.5, 0.5);
-    s.addText(r[0], { x: 1.45, y: y + 0.12, w: 2.8, h: 0.26, fontFace: F,
-      fontSize: 11.5, bold: true, color: i === 4 ? C.dim : C.white, margin: 0 });
-    s.addText(r[1], { x: 4.3, y: y + 0.13, w: 0.9, h: 0.24, fontFace: F,
-      fontSize: 10, color: C.dim, margin: 0 });
-    s.addText(r[2], { x: 5.25, y: y + 0.13, w: 3.2, h: 0.24, fontFace: F,
-      fontSize: 10, color: C.muted, margin: 0 });
+    const y = 2.82 + i * 0.74, hi = i === 2;
+    card(s, 0.85, y, W - 1.7, 0.62, hi);
+    s.addText(r[0], { x: 1.2, y: y + 0.15, w: 3.3, h: 0.32, fontFace: F,
+      fontSize: 15, bold: true, color: i === 4 ? C.dim : (hi ? C.cognac : C.white), margin: 0 });
+    s.addText(r[1], { x: 4.7, y: y + 0.17, w: 1.2, h: 0.28, fontFace: F,
+      fontSize: 12, color: C.dim, margin: 0 });
+    s.addText(r[2], { x: 6.1, y: y + 0.16, w: 6.0, h: 0.3, fontFace: F,
+      fontSize: T.body, color: C.muted, margin: 0 });
   });
-
-  card(s, 8.95, 3.0, 3.2, 3.0);
-  s.addText("리셀 가치 역전", { x: 9.25, y: 3.24, w: 2.7, h: 0.3, fontFace: F,
-    fontSize: 13, bold: true, color: C.cognac, margin: 0 });
-  s.addText("보통 리폼하면 진품성이 흔들려\n리셀가가 떨어집니다.\n\n브랜드 공식 리폼 + DPP 기록이면\n진품성은 유지되고 거기에\n세상에 하나뿐이라는 증명이 붙습니다.", {
-    x: 9.25, y: 3.64, w: 2.72, h: 1.5, fontFace: F, fontSize: 10.5,
-    color: C.muted, lineSpacing: 16, margin: 0 });
-  s.addText("DPP를 가진 브랜드만\n할 수 있습니다", { x: 9.25, y: 5.28, w: 2.7, h: 0.6,
-    fontFace: F, fontSize: 12, bold: true, color: C.white, lineSpacing: 19, margin: 0 });
-  brandMark(s);
-  s.addNotes("사용자는 무료입니다. 브랜드가 냅니다. 그리고 수선이 비용 센터에서 매출과 로열티의 접점으로 바뀝니다. 리셀과 소유권 이전은 로드맵입니다.");
+  s.addText("수선이 비용 센터에서 매출과 로열티의 접점으로 바뀝니다", {
+    x: 0.85, y: 6.56, w: W - 1.7, h: 0.4, align: "center", fontFace: F,
+    fontSize: 17, bold: true, color: C.white, margin: 0 });
+  mark(s);
+  s.addNotes("사용자는 무료입니다. 브랜드가 냅니다. 리셀과 소유권 이전은 로드맵입니다.");
 }
 
-/* ── 15. 로드맵 ───────────────────────────── */
+/* ══ 18 로드맵 ═══════════════════════════ */
 {
   const s = p.addSlide(); dark(s);
   eyebrow(s, "ROADMAP");
-  headline(s, [{ t: "한 브랜드에서 깊게 검증하고, 확장합니다" }], { size: 28 });
+  headline(s, ["한 브랜드에서 깊게 검증하고, 확장합니다"], { size: 32 });
 
   const phases = [
-    ["Phase 1", "지금", "스토리북 + Care/Repair + REMADE\n기존 DPP 연동"],
-    ["Phase 2", "다음", "Archive Style\n상황 데이터 집계 대시보드 (B2B)"],
+    ["Phase 1", "지금", "스토리북 · Care/Repair\nREMADE · 기존 DPP 연동"],
+    ["Phase 2", "다음", "Archive Style\n상황 데이터 집계 대시보드"],
     ["Phase 3", "확장", "멀티 브랜드\n리셀 · 소유권 이전 연계"],
   ];
   phases.forEach((ph, i) => {
-    const x = 1.15 + i * 3.7;
-    card(s, x, 2.72, 3.4, 2.1);
-    if (i === 0) s.addShape(p.ShapeType.roundRect, { x, y: 2.72, w: 3.4, h: 2.1,
-      rectRadius: 0.09, fill: { type: "none" }, line: { color: C.cognac, width: 1.5 } });
-    s.addText(ph[0], { x: x + 0.28, y: 2.98, w: 2, h: 0.32, fontFace: F,
-      fontSize: 15, bold: true, color: i === 0 ? C.cognac : C.white, margin: 0 });
-    s.addText(ph[1], { x: x + 2.3, y: 3.02, w: 0.9, h: 0.26, align: "right",
-      fontFace: F, fontSize: 10, color: C.dim, margin: 0 });
-    s.addText(ph[2], { x: x + 0.28, y: 3.5, w: 2.94, h: 0.9, fontFace: F,
-      fontSize: 11, color: C.muted, lineSpacing: 17, margin: 0 });
+    const x = 0.85 + i * 3.95, hi = i === 0;
+    card(s, x, 2.7, 3.6, 2.24, hi);
+    s.addText(ph[0], { x: x + 0.32, y: 2.98, w: 2.2, h: 0.4, fontFace: F,
+      fontSize: 19, bold: true, color: hi ? C.cognac : C.white, margin: 0 });
+    s.addText(ph[1], { x: x + 2.4, y: 3.04, w: 0.9, h: 0.3, align: "right",
+      fontFace: F, fontSize: 12, color: C.dim, margin: 0 });
+    s.addText(ph[2], { x: x + 0.32, y: 3.6, w: 3.05, h: 0.9, fontFace: F,
+      fontSize: T.body, color: C.muted, lineSpacing: 21, margin: 0 });
   });
-
-  s.addText("MCM은 이미 인프라를 갖고 있습니다. 저희는 그 위에 경험을 얹습니다.", {
-    x: 1.15, y: 5.32, w: W - 2.3, h: 0.36, align: "center", fontFace: F,
-    fontSize: 16, bold: true, color: C.white, margin: 0 });
-  s.addText("감사합니다", { x: 1.15, y: 5.86, w: W - 2.3, h: 0.34, align: "center",
-    fontFace: F, fontSize: 12, color: C.cognac, charSpacing: 3, margin: 0 });
-  brandMark(s);
+  s.addText("MCM은 이미 인프라를 갖고 있습니다.\n저희는 그 위에 경험을 얹습니다.", {
+    x: 0.85, y: 5.34, w: W - 1.7, h: 0.9, align: "center", fontFace: F,
+    fontSize: 24, bold: true, color: C.white, lineSpacing: 38, margin: 0 });
+  s.addText("감사합니다", { x: 0.85, y: 6.5, w: W - 1.7, h: 0.36, align: "center",
+    fontFace: F, fontSize: 13, color: C.cognac, charSpacing: 4, margin: 0 });
   s.addNotes("한 브랜드에서 깊게 검증하고 확장합니다. 감사합니다.");
 }
 

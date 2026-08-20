@@ -38,7 +38,8 @@ function buildMenuItems(productId: string | null | undefined) {
       icon: BookOpenText,
     },
     {
-      href: productId ? `/products/${productId}/care` : "/camera?mode=qr",
+      // 제품 선택 화면을 거친다(제품이 하나뿐이면 그대로 통과시킨다).
+      href: productId ? "/care" : "/camera?mode=qr",
       label: "케어 & 리페어",
       // undefined = 아직 불러오는 중. null = 등록된 제품 없음.
       // 둘을 같이 다루면 로딩 중에 "제품이 없어요"가 잠깐 스쳐 보인다.

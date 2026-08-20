@@ -5,7 +5,7 @@ import { SafeImage } from "@/Components/ui/SafeImage";
 import Link from "next/link";
 import { PageHeader } from "@/Components/ui/PageHeader";
 import { BottomNav } from "@/Components/ui/BottomNav";
-import { RefreshCw, Wrench } from "lucide-react";
+import { Plus, RefreshCw, Wrench } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import type { DbRepair } from "@/lib/mock-db";
 import {
@@ -91,7 +91,18 @@ export function RepairListScreen({
 
   return (
     <main className="visetos-bg relative min-h-dvh pb-28">
-      <PageHeader title="수선 접수 내역" backHref={`/products/${productId}/care?tab=repairs`} />
+      <PageHeader
+        title="수선 접수 내역"
+        backHref={`/products/${productId}/care?tab=repairs`}
+        rightSlot={
+          <Link
+            href={`/products/${productId}/repairs/new`}
+            className="inline-flex items-center gap-1 rounded-full bg-cognac-deep px-3 py-1.5 text-[12px] font-semibold text-white"
+          >
+            <Plus size={13} strokeWidth={2.4} /> 접수
+          </Link>
+        }
+      />
 
       {loading && (
         <div className="mx-4 mt-5 space-y-3" aria-busy="true"><div className="h-24 animate-pulse rounded-2xl bg-black/5"/><div className="h-24 animate-pulse rounded-2xl bg-black/5"/><p className="text-center text-[12px] text-muted">수선 내역을 불러오고 있어요.</p></div>
