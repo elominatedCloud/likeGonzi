@@ -289,10 +289,10 @@ chapter(1, "왜 이걸 만들었나", "사용 빈도라는 축을 하나 더 두
 {
   const s = p.addSlide();
   statement(s, [
-    { t: "럭셔리는 새것일 때 가장 비쌉니다." },
-    { t: "그래서 사람들은 쓰지 않습니다.", c: C.cognac },
-  ], { size: 38 });
-  s.addNotes("모든 광고와 매장이 새것 상태를 보여줍니다. 비 오는 날 안 들고 나가고, 긁힐까 봐 조심하고, 결국 옷장에 둡니다.");
+    { t: "럭셔리의 가치는 여전히" },
+    { t: "“흠 없는 상태”를 기준으로 평가됩니다", c: C.cognac },
+  ], { size: 34, note: "그래서 상할까 봐 자주 들지 못하는 가방이 생깁니다" });
+  s.addNotes("리셀 시세도, 감정도, 광고도 전부 흠이 없는 상태를 기준으로 매깁니다. 그러니 사는 순간부터 값이 떨어지는 걸 지켜보게 되고, 상할까 봐 자주 들지 못하는 가방이 생깁니다.");
 }
 
 /* ═══ 05 포지셔닝 맵 ═══ */
@@ -505,6 +505,64 @@ chapter(3, "어떻게 동작하나", "AI가 마찰을 없애고 흠을 무늬로
     x: 0.8, y: H - 0.78, w: W - 1.6, h: 0.34, align: "center", fontFace: F,
     fontSize: 11, color: C.dim, margin: 0 });
   s.addNotes("기존 서비스는 사용자에게 입력을 요구했습니다. 저희는 반대로 갑니다.");
+}
+
+/* ═══ 18b AI 레이어 ═══ */
+{
+  const s = p.addSlide();
+  head(s, "WHY NOT A PHOTO APP", ["사진 앱에는 없는 재료가 들어갑니다"], { size: 32 });
+
+  const ins = ["사진", "제품 ID · 시리얼", "구매 · 수선 이력", "DPP 여권 정보"];
+  ins.forEach((t, i) => {
+    const y = 2.62 + i * 0.62;
+    s.addShape(p.ShapeType.roundRect, { x: 0.95, y, w: 2.9, h: 0.5, rectRadius: 0.06,
+      fill: { color: "1B1712" }, line: { color: C.line, width: 0.75 } });
+    s.addText(t, { x: 0.95, y: y + 0.12, w: 2.9, h: 0.3, align: "center", fontFace: F,
+      fontSize: 13, color: i === 0 ? C.muted : C.white, margin: 0 });
+  });
+  s.addText("사진 앱이 가진 건 첫 줄 하나뿐입니다", { x: 0.95, y: 5.26, w: 2.9, h: 0.5,
+    align: "center", fontFace: F, fontSize: 11.5, color: C.dim, lineSpacing: 17, margin: 0 });
+
+  s.addText("→", { x: 4.0, y: 3.52, w: 0.5, h: 0.4, align: "center", fontFace: F,
+    fontSize: 20, color: C.dim, margin: 0 });
+
+  s.addShape(p.ShapeType.roundRect, { x: 4.7, y: 2.62, w: 2.3, h: 2.5, rectRadius: 0.08,
+    fill: { color: "1B1712" }, line: { color: C.cognac, width: 1.5 } });
+  s.addText("AI 레이어", { x: 4.7, y: 3.4, w: 2.3, h: 0.4, align: "center", fontFace: F,
+    fontSize: 18, bold: true, color: C.cognac, margin: 0 });
+  s.addText("gpt-4o-mini\ngpt-image-1-mini", { x: 4.7, y: 3.9, w: 2.3, h: 0.6, align: "center",
+    fontFace: F, fontSize: 11, color: C.muted, lineSpacing: 16, margin: 0 });
+
+  s.addText("→", { x: 7.2, y: 3.52, w: 0.5, h: 0.4, align: "center", fontFace: F,
+    fontSize: 20, color: C.dim, margin: 0 });
+
+  const outs = [
+    ["Story", "사진을 문장으로", "구현"],
+    ["Recap", "기록을 이야기로", "구현"],
+    ["Care Score", "기록 기반 규칙 계산", "AI 아님"],
+    ["REMADE", "손상 자리 시안 생성", "구현"],
+  ];
+  outs.forEach((o, i) => {
+    const y = 2.62 + i * 0.62, ai = o[2] === "구현";
+    s.addShape(p.ShapeType.roundRect, { x: 7.9, y, w: 4.45, h: 0.5, rectRadius: 0.06,
+      fill: { color: "1B1712" }, line: { color: ai ? C.cognac : C.line, width: ai ? 1.1 : 0.75 } });
+    s.addText(o[0], { x: 8.15, y: y + 0.12, w: 1.5, h: 0.3, fontFace: F,
+      fontSize: 13.5, bold: true, color: ai ? C.cognac : C.white, margin: 0 });
+    s.addText(o[1], { x: 9.55, y: y + 0.13, w: 1.9, h: 0.28, fontFace: F,
+      fontSize: 11.5, color: C.muted, margin: 0 });
+    s.addText(o[2], { x: 11.3, y: y + 0.13, w: 0.85, h: 0.28, align: "right", fontFace: F,
+      fontSize: 10.5, color: ai ? C.cognac : C.dim, margin: 0 });
+  });
+  s.addText("제품 상태는 AI가 판정하지 않습니다. 등록된 기록으로 계산합니다.", {
+    x: 7.9, y: 5.26, w: 4.45, h: 0.5, align: "center", fontFace: F,
+    fontSize: 11.5, color: C.dim, lineSpacing: 17, margin: 0 });
+
+  rule(s, 0.95, 5.94, W - 1.9);
+  s.addText("같은 사진이라도 어느 제품인지, 언제 샀는지, 무엇을 고쳤는지를 알고 씁니다", {
+    x: 1.0, y: 6.14, w: W - 2, h: 0.4, align: "center", fontFace: F,
+    fontSize: 17, bold: true, color: C.white, margin: 0 });
+  mark(s);
+  s.addNotes("사진 앱과 뭐가 다르냐는 질문에 대한 답입니다. 저희는 사진만 받는 게 아니라 제품 ID와 시리얼, 구매와 수선 이력, DPP 여권 정보를 같이 넣습니다. 사진 앱이 가진 건 사진 하나뿐입니다. AI 레이어를 거쳐 나오는 것은 Story, Recap, REMADE 시안이고, Care Score는 AI가 아니라 등록된 기록으로 계산합니다. 제품 상태를 AI가 판정하지 않는다는 뜻입니다.");
 }
 
 /* ═══ 19 REMADE ═══ */
