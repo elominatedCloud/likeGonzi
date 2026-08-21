@@ -8,6 +8,7 @@ import {
   ChevronRight,
   ClipboardList,
   LoaderCircle,
+  ShieldCheck,
   LogOut,
   Wrench,
 } from "lucide-react";
@@ -29,7 +30,7 @@ const DEMO_AUTH_KEYS = [
  * 예전에는 stark-backpack으로 하드코딩돼 있어서, Stark를 소유하지 않은 계정은
  * "내 제품"과 "케어 & 리페어"가 404였다.
  */
-function buildMenuItems(productId: string | null | undefined) {
+function buildMenuItems(productId: string | null | undefined, isAdmin: boolean) {
   return [
     {
       href: "/log/timeline",
@@ -57,6 +58,18 @@ function buildMenuItems(productId: string | null | undefined) {
       description: "접수 상태와 진행 단계 확인",
       icon: ClipboardList,
     },
+    // 운영자에게만 보인다. 여태 앱 안에 운영 도구로 가는 링크가 없어서
+    // 주소를 외우는 사람만 들어갈 수 있었다.
+    ...(isAdmin
+      ? [
+          {
+            href: "/admin",
+            label: "운영 도구",
+            description: "브랜드 인사이트 · 수선 관리 · QR 발급",
+            icon: ShieldCheck,
+          },
+        ]
+      : []),
   ];
 }
 
@@ -65,6 +78,7 @@ export function MyScreen() {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [error, setError] = useState("");
   const [firstProductId, setFirstProductId] = useState<string | null | undefined>(undefined);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -77,7 +91,19 @@ export function MyScreen() {
     return () => { cancelled = true };
   }, []);
 
-  const menuItems = buildMenuItems(firstProductId);
+  // 운영자 여부는 별도로 묻는다. 실제 차단은 API의 requireAdmin과 RLS가 하고,
+  // 여기서는 메뉴를 보여줄지만 정한다.
+  useEffect(() => {
+    let cancelled = false;
+    apiFetch<unknown>("/api/admin/me")
+      .then((json) => {
+        if (!cancelled && json.ok) setIsAdmin(true);
+      })
+      .catch(() => {});
+    return () => { cancelled = true };
+  }, []);
+
+  const menuItems = buildMenuItems(firstProductId, isAdmin);
 
   const handleSignOut = async () => {
     if (isSigningOut) return;
